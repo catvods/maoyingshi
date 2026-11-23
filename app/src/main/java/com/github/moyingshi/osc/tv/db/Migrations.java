@@ -242,6 +242,36 @@ public class Migrations {
         }
     };
 
+    /**
+     * 内核记忆从「整剧一个值」改成「按线路一张表」。
+     *
+     * <p>旧值不能归到某一条线路上：它写入时的线路会被之后的换线路改写成 {@code vodFlag}，
+     * 硬塞回去就是把「线路1 选的内核」记到「线路2」名下——正是这次要修的 bug。
+     * 所以升级时直接丢弃旧值，迁移后每条线路从零开始，用户下一次换内核就按线路记住。
+     */
+    public static final Migration MIGRATION_48_49 = new Migration(48, 49) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            // 列必须可空：实体是 String 且未标 @NonNull，Room 的期望表里 notNull=false，
+            // 加 NOT NULL 会在 upgrade 后的 validateMigration 里直接抛异常。
+            addColumnIfMissing(database, "History", "kernelByFlag",
+                    "ALTER TABLE History ADD COLUMN `kernelByFlag` TEXT DEFAULT ''");
+            database.execSQL("UPDATE History SET player = -1 WHERE player <> -1");
+        }
+    };
+
+    /**
+     * 喜好“想看”清单：只新建 Want 表，不动旧表。
+     * 列声明与 Want 实体一致（key 非空主键，其余 String 可空，createTime/cid 非空），
+     * 与 Room 导出的 50.json 期望表一致。
+     */
+    public static final Migration MIGRATION_49_50 = new Migration(49, 50) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `Want` (`key` TEXT NOT NULL, `siteName` TEXT, `vodName` TEXT, `vodPic` TEXT, `createTime` INTEGER NOT NULL, `cid` INTEGER NOT NULL, PRIMARY KEY(`key`))");
+        }
+    };
+
     private static void addColumnIfMissing(
             SupportSQLiteDatabase database,
             String table,

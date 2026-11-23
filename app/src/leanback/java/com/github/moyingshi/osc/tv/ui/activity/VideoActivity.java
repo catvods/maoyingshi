@@ -2320,11 +2320,11 @@ private boolean runtimeSourceOnly;
 
     /**
      * 起播前把内核切到本剧记住的选择，并返回该内核给取址用——取播放地址要按内核区分线路。
-     * 没有记录时 getPlayerOrDefault 会退回设置页的全局默认。
+     * 记住的内核只对当前线路自己的记录生效；跨源聚合来的记录回落到设置页的全局默认。
      * 播放服务还没连上时先只记会话内核（取址在工作线程上读它），引擎由 onServiceConnected 补齐。
      */
     private int applyHistoryPlayerKernel(boolean forcePrepare) {
-        int kernel = mHistory == null ? PlayerSetting.getPlayer() : mHistory.getPlayerOrDefault();
+        int kernel = mHistory == null ? PlayerSetting.getPlayer() : mHistory.getPlaybackPlayerOrDefault(kernelFlag());
         PlayerSetting.putActivePlayer(kernel);
         if (service() == null) {
             mPendingPlayerKernel = kernel;
@@ -2343,6 +2343,12 @@ private boolean runtimeSourceOnly;
 
     private int applyHistoryPlayerKernel() {
         return applyHistoryPlayerKernel(false);
+    }
+
+    /** 当前线路名：内核记忆按线路存，读写都必须带它。 */
+    private String kernelFlag() {
+        Flag flag = getFlag();
+        return flag == null ? "" : flag.getFlag();
     }
 
     /**
@@ -2366,9 +2372,9 @@ private boolean runtimeSourceOnly;
      * 上一部剧的收尾存档会用别人的会话内核覆盖本剧记住的选择；
      * 而引擎类型还会被播放失败后的自动回退改掉，也不代表用户改了选择。
      */
-    private void rememberPlayerKernel(int type) {
+    private void rememberPlayerKernel(String flag, int type) {
         if (mHistory == null || !PlayerSetting.isPlayer(type)) return;
-        mHistory.setPlayer(type);
+        mHistory.setKernelForFlag(flag, type);
         syncHistory();
     }
 
@@ -5241,6 +5247,12 @@ private boolean runtimeSourceOnly;
 
     private void onKeep() {
         Keep keep = Keep.find(getHistoryKey());
+        // 详情回调（setDetail -> checkHistory）之前 mHistory 还是 null，此时新增收藏会拿空历史当对象用。
+        // 取消收藏只依赖 key，与详情是否就绪无关，因此只挡新增这一支。
+        if (keep == null && !isKeepReady()) {
+            Notify.show(R.string.keep_not_ready);
+            return;
+        }
         Notify.show(keep != null ? R.string.keep_del : R.string.keep_add);
         if (keep != null) keep.delete();
         else createKeep();
@@ -5699,7 +5711,7 @@ private boolean runtimeSourceOnly;
         player().switchPlayer(type);
         setPlayerKernel();
         setDecode();
-        rememberPlayerKernel(type);
+        rememberPlayerKernel(kernelFlag(), type);
     }
 
     private boolean onPlayerKernelLong() {
@@ -5757,7 +5769,7 @@ private boolean runtimeSourceOnly;
             PlayerManager danmakuManager = player();
             String beforeTrace = danmakuManager.getPlaybackTraceId();
             player().switchPlayer(type, result, activePlaybackKey(), metadata, isUseParse(), position, speed, repeat);
-            rememberPlayerKernel(type);
+            rememberPlayerKernel(flag, type);
             searchAutoDanmaku(result, danmakuManager, beforeTrace);
         }
         setPlayerKernel();
@@ -6167,7 +6179,8 @@ private boolean runtimeSourceOnly;
                 : isOriginSession() ? resumeHistory : resumeHistory.forPlaybackKey(getHistoryKey(), VodConfig.getCid());
         mHistory = mHistory == null ? createHistory(item) : mHistory;
         if (!TextUtils.isEmpty(getWallPic())) mHistory.setWallPic(getWallPic());
-        if (!TextUtils.isEmpty(getMark())) mHistory.setVodRemarks(getMark());
+        // 文件夹点选需保留旧集身份，交给显式选集链路判断是否重置进度。
+        if (!TextUtils.isEmpty(getMark()) && findFolderPlaybackEpisode(item) == null) mHistory.setVodRemarks(getMark());
         applyIntentPlaybackSelection(item);
         if (resumeHistory == null && Setting.isIncognito() && mHistory.getKey().equals(getHistoryKey())) mHistory.delete();
         setOpeningEndingText();
@@ -6366,7 +6379,12 @@ private boolean runtimeSourceOnly;
         String playName = getIntentPlaybackEpisodeName();
         String playUrl = getIntentPlaybackEpisodeUrl();
         if (TextUtils.isEmpty(playFlag) && TextUtils.isEmpty(playFlagKey)
-                && TextUtils.isEmpty(playName) && TextUtils.isEmpty(playUrl)) return;
+                && TextUtils.isEmpty(playName) && TextUtils.isEmpty(playUrl)) {
+            Episode folderEpisode = findFolderPlaybackEpisode(item);
+            if (folderEpisode == null) return;
+            playName = folderEpisode.getName();
+            playUrl = folderEpisode.getUrl();
+        }
         Flag flag = findIntentPlaybackFlag(item.getFlags(), playFlagKey, playFlag, playUrl);
         if (flag == null) return;
         Episode episode = findIntentPlaybackEpisode(flag, playName, playUrl);
@@ -6389,6 +6407,20 @@ private boolean runtimeSourceOnly;
         mHistory.setVodRemarks(getHistoryEpisodeName(historyEpisode));
         mHistory.setEpisodeUrl(episode.getUrl());
         if (historyEpisode.getTmdbEpisode() != null || !sameEpisode) mHistory.setTmdbEpisodePosition(historyEpisode);
+    }
+
+    private Episode findFolderPlaybackEpisode(Vod item) {
+        String mark = getMark();
+        if (isResumeFromHistory() || TextUtils.isEmpty(mark)) return null;
+        Episode matched = null;
+        for (Flag flag : item.getFlags()) {
+            for (Episode episode : flag.getEpisodes()) {
+                if (!mark.equalsIgnoreCase(episode.getName())) continue;
+                if (matched != null && !TextUtils.equals(matched.getUrl(), episode.getUrl())) return null;
+                matched = episode;
+            }
+        }
+        return matched;
     }
 
     private Flag findIntentPlaybackFlag(List<Flag> flags, String playFlagKey, String playFlag, String playUrl) {
@@ -6518,7 +6550,15 @@ private boolean runtimeSourceOnly;
         mBinding.keep.setCompoundDrawablesWithIntrinsicBounds(Keep.find(getHistoryKey()) == null ? R.drawable.ic_detail_keep_off : R.drawable.ic_detail_keep_on, 0, 0, 0);
     }
 
+    /**
+     * 就绪 = 详情已给出历史，且站点仍可解析（接口刷新后站点可能消失，getSite() 会返回 null）。
+     */
+    private boolean isKeepReady() {
+        return mHistory != null && getSite() != null;
+    }
+
     private void createKeep() {
+        if (!isKeepReady()) return;
         Keep keep = new Keep();
         keep.setKey(getHistoryKey());
         keep.setCid(VodConfig.getCid());

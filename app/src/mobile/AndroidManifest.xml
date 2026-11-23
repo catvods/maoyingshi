@@ -124,26 +124,8 @@
             android:screenOrientation="fullUser" />
 
         <activity
-            android:name=".ui.hk.HkListActivity"
+            android:name=".ui.activity.DiceActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout"
-            android:parentActivityName=".lab.LabActivity"
-            android:screenOrientation="fullUser">
-            <intent-filter>
-                <action android:name="${applicationId}.hk_list" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".ui.hk.HkDetailActivity"
-            android:configChanges="screenSize|smallestScreenSize|screenLayout"
-            android:parentActivityName=".ui.hk.HkListActivity"
-            android:screenOrientation="fullUser" />
-
-        <activity
-            android:name=".ui.hk.HkSearchActivity"
-            android:configChanges="screenSize|smallestScreenSize|screenLayout"
-            android:parentActivityName=".ui.hk.HkListActivity"
             android:screenOrientation="fullUser" />
 
         <activity

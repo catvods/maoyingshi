@@ -26,7 +26,6 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.github.moyingshi.osc.tv.App;
 import com.github.moyingshi.osc.tv.R;
 import com.github.moyingshi.osc.tv.api.config.VodConfig;
-import com.github.moyingshi.osc.tv.api.hk.HkStore;
 import com.github.moyingshi.osc.tv.bean.Class;
 import com.github.moyingshi.osc.tv.bean.Config;
 import com.github.moyingshi.osc.tv.bean.Device;
@@ -53,6 +52,7 @@ import com.github.moyingshi.osc.tv.impl.SiteListener;
 import com.github.moyingshi.osc.tv.model.SiteViewModel;
 import com.github.moyingshi.osc.tv.setting.Setting;
 import com.github.moyingshi.osc.tv.setting.AppBranding;
+import com.github.moyingshi.osc.tv.ui.activity.DiceActivity;
 import com.github.moyingshi.osc.tv.ui.activity.HistoryResumeCoordinator;
 import com.github.moyingshi.osc.tv.ui.activity.VideoActivity;
 import com.github.moyingshi.osc.tv.ui.adapter.BannerAdapter;
@@ -71,9 +71,6 @@ import com.github.moyingshi.osc.tv.ui.dialog.PushPlayUrlDialog;
 import com.github.moyingshi.osc.tv.ui.dialog.ReceiveDialog;
 import com.github.moyingshi.osc.tv.ui.dialog.SiteDialog;
 import com.github.moyingshi.osc.tv.ui.dialog.TypeFilterDialog;
-import com.github.moyingshi.osc.tv.ui.hk.HkListActivity;
-import com.github.moyingshi.osc.tv.ui.hk.HkListFragment;
-import com.github.moyingshi.osc.tv.ui.hk.HkSearchActivity;
 import com.github.moyingshi.osc.tv.utils.ImgUtil;
 import com.github.moyingshi.osc.tv.utils.Notify;
 import com.github.moyingshi.osc.tv.utils.ResUtil;
@@ -93,7 +90,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class VodFragment extends BaseFragment implements ConfigListener, SiteListener, FilterListener, TypeAdapter.OnClickListener, HomeWebController.Listener, HkListFragment.EmbedHost {
+public class VodFragment extends BaseFragment implements ConfigListener, SiteListener, FilterListener, TypeAdapter.OnClickListener, HomeWebController.Listener {
 
     private final ActivityResultLauncher<String[]> apkLauncher = registerForActivityResult(new ActivityResultContracts.OpenDocument(), this::onApkSelected);
 
@@ -120,12 +117,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     private final Map<String, AdapterWidgetSectionBinding> mWidgetSections = new LinkedHashMap<>();
     private final Map<String, WidgetSectionAdapter> mWidgetAdapters = new LinkedHashMap<>();
 
-    // 海阔小程序首页内嵌（第 7 步之五，魔影 HkSiteAdapter.open() → HomeActivity.j1(site)
-    // 先试内嵌、失败再开列表页的语义窄化版）：当前站是 hk:// 时首页挂 HkListFragment。
-    private boolean mHkEmbedded;
-    private String mHkTitle = "";
-    private boolean mHkFallbackOpened;
-
     private final Runnable mBannerAutoScroll = new Runnable() {
         @Override
         public void run() {
@@ -147,118 +138,27 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         return (FolderFragment) mBinding.pager.getAdapter().instantiateItem(mBinding.pager, mBinding.pager.getCurrentItem());
     }
 
+    /** 底栏滚动折叠：只有当前 pager 页的 FolderFragment 才允许上报滚动（切页后旧页的回调失效）。 */
+    public boolean isCurrentFolder(FolderFragment folder) {
+        if (mBinding == null || folder == null || mBinding.pager.getAdapter() == null) return false;
+        if (mAdapter == null || mAdapter.getItemCount() == 0) return false;
+        return getFragment() == folder;
+    }
+
+    /**
+     * 首页内容竖向滚动入口（FolderFragment/TypeFragment 上报）：原先转发给
+     * HomeActivity 折叠原生底栏；HomeActivity 已在 B8 删原生阶段删除、
+     * Flutter 首页自带底栏，这里保留方法签名供调用方使用，暂无消费者。
+     * 网页首页模式时竖滚走 homeWeb 的监听，不走列表（TypeFragment 那路也被这道关拦住）。
+     */
+    public void onContentScrolled(int dy, boolean atTop) {
+        if (!isVisible() || getActivity() == null) return;
+        if (mWeb != null && mWeb.isVisible()) return;
+        // No native bottom bar remains to fold; see docs/merge-main-into-b8-2026-11-23.md.
+    }
+
     private Site getHome() {
         return VodConfig.get().getHome();
-    }
-
-    private boolean isHkHome() {
-        return HkStore.isMiniapp(getHome());
-    }
-
-    private String getHkTitle() {
-        return HkStore.titleOf(getHome());
-    }
-
-    /**
-     * 海阔小程序首页内嵌（第 7 步之五）：当前站是 hk:// 时返回 true（已内嵌或已回落），
-     * 否则拆掉可能残留的内嵌、返回 false 走原链路。内嵌复用第 3 步的 HkListFragment
-     *（卡片样式、分类 chips、下拉刷新、滑到底翻页与点卡片进详情全部现成）。
-     */
-    private boolean tryEmbedHkHome(Site home) {
-        if (!HkStore.isMiniapp(home)) {
-            hideHkEmbed();
-            return false;
-        }
-        String title = HkStore.titleOf(home);
-        if (!title.equals(mHkTitle)) {
-            // 换了规则：拆掉旧内嵌，回落防重入标记重置。
-            hideHkEmbed();
-            mHkTitle = title;
-            mHkFallbackOpened = false;
-        }
-        if (HkStore.read(title) == null) {
-            // 规则文件被删但站源条目还在：不挂内嵌（它的 finish() 会关掉 HomeActivity），直接回落。
-            fallbackToList(title);
-            return true;
-        }
-        if (mHkEmbedded) {
-            // 已内嵌同一规则：刷新一遍（菜单刷新 / 切回首页都走这里），不重复挂。
-            HkListFragment fragment = embeddedHkFragment();
-            if (fragment != null) fragment.onRefresh();
-            return true;
-        }
-        hideProgress();
-        hideState();
-        if (mWeb != null) mWeb.hide();
-        hideNativeChromeForHk();
-        mBinding.hkContainer.setVisibility(View.VISIBLE);
-        getChildFragmentManager().beginTransaction()
-                .replace(R.id.hkContainer, HkListFragment.newInstance(title, true), "hk_embed")
-                .commit();
-        mHkEmbedded = true;
-        return true;
-    }
-
-    private HkListFragment embeddedHkFragment() {
-        Fragment fragment = getChildFragmentManager().findFragmentByTag("hk_embed");
-        return fragment instanceof HkListFragment ? (HkListFragment) fragment : null;
-    }
-
-    /** 拆掉内嵌 Fragment、隐藏容器；普通站源首页与切站回普通站时调用。 */
-    private void hideHkEmbed() {
-        if (mBinding == null) {
-            mHkEmbedded = false;
-            return;
-        }
-        Fragment fragment = getChildFragmentManager().findFragmentByTag("hk_embed");
-        if (fragment != null) {
-            getChildFragmentManager().beginTransaction().remove(fragment).commitAllowingStateLoss();
-        }
-        mBinding.hkContainer.setVisibility(View.GONE);
-        mHkEmbedded = false;
-    }
-
-    /** 内嵌时隐藏普通站首页区：分类栏（内嵌页自带分类 chips）、pager、横幅、继续观看、组件区、FAB。 */
-    private void hideNativeChromeForHk() {
-        mBinding.typeBar.setVisibility(View.GONE);
-        mBinding.pager.setVisibility(View.GONE);
-        mBinding.banner.setVisibility(View.GONE);
-        stopBannerAutoScroll();
-        mBinding.continueSection.setVisibility(View.GONE);
-        mBinding.widgetSections.setVisibility(View.GONE);
-        mBinding.browse.setVisibility(View.GONE);
-        mBinding.link.setVisibility(View.GONE);
-        mBinding.top.setVisibility(View.GONE);
-    }
-
-    @Override
-    public boolean onHkEmbedUnavailable(String title) {
-        return fallbackToList(title);
-    }
-
-    @Override
-    public boolean onHkEmbedFailed(String title, String error) {
-        return fallbackToList(title);
-    }
-
-    /**
-     * 内嵌失败回落：自动改开 HkListActivity（第 3 步列表页），首页不留在空白/报错页。
-     * 每条规则只回落一次——列表页同样失败时返回首页不再自动跳走，内嵌页自己显示错误态重试。
-     */
-    private boolean fallbackToList(String title) {
-        if (mHkFallbackOpened) return false;
-        // 回落回调走后台线程投递：视图已销毁时不再碰 binding、不开新页面。
-        if (!isAdded() || mBinding == null) return false;
-        mHkFallbackOpened = true;
-        hideHkEmbed();
-        hideProgress();
-        hideState();
-        showNativeContent();
-        // 列表页背后别留上一个站的残影：分类与横幅清掉，首页回到干净的空态。
-        clearPagerTypes();
-        setBanner(new ArrayList<Vod>());
-        if (isAdded()) HkListActivity.open(requireActivity(), title);
-        return true;
     }
 
     private Config getConfig() {
@@ -317,6 +217,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
             // B8 C2: the history screen is Flutter.
             C1ScreenActivity.start(requireActivity(), C1ScreenActivity.ROUTE_HISTORY);
         });
+        mBinding.searchDice.setOnClickListener(v -> DiceActivity.start(requireActivity()));
+        mBinding.searchDice.setVisibility(Setting.isDiceEntry() ? View.VISIBLE : View.GONE);
         mBinding.searchMore.setOnClickListener(this::onSearchMore);
         mBinding.toolbar.setOnMenuItemClickListener(this::onMenuItemClick);
         mBinding.toolbar.post(this::setSearchLongClick);
@@ -375,10 +277,9 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         updateBannerVisibility();
     }
 
-    /** 横幅可见的唯一判据：有数据、原生内容在显示（不是网页首页/沉浸模式/小程序内嵌）。 */
+    /** 横幅可见的唯一判据：有数据、原生内容在显示（不是网页首页/沉浸模式）。 */
     private void updateBannerVisibility() {
         boolean show = mBannerAdapter != null && mBannerAdapter.getItemCount() > 0
-                && !mHkEmbedded
                 && !isNativeChromeHidden()
                 && (mWeb == null || !mWeb.isVisible());
         mBinding.banner.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -433,10 +334,9 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         updateContinueVisibility();
     }
 
-    /** “继续观看”可见的唯一判据：有未看完内容、原生内容在显示（不是网页首页/沉浸模式/小程序内嵌）。 */
+    /** “继续观看”可见的唯一判据：有未看完内容、原生内容在显示（不是网页首页/沉浸模式）。 */
     private void updateContinueVisibility() {
         boolean show = mContinueAdapter != null && mContinueAdapter.getItemCount() > 0
-                && !mHkEmbedded
                 && !isNativeChromeHidden()
                 && (mWeb == null || !mWeb.isVisible());
         mBinding.continueSection.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -519,10 +419,9 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         return index;
     }
 
-    /** 组件区可见的唯一判据：至少有一行、原生内容在显示（不是网页首页/沉浸模式/小程序内嵌）。 */
+    /** 组件区可见的唯一判据：至少有一行、原生内容在显示（不是网页首页/沉浸模式）。 */
     private void updateWidgetVisibility() {
         boolean show = !mWidgetSections.isEmpty()
-                && !mHkEmbedded
                 && !isNativeChromeHidden()
                 && (mWeb == null || !mWeb.isVisible());
         mBinding.widgetSections.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -536,6 +435,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
 
     private void setWebView() {
         mWeb = new HomeWebController(requireActivity(), mBinding.homeWeb, this);
+        // 网页首页模式原先把 WebView 竖滚转发给 HomeActivity 折叠原生底栏；
+        // HomeActivity 已删除、Flutter 首页自带底栏，该监听不再需要（见 merge 文档）。
         syncWebHomeChrome();
     }
 
@@ -545,8 +446,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     }
 
     private void setAdapter(Result result) {
-        // 内嵌态下迟到的普通站结果不盖掉小程序首页（切站前在途的 homeContent 回包）。
-        if (mHkEmbedded) return;
         if (mWeb != null && mWeb.isVisible()) return;
         mAdapter.addAll(mResult = result);
         setBanner(result.getList());
@@ -560,12 +459,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     }
 
     private void setFabVisible(int position) {
-        if (mHkEmbedded) {
-            mBinding.top.setVisibility(View.GONE);
-            mBinding.link.setVisibility(View.GONE);
-            mBinding.browse.setVisibility(View.GONE);
-            return;
-        }
         if (isNativeChromeHidden()) {
             mBinding.top.setVisibility(View.GONE);
             mBinding.link.setVisibility(View.GONE);
@@ -613,16 +506,13 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         HistoryDialog.create().vod().readOnly().show(this);
     }
 
-    /** 搜索入口：小程序站进 HkSearchActivity（第 1 步，带当前规则），其余走原 SearchActivity。 */
     private void onSearchClick() {
-        if (isHkHome()) HkSearchActivity.open(requireActivity(), getHkTitle());
-        else FlutterNav.openSearch(requireActivity());
+        FlutterNav.openSearch(requireActivity());
     }
 
-    /** 长按搜索条（搜本站）：小程序站同样进 HkSearchActivity，其余走原行为。 */
+    /** 长按搜索条（搜本站）。 */
     private void onSearchCurrentSite() {
-        if (isHkHome()) HkSearchActivity.open(requireActivity(), getHkTitle());
-        else FlutterNav.openSearch(requireActivity(), "", getHome().getKey());
+        FlutterNav.openSearch(requireActivity(), "", getHome().getKey());
     }
 
     private void onSite(View view) {
@@ -762,11 +652,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     }
 
     private void homeContent() {
-        if (isHkHome()) {
-            // 小程序站不走 SiteViewModel/Spider：回到 loadHome() 走内嵌/回落。
-            loadHome();
-            return;
-        }
         requestNormalChrome();
         showProgress();
         if (mWeb != null) mWeb.hide();
@@ -781,7 +666,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         Site home = getHome();
         WebHomeChromeStartup.remember(getConfig(), home);
         setTitle();
-        if (tryEmbedHkHome(home)) return;
         if (mWeb != null && mWeb.load(home)) {
             clearPagerTypes();
             hideProgress();
@@ -850,13 +734,11 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
                 break;
             case SIZE:
                 if (mWeb != null && mWeb.isVisible()) return;
-                if (isHkHome()) loadHome();
-                else homeContent();
+                homeContent();
                 break;
             case CATEGORY:
                 if (mWeb != null && mWeb.isVisible()) return;
-                if (isHkHome()) loadHome();
-                else getFragment().onRefresh();
+                getFragment().onRefresh();
                 break;
             case HISTORY:
                 if (mWeb != null && mWeb.isVisible()) return;
@@ -884,10 +766,10 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
             case ERROR:
                 // 失败不接管整屏：全屏错误态会把顶栏（含内容源切换）一起盖掉，用户既切不了源
                 // 也进不去设置，而吐司几秒后消失，页面上没有任何恢复入口。这里只收起转圈与
-                // 浮层、回到原生首页，失败原因由吐司提示。内嵌态下不碰原生内容（不盖掉小程序首页）。
+                // 浮层、回到原生首页，失败原因由吐司提示。
                 hideProgress();
                 hideState();
-                if (!mHkEmbedded) showNativeContent();
+                showNativeContent();
                 break;
             case NO_CONFIG:
                 // 还没配接口：不是失败，所以不给"重试"（它永远不会成功），也不接管首页——
@@ -988,10 +870,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     @Override
     public void onDestroyView() {
         stopBannerAutoScroll();
-        // 视图销毁时内嵌子 Fragment 随之销毁：内嵌态复位，下次建视图重新走 loadHome() 内嵌。
-        mHkEmbedded = false;
-        mHkTitle = "";
-        mHkFallbackOpened = false;
         if (mWidgetManager != null) mWidgetManager.destroy();
         requestNormalChrome();
         if (mWeb != null) mWeb.destroy();
@@ -1004,6 +882,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         super.onResume();
         if (mWeb != null) mWeb.onResume();
         if (mBinding == null) return;
+        mBinding.searchDice.setVisibility(Setting.isDiceEntry() ? View.VISIBLE : View.GONE);
         refreshContinue();
         refreshWidgets();
         if (mBinding.banner.getVisibility() == View.VISIBLE) startBannerAutoScroll();
@@ -1028,10 +907,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
 
     @Override
     public void onWebError() {
-        if (isHkHome()) {
-            loadHome();
-            return;
-        }
         requestNormalChrome();
         showNativeContent();
         homeContent();

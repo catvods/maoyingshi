@@ -228,6 +228,20 @@ public final class B21HostApiImpl implements B21Messages.B21HostApi {
         return value == null ? "" : value;
     }
 
+    /**
+     * Local copy of the hk:// prefix test. Main made the equivalent
+     * LocalSource check private when the Hiker feature was removed;
+     * LocalSource.getSites() now filters these entries out, so this
+     * split is retained only to preserve the B21 snapshot shape.
+     */
+    private static boolean isMiniappSite(@Nullable Site site) {
+        if (site == null) return false;
+        String api = site.getApi();
+        if (!TextUtils.isEmpty(api) && api.startsWith("hk://")) return true;
+        String key = site.getKey();
+        return !TextUtils.isEmpty(key) && key.startsWith("hk://");
+    }
+
     private String timeoutText() {
         AppCompatActivity act = activity;
         return act == null ? "" : act.getString(R.string.error_play_timeout);
@@ -362,12 +376,8 @@ public final class B21HostApiImpl implements B21Messages.B21HostApi {
                     .setName(act.getString(R.string.setting_local_source))
                     .build());
         }
-        if (act != null && !Util.isLeanback() && Setting.isHkMiniapp()) {
-            groups.add(new B21Messages.B21LabGroup.Builder()
-                    .setId("__miniapp__")
-                    .setName("海阔小程序")
-                    .build());
-        }
+        // Main removed the Hiker miniapp feature, so the former
+        // "__miniapp__" group is never added to the merged tree.
         if (root != null && root.groups != null) {
             for (LabModels.Group group : root.groups) {
                 groups.add(new B21Messages.B21LabGroup.Builder()
@@ -429,7 +439,7 @@ public final class B21HostApiImpl implements B21Messages.B21HostApi {
                     .setKey(nn(site.getKey()))
                     .setName(nn(site.getName()))
                     .build();
-            if (LocalSource.isMiniapp(site)) miniappSites.add(row);
+            if (isMiniappSite(site)) miniappSites.add(row);
             else localSources.add(row);
         }
         return new B21Messages.B21LabList.Builder()
@@ -442,7 +452,7 @@ public final class B21HostApiImpl implements B21Messages.B21HostApi {
                 .setPickState(listPickState)
                 .setPickEpoch(listPickEpoch)
                 .setPickMessage(listPickMessage)
-                .setIsHkMiniapp(Setting.isHkMiniapp())
+                .setIsHkMiniapp(false)
                 .build();
     }
 
@@ -457,7 +467,7 @@ public final class B21HostApiImpl implements B21Messages.B21HostApi {
                 .setPickState(listPickState)
                 .setPickEpoch(listPickEpoch)
                 .setPickMessage(listPickMessage)
-                .setIsHkMiniapp(Setting.isHkMiniapp())
+                .setIsHkMiniapp(false)
                 .build();
     }
 
@@ -568,7 +578,7 @@ public final class B21HostApiImpl implements B21Messages.B21HostApi {
                 .setScanLabel(act.getString(R.string.lab_local_source_scan))
                 .setEmptyText(act.getString(R.string.lab_empty_no_source))
                 .setLocalSourceEmptyText(act.getString(R.string.lab_local_source_empty))
-                .setMiniappEmptyText(act.getString(R.string.hk_miniapp_empty))
+                .setMiniappEmptyText("")
                 .setCancelLabel(act.getString(R.string.dialog_cancel))
                 .setRetryLabel(act.getString(R.string.error_retry))
                 .setConfirmLabel(act.getString(R.string.dialog_confirm))
@@ -1018,15 +1028,9 @@ public final class B21HostApiImpl implements B21Messages.B21HostApi {
 
     @Override
     public void openLabMiniappList(String key) {
-        AppCompatActivity act = activity;
-        if (act == null) return;
-        Site site = findSite(nn(key));
-        if (site == null) return;
-        Intent intent = new Intent(App.get().getPackageName() + ".hk_list");
-        intent.addCategory(Intent.CATEGORY_DEFAULT);
-        intent.putExtra("title", LocalSource.miniappTitle(site));
-        if (intent.resolveActivity(act.getPackageManager()) != null) act.startActivity(intent);
-        else Notify.show(R.string.hk_miniapp_list_pending);
+        // Main removed the Hiker miniapp list activity, its manifest
+        // declaration and its strings. The B21 contract method remains
+        // for compatibility, but there is no destination to open.
     }
 
     @Override

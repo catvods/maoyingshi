@@ -11,7 +11,6 @@ import androidx.fragment.app.FragmentManager;
 import com.github.catvod.bean.Doh;
 import com.github.catvod.net.OkHttp;
 import com.github.moyingshi.osc.tv.R;
-import com.github.moyingshi.osc.tv.Updater;
 import com.github.moyingshi.osc.tv.api.config.LiveConfig;
 import com.github.moyingshi.osc.tv.api.config.VodConfig;
 import com.github.moyingshi.osc.tv.api.config.WallConfig;
@@ -893,7 +892,7 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
             C1ScreenActivity.start(activity, C1ScreenActivity.ROUTE_ABOUT);
             return;
         }
-        AboutDialog.show(activity, () -> Updater.create().force().start(activity));
+        AboutDialog.show(activity);
     }
 
     @Override

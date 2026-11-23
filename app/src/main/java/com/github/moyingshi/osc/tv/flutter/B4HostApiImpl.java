@@ -103,7 +103,6 @@ public class B4HostApiImpl implements B4Messages.B4HostApi {
         // Row order mirrors SettingEnhanceFragment.reorderItems().
         rows.add(row("lab", R.string.setting_lab, activity.getString(R.string.setting_lab_summary), false));
         rows.add(safeRow("labNav", R.string.setting_lab_nav, () -> getSwitch(Setting.isLabNav())));
-        rows.add(safeRow("hkMiniapp", R.string.setting_hk_miniapp, () -> getSwitch(Setting.isHkMiniapp())));
         rows.add(customCspRow());
         rows.add(safeRow("webHomeExtension", R.string.setting_web_home_extension, () -> {
             WebHomeExtensionRegistry.Snapshot snapshot = WebHomeExtensionRegistry.get().snapshot();
@@ -247,7 +246,9 @@ public class B4HostApiImpl implements B4Messages.B4HostApi {
 
     @Override
     public void toggleHkMiniapp() {
-        Setting.putHkMiniapp(!Setting.isHkMiniapp());
+        // Main removed the Hiker miniapp setting. The generated B4
+        // contract still exposes this method, so it is deliberately a
+        // no-op until the dead contract surface is removed separately.
     }
 
     @Override

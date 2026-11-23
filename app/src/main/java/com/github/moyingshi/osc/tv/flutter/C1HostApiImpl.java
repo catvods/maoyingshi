@@ -6,12 +6,10 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.github.moyingshi.osc.tv.BuildConfig;
 import com.github.moyingshi.osc.tv.R;
-import com.github.moyingshi.osc.tv.Updater;
 import com.github.moyingshi.osc.tv.setting.Setting;
 import com.github.moyingshi.osc.tv.subtitle.provider.SubtitleProviderRegistry;
 import com.github.moyingshi.osc.tv.ui.dialog.AboutDialog;
 import com.github.moyingshi.osc.tv.ui.dialog.SubtitleSettingsDialog;
-import com.github.moyingshi.osc.tv.ui.dialog.UpdateSettingsDialog;
 import com.github.moyingshi.osc.tv.utils.AppVersion;
 import com.github.moyingshi.osc.tv.utils.Notify;
 import com.github.moyingshi.osc.tv.utils.ResUtil;
@@ -78,17 +76,15 @@ public class C1HostApiImpl implements C1Messages.C1HostApi {
 
     @Override
     public void checkUpdate() {
-        // Deliberately does not finish the screen first: the native dialog
-        // dismisses itself before starting the updater, but this Flutter
-        // screen IS the Activity, and starting the updater flow from a
-        // finishing Activity risks a bad window token. The updater UI
-        // overlays this screen instead; see docs/b8-c1-about-subtitle.md.
-        Updater.create().force().start(activity);
+        // Main removed the in-app updater. The C1 contract method is
+        // retained for compatibility and deliberately does nothing
+        // until the dead About-page update rows are removed separately.
     }
 
     @Override
     public void openUpdateSettings() {
-        UpdateSettingsDialog.show(activity);
+        // The native update settings dialog was removed with the
+        // in-app updater on main; see checkUpdate().
     }
 
     @Override

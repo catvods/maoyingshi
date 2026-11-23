@@ -30,8 +30,8 @@ import com.github.moyingshi.osc.tv.bean.Vod;
 import com.github.moyingshi.osc.tv.bean.Want;
 import com.github.moyingshi.osc.tv.databinding.FragmentDiceBinding;
 import com.github.moyingshi.osc.tv.db.AppDatabase;
+import com.github.moyingshi.osc.tv.flutter.FlutterNav;
 import com.github.moyingshi.osc.tv.setting.DiceSetting;
-import com.github.moyingshi.osc.tv.ui.activity.SearchActivity;
 import com.github.moyingshi.osc.tv.ui.activity.VideoActivity;
 import com.github.moyingshi.osc.tv.ui.adapter.DiceHistoryAdapter;
 import com.github.moyingshi.osc.tv.ui.base.BaseFragment;
@@ -68,7 +68,7 @@ import java.util.List;
  *
  * <p>约定：dice_duration ""=不限、"long"=长片、"short"=短片；dice_bg 0=跟随主题
  * （默认深色底），其余为 BG_COLORS 下标；摇片历史存 Vod 数组 JSON（DiceSetting history）。
- * 豆瓣 Vod 无站源：点详情走站内搜索片名（SearchActivity），不硬编站源字段。
+ * 豆瓣 Vod 无站源：点详情走站内搜索片名（FlutterNav.openSearch 打开 Flutter 搜索页），不硬编站源字段。
  */
 public class DiceFragment extends BaseFragment implements DiceHistoryAdapter.OnHistoryActionListener {
 
@@ -293,13 +293,13 @@ public class DiceFragment extends BaseFragment implements DiceHistoryAdapter.OnH
                     VideoActivity.startDirect(requireActivity(), found.getSiteKey(), found.getId(), found.getName(), found.getPic(), found.getRemarks());
                 } else {
                     Notify.show(R.string.dice_direct_not_found);
-                    SearchActivity.start(requireActivity(), name);
+                    FlutterNav.openSearch(requireActivity(), name);
                 }
             });
         }).start();
     }
 
-    /** 后台按片名在当前站搜一次（SearchActivity 用的同一条 SiteApi.searchContent），取第一个有 siteKey + id 的结果；无站源或搜不到返回 null。 */
+    /** 后台按片名在当前站搜一次（与 Flutter 搜索页用的同一条 SiteApi.searchContent），取第一个有 siteKey + id 的结果；无站源或搜不到返回 null。 */
     private Vod searchFirstByName(String name) {
         try {
             Site home = VodConfig.get().getHome();
@@ -322,7 +322,7 @@ public class DiceFragment extends BaseFragment implements DiceHistoryAdapter.OnH
         if (!TextUtils.isEmpty(siteKey) && !TextUtils.isEmpty(item.getId())) {
             VideoActivity.start(requireActivity(), siteKey, item.getId(), item.getName(), item.getPic(), null);
         } else {
-            SearchActivity.start(requireActivity(), item.getName());
+            FlutterNav.openSearch(requireActivity(), item.getName());
         }
     }
 

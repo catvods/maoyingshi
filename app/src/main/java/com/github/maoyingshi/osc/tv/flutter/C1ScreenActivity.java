@@ -352,9 +352,25 @@ public class C1ScreenActivity extends AppCompatActivity {
      * entry, mirroring native {@code FragmentStateManager.change()}
      * (bottom-nav switches never built history).
      */
+    /**
+     * B8 back stack: the history form of a route. Settings-family
+     * member routes ({@code /settings?member=X}) collapse to the
+     * family root: members are Dart-internal (H2), so a root back
+     * must never assert a member route — doing so resurrects that
+     * member page (e.g. TMDB) when the user backs out of the
+     * settings home after a direct member entry. Forward assertions
+     * keep using the full route; only the back history normalizes.
+     */
+    private static String historyRoute(String route) {
+        if (route != null && route.startsWith(ROUTE_SETTINGS + "?")) {
+            return ROUTE_SETTINGS;
+        }
+        return route;
+    }
+
     private static void recordSwitch(String route) {
         sRouteHistory.clear();
-        sRouteHistory.add(route);
+        sRouteHistory.add(historyRoute(route));
     }
 
     /**
@@ -364,9 +380,10 @@ public class C1ScreenActivity extends AppCompatActivity {
      * popped route string — see {@link #assertRouteForced()}).
      */
     private static void recordPush(String route) {
+        String entry = historyRoute(route);
         int size = sRouteHistory.size();
-        if (size > 0 && sRouteHistory.get(size - 1).equals(route)) return;
-        sRouteHistory.add(route);
+        if (size > 0 && sRouteHistory.get(size - 1).equals(entry)) return;
+        sRouteHistory.add(entry);
     }
 
     @Override

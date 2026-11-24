@@ -516,9 +516,20 @@ prepare_sources() {
     # Fetch the upstream tag first. A depth-1 tag fetch marks the tag commit as
     # a shallow boundary; expanding the selected FongMi commit afterwards
     # reconnects that commit and keeps git-describe deterministic.
-    git -C "$deps/mpv" fetch --depth=1 "$MPV_TAG_REPO" \
+    git -C "$deps/mpv" -c maintenance.auto=false fetch --depth=1 "$MPV_TAG_REPO" \
       "refs/tags/$MPV_DESCRIBE_TAG:refs/tags/$MPV_DESCRIBE_TAG"
-    git -C "$deps/mpv" fetch --depth="$MPV_HISTORY_DEPTH" origin "$MPV_COMMIT"
+    # The deepen fetch can die with "fatal: shallow file has changed
+    # since we read it" when git's background maintenance rewrites
+    # .git/shallow mid-fetch on current runner images; disable the
+    # background maintenance and retry on that transient failure.
+    for attempt in 1 2 3; do
+      if git -C "$deps/mpv" -c maintenance.auto=false fetch \
+          --depth="$MPV_HISTORY_DEPTH" origin "$MPV_COMMIT"; then
+        break
+      fi
+      [ "$attempt" = "3" ] && die "MPV history fetch failed after 3 attempts"
+      sleep 5
+    done
   fi
   [ "$(git -C "$deps/mpv" describe --abbrev=9 --tags --match "$MPV_DESCRIBE_TAG" HEAD)" = "v$MPV_VERSION" ] || die "MPV describe version mismatch"
   # FongMi tracks post-release commits while upstream's MPV_VERSION remains

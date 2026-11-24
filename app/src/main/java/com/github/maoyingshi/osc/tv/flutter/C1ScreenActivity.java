@@ -407,6 +407,8 @@ public class C1ScreenActivity extends AppCompatActivity {
         if (sRouteHistory.isEmpty()) {
             recordSwitch(mRoute);
         }
+        dbgToast(this, "CREATE route=" + mRoute + " taskRoot=" + isTaskRoot()
+                + " reused=" + engineReused);
         // Before super.onCreate(): the FragmentManager restores the
         // FlutterFragment during super.onCreate() after process death, and
         // the fragment looks the cached engine up by ID at that point.
@@ -854,6 +856,7 @@ public class C1ScreenActivity extends AppCompatActivity {
         }
         sAssertedRoute = mRoute;
         sRouteOwnerToken = mRouteToken;
+        dbgToast(this, "ASSERT " + mRoute);
         sendRouteToDart(mRoute);
     }
 
@@ -872,7 +875,19 @@ public class C1ScreenActivity extends AppCompatActivity {
     private void assertRouteForced() {
         sAssertedRoute = mRoute;
         sRouteOwnerToken = mRouteToken;
+        dbgToast(this, "ASSERT-F " + mRoute);
         sendRouteToDart(mRoute);
+    }
+
+    /** TEMP DEBUG (back-nav diagnosis, remove after): a toast the
+     * screen recorder can see, showing what the host did with a back
+     * press. */
+    public static void dbgToast(android.content.Context ctx, String msg) {
+        try {
+            android.widget.Toast.makeText(ctx, "BK " + msg,
+                    android.widget.Toast.LENGTH_SHORT).show();
+        } catch (Exception ignored) {
+        }
     }
 
     /**
@@ -893,6 +908,9 @@ public class C1ScreenActivity extends AppCompatActivity {
      * exit path, and the M2 teardown does not run on home-back).
      */
     public void handleRootBack() {
+        dbgToast(this, "ROOTBACK taskRoot=" + isTaskRoot()
+                + " hist=" + sRouteHistory + " mRoute=" + mRoute
+                + " inst=" + Integer.toHexString(System.identityHashCode(this)));
         if (!isTaskRoot()) {
             finish();
             return;
@@ -1063,6 +1081,7 @@ public class C1ScreenActivity extends AppCompatActivity {
             recordSwitch(ROUTE_HOME);
         }
         assertRouteIfNeeded();
+        dbgToast(this, "NAV mRoute=" + mRoute + " hist=" + sRouteHistory);
         if (flutterFragment != null) {
             flutterFragment.onNewIntent(intent);
         }

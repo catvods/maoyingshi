@@ -49,12 +49,42 @@ void _showRoute(String route) {
   if (route == _currentTopRoute) return;
   final NavigatorState? navigator = _rootNavigatorKey.currentState;
   if (navigator == null) return;
+  final RouteSettings settings = RouteSettings(name: route);
+  final WidgetBuilder? builder =
+      _c0Routes[route] ?? _generatedBuilder(settings);
   try {
-    navigator.pushNamedAndRemoveUntil(route, (_) => false);
+    if (builder == null) {
+      navigator.pushNamedAndRemoveUntil(route, (_) => false);
+    } else {
+      // A host-driven switch replaces the stack instantly, with no
+      // page transition: the default transition composites the
+      // outgoing and incoming pages for its whole duration, which
+      // shows on device as a torn ghost flash on every root back
+      // and bottom-bar switch.
+      navigator.pushAndRemoveUntil<void>(
+        PageRouteBuilder<void>(
+          settings: settings,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (BuildContext context, _, _) => builder(context),
+        ),
+        (_) => false,
+      );
+    }
   } catch (_) {
     return;
   }
   _currentTopRoute = route;
+}
+
+/// Resolves [settings] through [_c0GenerateRoute] and returns the
+/// page builder of the route it creates, or null when the generated
+/// route is not a plain page route [_showRoute] can rebuild without
+/// animation.
+WidgetBuilder? _generatedBuilder(RouteSettings settings) {
+  final Route<dynamic>? route = _c0GenerateRoute(settings);
+  if (route is MaterialPageRoute<dynamic>) return route.builder;
+  return null;
 }
 
 /// The host tells Dart which screen this engine should show first, so one
@@ -84,6 +114,184 @@ void main() async {
   runApp(C0ShellApp(initialRoute: initialRoute));
 }
 
+/// The literal route table for [C0ShellApp], shared with
+/// [_showRoute] so a host-driven switch builds the same page
+/// the named navigation would.
+final Map<String, WidgetBuilder> _c0Routes = {
+  '/': (context) => const _UnreachablePlaceholder(),
+  '/about': (context) => const C1AboutPage(),
+  '/subtitle': (context) => const C1SubtitlePage(),
+  '/history': (context) => const C2HistoryPage(),
+  '/keep': (context) => const B2KeepPage(),
+  // B8 B14: the mobile following page; only this literal route is
+  // added, the entries above are untouched.
+  '/following': (context) => const B14FollowingPage(),
+  // B8 B15: the app-branding page; only this literal route is
+  // added, the entries above are untouched.
+  '/branding': (context) => const B15BrandingPage(),
+  // B8 B19: the mobile plugin manager page; only this literal
+  // route is added, the entries above are untouched.
+  '/plugins': (context) => const B19PluginPage(),
+  // B8 B20: the mobile Hk miniapp manager page; only this
+  // literal route is added, the entries above are untouched.
+  '/hk-manager': (context) => const B20HkPage(),
+  // B8 B21: the mobile lab list + detail pages (family route
+  // with an in-family Navigator); only this literal route is
+  // added, the entries above are untouched.
+  '/lab': (context) => const B21LabPage(),
+  // B8 B22: the short-drama theater grid and history list
+  // (scheme B: the native ShortDramaActivity stays the entry
+  // and play-stream host; only its theater/history tabs divert
+  // here). Two independent literal routes, not a family route;
+  // only these two entries are added, the entries above are
+  // untouched.
+  '/drama-theater': (context) => const B22TheaterPage(),
+  '/drama-history': (context) => const B22HistoryPage(),
+  // B8 B11: the mobile home shell (top bar + tabs + glass bottom
+  // bar); only this literal route is added, the entries above are
+  // untouched. hk:// sites and WebHome themes fall back to the
+  // native home in the host diversion, never in Dart.
+  '/home': (context) => const B11HomePage(),
+  // B8 B3: the settings family. One literal route per member (the
+  // routes table matches exact strings); '/settings' without a
+  // member defaults to the first member, TMDB. B4/B5/B6/B7 add
+  // members the same way, without touching these entries.
+  // B8 B7: the settings home joins the family as the default
+  // member; '/settings' without a member now opens the home.
+  '/settings': (context) => const B3SettingsPage(member: 'home'),
+  '/settings?member=home': (context) =>
+      const B3SettingsPage(member: 'home'),
+  '/settings?member=tmdb': (context) =>
+      const B3SettingsPage(member: 'tmdb'),
+  '/settings?member=ai': (context) => const B3SettingsPage(member: 'ai'),
+  '/settings?member=ad': (context) => const B3SettingsPage(member: 'ad'),
+  '/settings?member=danmaku': (context) =>
+      const B3SettingsPage(member: 'danmaku'),
+  // B8 B4: the enhance page joins the settings family the same way;
+  // only this literal route is added, the B3 entries are untouched.
+  '/settings?member=enhance': (context) =>
+      const B3SettingsPage(member: 'enhance'),
+  // B8 B5: the personal page and the settings search join the
+  // settings family the same way; only these literal routes are
+  // added, the B3/B4 entries are untouched.
+  '/settings?member=personal': (context) =>
+      const B3SettingsPage(member: 'personal'),
+  '/settings?member=search': (context) =>
+      const B3SettingsPage(member: 'search'),
+  // B8 B6: the player settings page joins the settings family the
+  // same way; only this literal route is added, the B3/B4/B5
+  // entries are untouched.
+  '/settings?member=player': (context) =>
+      const B3SettingsPage(member: 'player'),
+};
+
+/// Route generator for the parameterized families (category,
+/// search, collect, local, report, person, widgets), whose
+/// parameters are unbounded and so cannot live in [_c0Routes].
+/// Shared by [C0ShellApp] and [_showRoute].
+Route<dynamic>? _c0GenerateRoute(RouteSettings settings) {
+  final String? name = settings.name;
+  if (name != null && name.startsWith('/widgets')) {
+    final Uri uri = Uri.parse(name);
+    final Map<String, String> params = uri.queryParameters;
+    return MaterialPageRoute<void>(
+      builder: (_) => B18BrowsePage(
+        widgetId: params['widgetId'] ?? '',
+      ),
+      settings: settings,
+    );
+  }
+  if (name != null && name.startsWith('/person')) {
+    final Uri uri = Uri.parse(name);
+    final Map<String, String> params = uri.queryParameters;
+    return MaterialPageRoute<void>(
+      builder: (_) => B17PersonPage(
+        personId: int.tryParse(params['personId'] ?? '') ?? 0,
+        name: params['name'] ?? '',
+        subtitle: params['subtitle'] ?? '',
+        profileUrl: params['profile'] ?? '',
+        department: params['department'] ?? '',
+        biography: params['biography'] ?? '',
+        siteKey: params['siteKey'] ?? '',
+        detailMode: int.tryParse(params['detailMode'] ?? '') ?? 0,
+      ),
+      settings: settings,
+    );
+  }
+  if (name != null && name.startsWith('/report')) {
+    final Uri uri = Uri.parse(name);
+    final Map<String, String> params = uri.queryParameters;
+    return MaterialPageRoute<void>(
+      builder: (_) => B16ReportPage(
+        initialRange: params['range'] ?? 'ALL',
+      ),
+      settings: settings,
+    );
+  }
+  if (name != null && name.startsWith('/local')) {
+    final Uri uri = Uri.parse(name);
+    final Map<String, String> params = uri.queryParameters;
+    return MaterialPageRoute<void>(
+      builder: (_) => B15LocalPage(
+        selectDir: params['selectDir'] == 'true',
+        readMode: params['readMode'] == 'true',
+      ),
+      settings: settings,
+    );
+  }
+  if (name != null && name.startsWith('/collect')) {
+    final Uri uri = Uri.parse(name);
+    final Map<String, String> params = uri.queryParameters;
+    return MaterialPageRoute<void>(
+      builder: (_) => B10CollectPage(
+        keyword: params['keyword'] ?? '',
+        currentSite: params['currentSite'] == 'true',
+        siteKey: params['siteKey'] ?? '',
+        group: params['group'] ?? '',
+        pic: params['pic'] ?? '',
+        wallPic: params['wallPic'] ?? '',
+        historyResumeCid:
+            int.tryParse(params['hrCid'] ?? '') ?? -1,
+        historyResumeKey: params['hrKey'] ?? '',
+        historyResumeTargetCid:
+            int.tryParse(params['hrTargetCid'] ?? '') ?? -1,
+      ),
+      settings: settings,
+    );
+  }
+  if (name != null && name.startsWith('/search')) {
+    final Uri uri = Uri.parse(name);
+    final Map<String, String> params = uri.queryParameters;
+    return MaterialPageRoute<void>(
+      builder: (_) => B9SearchPage(
+        keyword: params['keyword'] ?? '',
+        siteKey: params['siteKey'] ?? '',
+        pic: params['pic'] ?? '',
+        wallPic: params['wallPic'] ?? '',
+      ),
+      settings: settings,
+    );
+  }
+  if (name != null && name.startsWith('/category')) {
+    final Uri uri = Uri.parse(name);
+    final Map<String, String> params = uri.queryParameters;
+    return MaterialPageRoute<void>(
+      builder: (_) => B8CategoryPage(
+        siteKey: params['key'] ?? '',
+        typeId: params['typeId'] ?? '',
+        typeJson: params['type'] ?? '',
+        historyResumeCid:
+            int.tryParse(params['hrCid'] ?? '') ?? -1,
+        historyResumeKey: params['hrKey'] ?? '',
+        historyResumeTargetCid:
+            int.tryParse(params['hrTargetCid'] ?? '') ?? -1,
+      ),
+      settings: settings,
+    );
+  }
+  return null;
+}
+
 /// B8 screens, routed by the host.
 /// Theme seed stays the Mooyingshi accent #0B57D0 for every route.
 class C0ShellApp extends StatelessWidget {
@@ -102,73 +310,7 @@ class C0ShellApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0B57D0)),
       ),
       initialRoute: initialRoute,
-      routes: {
-        '/': (context) => const _UnreachablePlaceholder(),
-        '/about': (context) => const C1AboutPage(),
-        '/subtitle': (context) => const C1SubtitlePage(),
-        '/history': (context) => const C2HistoryPage(),
-        '/keep': (context) => const B2KeepPage(),
-        // B8 B14: the mobile following page; only this literal route is
-        // added, the entries above are untouched.
-        '/following': (context) => const B14FollowingPage(),
-        // B8 B15: the app-branding page; only this literal route is
-        // added, the entries above are untouched.
-        '/branding': (context) => const B15BrandingPage(),
-        // B8 B19: the mobile plugin manager page; only this literal
-        // route is added, the entries above are untouched.
-        '/plugins': (context) => const B19PluginPage(),
-        // B8 B20: the mobile Hk miniapp manager page; only this
-        // literal route is added, the entries above are untouched.
-        '/hk-manager': (context) => const B20HkPage(),
-        // B8 B21: the mobile lab list + detail pages (family route
-        // with an in-family Navigator); only this literal route is
-        // added, the entries above are untouched.
-        '/lab': (context) => const B21LabPage(),
-        // B8 B22: the short-drama theater grid and history list
-        // (scheme B: the native ShortDramaActivity stays the entry
-        // and play-stream host; only its theater/history tabs divert
-        // here). Two independent literal routes, not a family route;
-        // only these two entries are added, the entries above are
-        // untouched.
-        '/drama-theater': (context) => const B22TheaterPage(),
-        '/drama-history': (context) => const B22HistoryPage(),
-        // B8 B11: the mobile home shell (top bar + tabs + glass bottom
-        // bar); only this literal route is added, the entries above are
-        // untouched. hk:// sites and WebHome themes fall back to the
-        // native home in the host diversion, never in Dart.
-        '/home': (context) => const B11HomePage(),
-        // B8 B3: the settings family. One literal route per member (the
-        // routes table matches exact strings); '/settings' without a
-        // member defaults to the first member, TMDB. B4/B5/B6/B7 add
-        // members the same way, without touching these entries.
-        // B8 B7: the settings home joins the family as the default
-        // member; '/settings' without a member now opens the home.
-        '/settings': (context) => const B3SettingsPage(member: 'home'),
-        '/settings?member=home': (context) =>
-            const B3SettingsPage(member: 'home'),
-        '/settings?member=tmdb': (context) =>
-            const B3SettingsPage(member: 'tmdb'),
-        '/settings?member=ai': (context) => const B3SettingsPage(member: 'ai'),
-        '/settings?member=ad': (context) => const B3SettingsPage(member: 'ad'),
-        '/settings?member=danmaku': (context) =>
-            const B3SettingsPage(member: 'danmaku'),
-        // B8 B4: the enhance page joins the settings family the same way;
-        // only this literal route is added, the B3 entries are untouched.
-        '/settings?member=enhance': (context) =>
-            const B3SettingsPage(member: 'enhance'),
-        // B8 B5: the personal page and the settings search join the
-        // settings family the same way; only these literal routes are
-        // added, the B3/B4 entries are untouched.
-        '/settings?member=personal': (context) =>
-            const B3SettingsPage(member: 'personal'),
-        '/settings?member=search': (context) =>
-            const B3SettingsPage(member: 'search'),
-        // B8 B6: the player settings page joins the settings family the
-        // same way; only this literal route is added, the B3/B4/B5
-        // entries are untouched.
-        '/settings?member=player': (context) =>
-            const B3SettingsPage(member: 'player'),
-      },
+      routes: _c0Routes,
       // B8 B8: the category list cannot use the literal routes table —
       // its parameters (key, typeId, the Class JSON, history-resume
       // params) are unbounded, so onGenerateRoute parses them from the
@@ -198,108 +340,7 @@ class C0ShellApp extends StatelessWidget {
       // way (widgetId is URL-encoded in the query); it takes over the
       // native WidgetBrowseActivity and the B13 home-block "more"
       // opening (see docs/b8-b18-widget.md).
-      onGenerateRoute: (RouteSettings settings) {
-        final String? name = settings.name;
-        if (name != null && name.startsWith('/widgets')) {
-          final Uri uri = Uri.parse(name);
-          final Map<String, String> params = uri.queryParameters;
-          return MaterialPageRoute<void>(
-            builder: (_) => B18BrowsePage(
-              widgetId: params['widgetId'] ?? '',
-            ),
-            settings: settings,
-          );
-        }
-        if (name != null && name.startsWith('/person')) {
-          final Uri uri = Uri.parse(name);
-          final Map<String, String> params = uri.queryParameters;
-          return MaterialPageRoute<void>(
-            builder: (_) => B17PersonPage(
-              personId: int.tryParse(params['personId'] ?? '') ?? 0,
-              name: params['name'] ?? '',
-              subtitle: params['subtitle'] ?? '',
-              profileUrl: params['profile'] ?? '',
-              department: params['department'] ?? '',
-              biography: params['biography'] ?? '',
-              siteKey: params['siteKey'] ?? '',
-              detailMode: int.tryParse(params['detailMode'] ?? '') ?? 0,
-            ),
-            settings: settings,
-          );
-        }
-        if (name != null && name.startsWith('/report')) {
-          final Uri uri = Uri.parse(name);
-          final Map<String, String> params = uri.queryParameters;
-          return MaterialPageRoute<void>(
-            builder: (_) => B16ReportPage(
-              initialRange: params['range'] ?? 'ALL',
-            ),
-            settings: settings,
-          );
-        }
-        if (name != null && name.startsWith('/local')) {
-          final Uri uri = Uri.parse(name);
-          final Map<String, String> params = uri.queryParameters;
-          return MaterialPageRoute<void>(
-            builder: (_) => B15LocalPage(
-              selectDir: params['selectDir'] == 'true',
-              readMode: params['readMode'] == 'true',
-            ),
-            settings: settings,
-          );
-        }
-        if (name != null && name.startsWith('/collect')) {
-          final Uri uri = Uri.parse(name);
-          final Map<String, String> params = uri.queryParameters;
-          return MaterialPageRoute<void>(
-            builder: (_) => B10CollectPage(
-              keyword: params['keyword'] ?? '',
-              currentSite: params['currentSite'] == 'true',
-              siteKey: params['siteKey'] ?? '',
-              group: params['group'] ?? '',
-              pic: params['pic'] ?? '',
-              wallPic: params['wallPic'] ?? '',
-              historyResumeCid:
-                  int.tryParse(params['hrCid'] ?? '') ?? -1,
-              historyResumeKey: params['hrKey'] ?? '',
-              historyResumeTargetCid:
-                  int.tryParse(params['hrTargetCid'] ?? '') ?? -1,
-            ),
-            settings: settings,
-          );
-        }
-        if (name != null && name.startsWith('/search')) {
-          final Uri uri = Uri.parse(name);
-          final Map<String, String> params = uri.queryParameters;
-          return MaterialPageRoute<void>(
-            builder: (_) => B9SearchPage(
-              keyword: params['keyword'] ?? '',
-              siteKey: params['siteKey'] ?? '',
-              pic: params['pic'] ?? '',
-              wallPic: params['wallPic'] ?? '',
-            ),
-            settings: settings,
-          );
-        }
-        if (name != null && name.startsWith('/category')) {
-          final Uri uri = Uri.parse(name);
-          final Map<String, String> params = uri.queryParameters;
-          return MaterialPageRoute<void>(
-            builder: (_) => B8CategoryPage(
-              siteKey: params['key'] ?? '',
-              typeId: params['typeId'] ?? '',
-              typeJson: params['type'] ?? '',
-              historyResumeCid:
-                  int.tryParse(params['hrCid'] ?? '') ?? -1,
-              historyResumeKey: params['hrKey'] ?? '',
-              historyResumeTargetCid:
-                  int.tryParse(params['hrTargetCid'] ?? '') ?? -1,
-            ),
-            settings: settings,
-          );
-        }
-        return null;
-      },
+      onGenerateRoute: _c0GenerateRoute,
     );
   }
 }

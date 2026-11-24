@@ -139,6 +139,13 @@ class _SettingsHomeViewState extends State<SettingsHomeView>
     _pendingRowHandled = true;
     final String rowId = info.pendingRowId;
     if (rowId.isEmpty) return;
+    // TEMP DEBUG (back-nav diagnosis, remove after).
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: const Duration(seconds: 1),
+        content: Text('PENDING perform $rowId'),
+      ));
+    } catch (_) {}
     final B7SettingsRow? row = _findRow(rowId);
     if (row == null) return;
     _onRowTap(row);
@@ -159,6 +166,13 @@ class _SettingsHomeViewState extends State<SettingsHomeView>
   void _drainHandoff() {
     final String? rowId = SettingsSearchRowHandoff.take();
     if (rowId == null || rowId.isEmpty) return;
+    // TEMP DEBUG (back-nav diagnosis, remove after).
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: const Duration(seconds: 1),
+        content: Text('HANDOFF perform $rowId'),
+      ));
+    } catch (_) {}
     final B7SettingsRow? row = _findRow(rowId);
     if (row == null) return;
     _onRowTap(row);

@@ -85,6 +85,14 @@ class _B3SettingsPageState extends State<B3SettingsPage> {
 
   void _handleBack() {
     final NavigatorState? navigator = _navigatorKey.currentState;
+    // TEMP DEBUG (back-nav diagnosis, remove after).
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: const Duration(seconds: 1),
+        content:
+            Text('B3 back canPop=${navigator?.canPop()} member=$_currentMember'),
+      ));
+    } catch (_) {}
     if (navigator != null && navigator.canPop()) {
       navigator.pop();
       return;

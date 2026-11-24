@@ -217,6 +217,14 @@ jobs:
           echo "flutter.sdk=$FLUTTER_ROOT" >> local.properties
           echo "Release signing configured"
 
+      - name: Verify decoded keystore (debug)
+        env:
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+        run: |
+          sha256sum app/signing/release.jks
+          keytool -list -keystore app/signing/release.jks -storepass "$RELEASE_STORE_PASSWORD" || true
+          keytool -list -keystore app/signing/release.jks -storetype JKS -storepass "$RELEASE_STORE_PASSWORD" || true
+
       - name: Build four release APKs
         env:
           WEBHTV_RELEASE_TAG: b8-c0-${{ github.run_number }}

@@ -217,6 +217,14 @@ class _B11HomePageState extends State<B11HomePage>
     try {
       final B11HomeScreen screen = await _b11Api.getHomeShell();
       if (!mounted) return;
+      // The wallpaper file path never changes when the wallpaper
+      // does (the host renders/downloads to fixed file names), and
+      // FileImage caches by path alone — without an evict the home
+      // keeps drawing the previously decoded wallpaper until the
+      // process dies, so wallpaper changes never showed up.
+      if (screen.wallpaperPath.isNotEmpty) {
+        await FileImage(File(screen.wallpaperPath)).evict();
+      }
       setState(() {
         _screen = screen;
         _error = null;

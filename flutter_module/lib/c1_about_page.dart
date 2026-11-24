@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/c1_messages.g.dart';
-import 'ui_glass.dart';
 
 /// B8 C1: Flutter version of the native About dialog (AboutDialog).
 ///
@@ -82,10 +81,6 @@ class _C1AboutPageState extends State<C1AboutPage> {
       },
       child: Scaffold(
       appBar: AppBar(
-        backgroundColor: glassButtonColor(
-          context,
-          Theme.of(context).colorScheme.surface,
-        ),
         title: Text(info?.title ?? ''),
       ),
       body: _error != null
@@ -108,13 +103,15 @@ class _C1AboutPageState extends State<C1AboutPage> {
                               ),
                             ),
                           ),
-                          GlassSurface(
+                          Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 5),
-                            solidColor: Theme.of(context)
-                                .colorScheme
-                                .primaryContainer,
-                            borderRadius: BorderRadius.circular(8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             child: Text(
                               info.badge,
                               style: TextStyle(
@@ -157,12 +154,6 @@ class _C1AboutPageState extends State<C1AboutPage> {
                             child: SizedBox(
                               height: 44,
                               child: FilledButton.tonal(
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: glassButtonColor(
-                                    context,
-                                    Theme.of(context).colorScheme.secondaryContainer,
-                                  ),
-                                ),
                                 onPressed: () => _api.checkUpdate(),
                                 child: Text(info.checkUpdateLabel),
                               ),
@@ -173,12 +164,6 @@ class _C1AboutPageState extends State<C1AboutPage> {
                             child: SizedBox(
                               height: 44,
                               child: FilledButton.tonal(
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: glassButtonColor(
-                                    context,
-                                    Theme.of(context).colorScheme.secondaryContainer,
-                                  ),
-                                ),
                                 onPressed: () => _api.openGithubProxy(),
                                 child: Text(info.githubProxyLabel),
                               ),
@@ -191,12 +176,6 @@ class _C1AboutPageState extends State<C1AboutPage> {
                         width: double.infinity,
                         height: 44,
                         child: FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: glassButtonColor(
-                              context,
-                              Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
                           onPressed: () => _api.closeScreen(),
                           child: Text(info.confirmLabel),
                         ),

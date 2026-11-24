@@ -2,7 +2,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b2_keep_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
-import 'ui_glass.dart';
 import 'widgets/vod_card.dart';
 
 /// B8 B2: Flutter version of the native mobile KeepActivity.
@@ -183,8 +182,6 @@ class _B2KeepPageState extends State<B2KeepPage>
       },
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          flexibleSpace: const GlassSurface(child: SizedBox.expand()),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _onBack,
@@ -270,12 +267,6 @@ class _EmptyView extends StatelessWidget {
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => B2HostApi().goHome(),
-              style: FilledButton.styleFrom(
-                backgroundColor: glassButtonColor(
-                  context,
-                  Theme.of(context).colorScheme.primary,
-                ),
-              ),
               child: Text(screen.emptyActionLabel),
             ),
           ],
@@ -321,12 +312,6 @@ class _LoadErrorView extends StatelessWidget {
             const SizedBox(height: 24),
             FilledButton(
               onPressed: onRetry,
-              style: FilledButton.styleFrom(
-                backgroundColor: glassButtonColor(
-                  context,
-                  Theme.of(context).colorScheme.primary,
-                ),
-              ),
               child: Text(result.retryLabel),
             ),
           ],

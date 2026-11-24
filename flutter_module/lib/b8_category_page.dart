@@ -4,7 +4,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b8_category_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
-import 'ui_glass.dart';
 import 'widgets/pic_image.dart';
 import 'widgets/vod_card.dart';
 
@@ -373,8 +372,6 @@ class _B8CategoryListViewState extends State<_B8CategoryListView>
         widget.titleOverride.isNotEmpty ? widget.titleOverride : _title;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        flexibleSpace: const GlassSurface(child: SizedBox.expand()),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: _onBack,
@@ -656,12 +653,6 @@ class _LoadErrorView extends StatelessWidget {
           const SizedBox(height: 24),
           FilledButton(
             onPressed: onRetry,
-            style: FilledButton.styleFrom(
-              backgroundColor: glassButtonColor(
-                context,
-                Theme.of(context).colorScheme.primary,
-              ),
-            ),
             child: Text(screen.retryLabel),
           ),
         ],
@@ -688,10 +679,11 @@ class _B8ListRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.all(8),
-      child: GlassSurface(
-        solidColor: Theme.of(context).colorScheme.surfaceContainer,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(8),
-        child: InkWell(
+      ),
+      child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(8),
@@ -743,7 +735,6 @@ class _B8ListRow extends StatelessWidget {
               ),
             ],
           ),
-        ),
         ),
       ),
     );

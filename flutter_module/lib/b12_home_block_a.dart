@@ -4,7 +4,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b12_home_a_messages.g.dart';
 import 'widgets/pic_image.dart';
-import 'ui_glass.dart';
 
 /// B8 B12: the mobile home blocks A (banner carousel + continue
 /// watching) as widgets inside the /home family (B11 page), not pages.
@@ -470,17 +469,17 @@ class _B12BlockPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: GlassSurface(
-        solidColor: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          height: height,
-          child: Center(
-            child: Icon(
-              icon,
-              size: 28,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Icon(
+            icon,
+            size: 28,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ),

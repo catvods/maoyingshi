@@ -1,6 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../ui_glass.dart';
 import 'pic_image.dart';
 
 /// B8 B2: shared Vod grid card (see docs/b8-full-migration-plan.md §4.3).
@@ -118,14 +117,16 @@ class VodCard extends StatelessWidget {
                           left: 0,
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 92),
-                            child: GlassSurface(
-                              solidColor: scheme.surfaceContainer,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(8),
-                                topRight: Radius.circular(8),
-                                bottomRight: Radius.circular(8),
-                              ),
+                            child: Container(
                               padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: scheme.surfaceContainer,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(8),
+                                  topRight: Radius.circular(8),
+                                  bottomRight: Radius.circular(8),
+                                ),
+                              ),
                               child: Text(
                                 siteName,
                                 style: TextStyle(
@@ -144,13 +145,15 @@ class VodCard extends StatelessWidget {
                           left: 0,
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 100),
-                            child: GlassSurface(
-                              solidColor: scheme.surfaceContainer,
-                              borderRadius: const BorderRadius.only(
-                                topRight: Radius.circular(4),
-                                bottomRight: Radius.circular(4),
-                              ),
+                            child: Container(
                               padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: scheme.surfaceContainer,
+                                borderRadius: const BorderRadius.only(
+                                  topRight: Radius.circular(4),
+                                  bottomRight: Radius.circular(4),
+                                ),
+                              ),
                               child: Text(
                                 playbackText!,
                                 style: TextStyle(
@@ -175,13 +178,12 @@ class VodCard extends StatelessWidget {
                       color: scheme.primary,
                     ),
                   ),
-                SizedBox(
+                Container(
                   height: infoHeight(twoLines: twoLines),
                   width: double.infinity,
-                  child: GlassSurface(
-                    solidColor: const Color(0x66000000),
-                    padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
-                    child: Column(
+                  color: const Color(0x66000000),
+                  padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
@@ -210,7 +212,6 @@ class VodCard extends StatelessWidget {
                         ),
                       ],
                     ],
-                  ),
                   ),
                 ),
               ],

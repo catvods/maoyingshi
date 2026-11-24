@@ -5,7 +5,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b19_plugin_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
-import 'ui_glass.dart';
 
 /// B8 B19: the mobile plugin manager page (native
 /// PluginManagerActivity, 1040 lines) as the literal `/plugins` route
@@ -233,10 +232,6 @@ class _B19PluginPageState extends State<B19PluginPage>
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setDialogState) {
             return AlertDialog(
-              backgroundColor: glassButtonColor(
-                context,
-                Theme.of(context).colorScheme.surfaceContainerHigh,
-              ),
               title: Text(shell.remoteTitle),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -277,12 +272,6 @@ class _B19PluginPageState extends State<B19PluginPage>
                   child: Text(shell.cancelLabel),
                 ),
                 FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: glassButtonColor(
-                      context,
-                      Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
                   onPressed: () async {
                     final String url = input.text.trim();
                     final B19RemoteResolve resolved =
@@ -352,10 +341,6 @@ class _B19PluginPageState extends State<B19PluginPage>
             final bool allChecked =
                 checked.length == index.candidates.length;
             return AlertDialog(
-              backgroundColor: glassButtonColor(
-                context,
-                Theme.of(context).colorScheme.surfaceContainerHigh,
-              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -432,12 +417,6 @@ class _B19PluginPageState extends State<B19PluginPage>
                   child: Text(shell.cancelLabel),
                 ),
                 FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: glassButtonColor(
-                      context,
-                      Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
                   onPressed: checked.isEmpty
                       ? null
                       : () => Navigator.of(context).pop(
@@ -465,10 +444,6 @@ class _B19PluginPageState extends State<B19PluginPage>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: glassButtonColor(
-            context,
-            Theme.of(context).colorScheme.surfaceContainerHigh,
-          ),
           title: Text(confirm.title),
           content: SingleChildScrollView(
             child: Column(
@@ -495,12 +470,6 @@ class _B19PluginPageState extends State<B19PluginPage>
               child: Text(confirm.cancelLabel),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: glassButtonColor(
-                  context,
-                  Theme.of(context).colorScheme.primary,
-                ),
-              ),
               onPressed: () => Navigator.of(context).pop(true),
               child: Text(confirm.installLabel),
             ),
@@ -520,10 +489,6 @@ class _B19PluginPageState extends State<B19PluginPage>
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              backgroundColor: glassButtonColor(
-                context,
-                Theme.of(context).colorScheme.surfaceContainerHigh,
-              ),
               title: Text(screen.remoteResultTitle),
               content: SingleChildScrollView(
                 child: Text(screen.remoteResultLines.join('\n')),
@@ -568,10 +533,6 @@ class _B19PluginPageState extends State<B19PluginPage>
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setDialogState) {
             return AlertDialog(
-              backgroundColor: glassButtonColor(
-                context,
-                Theme.of(context).colorScheme.surfaceContainerHigh,
-              ),
               title: Text(params.title),
               content: TextField(
                 controller: input,
@@ -589,12 +550,6 @@ class _B19PluginPageState extends State<B19PluginPage>
                   child: Text(params.cancelLabel),
                 ),
                 FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: glassButtonColor(
-                      context,
-                      Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
                   onPressed: () async {
                     final B19PluginScreen screen =
                         await _api.savePluginParams(
@@ -638,10 +593,6 @@ class _B19PluginPageState extends State<B19PluginPage>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: glassButtonColor(
-            context,
-            Theme.of(context).colorScheme.surfaceContainerHigh,
-          ),
           title: Text(confirm.title),
           content: Text(confirm.messageText),
           actions: [
@@ -650,12 +601,6 @@ class _B19PluginPageState extends State<B19PluginPage>
               child: Text(confirm.cancelLabel),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: glassButtonColor(
-                  context,
-                  Theme.of(context).colorScheme.primary,
-                ),
-              ),
               onPressed: () => Navigator.of(context).pop(true),
               child: Text(confirm.deleteLabel),
             ),
@@ -702,10 +647,6 @@ class _B19PluginPageState extends State<B19PluginPage>
       },
       child: Scaffold(
       appBar: AppBar(
-        backgroundColor: glassButtonColor(
-          context,
-          Theme.of(context).colorScheme.surface,
-        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: _onBack,
@@ -728,12 +669,6 @@ class _B19PluginPageState extends State<B19PluginPage>
               children: [
                 Expanded(
                   child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: glassButtonColor(
-                        context,
-                        Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
                     onPressed: _busy ? null : _importFromDirectory,
                     child: Text(shell?.importLabel ?? ''),
                   ),
@@ -776,12 +711,6 @@ class _B19PluginPageState extends State<B19PluginPage>
               Text(_errorText!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
               FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: glassButtonColor(
-                    context,
-                    Theme.of(context).colorScheme.primary,
-                  ),
-                ),
                 onPressed: _refresh,
                 child: Text(_shell?.retryLabel ?? ''),
               ),
@@ -800,12 +729,6 @@ class _B19PluginPageState extends State<B19PluginPage>
               Text(_emptyText, textAlign: TextAlign.center),
               const SizedBox(height: 16),
               FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: glassButtonColor(
-                    context,
-                    Theme.of(context).colorScheme.primary,
-                  ),
-                ),
                 onPressed: _busy ? null : _importFromDirectory,
                 child: Text(_shell?.emptyImportLabel ?? ''),
               ),

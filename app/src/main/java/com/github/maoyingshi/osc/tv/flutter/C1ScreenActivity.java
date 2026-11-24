@@ -857,6 +857,12 @@ public class C1ScreenActivity extends AppCompatActivity {
         map.put("glassDistortionDp", Setting.getGlassDistortion());
         map.put("glassTranslucency", Setting.getGlassTranslucency());
         map.put("glassDispersion", Setting.isGlassDispersion());
+        // Resolve from the saved profile at query time, exactly as
+        // native screens do on create: this Activity never applies a
+        // theme itself, so the cached current() would otherwise serve
+        // stale (or default) tokens and the theme-color editor would
+        // appear to change nothing in the Flutter UI.
+        ThemeController.applyFromPreferences(this);
         ThemeTokens tokens = ThemeController.current();
         map.put("darkMode", ThemeController.isNight(this));
         map.put("primary", tokens.colorPrimary());

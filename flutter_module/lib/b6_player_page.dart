@@ -5,7 +5,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b6_player_messages.g.dart';
 import 'widgets/settings_row.dart';
-import 'ui_glass.dart';
 
 /// B8 B6: Flutter version of the mobile player settings page
 /// (SettingPlayerFragment), hosted as a member of the `/settings`
@@ -375,10 +374,6 @@ mixin _B6MemberState<T extends StatefulWidget> on State<T>
   Widget loadingScaffold({required String title, required VoidCallback onBack}) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: glassButtonColor(
-          context,
-          Theme.of(context).colorScheme.surface,
-        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,
@@ -396,10 +391,6 @@ mixin _B6MemberState<T extends StatefulWidget> on State<T>
   }) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: glassButtonColor(
-          context,
-          Theme.of(context).colorScheme.surface,
-        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,
@@ -417,10 +408,6 @@ mixin _B6MemberState<T extends StatefulWidget> on State<T>
   }) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: glassButtonColor(
-          context,
-          Theme.of(context).colorScheme.surface,
-        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,

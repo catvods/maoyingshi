@@ -8,7 +8,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b21_lab_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
-import 'ui_glass.dart';
 
 /// B8 B21: the mobile lab list + detail pages (native LabActivity,
 /// 940 lines, + LabDetailActivity, 435 lines) as the `/lab` family
@@ -543,10 +542,6 @@ class _B21LabListViewState extends State<_B21LabListView>
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setDialogState) {
             return AlertDialog(
-              backgroundColor: glassButtonColor(
-                context,
-                Theme.of(context).colorScheme.surfaceContainerHigh,
-              ),
               title: Text(shell.importTitle),
               content: SingleChildScrollView(
                 child: Column(
@@ -586,12 +581,6 @@ class _B21LabListViewState extends State<_B21LabListView>
                   child: Text(shell.cancelLabel),
                 ),
                 FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: glassButtonColor(
-                      context,
-                      Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
                   onPressed: () async {
                     final B21LabImportDecode decoded =
                         await _api.decodeLabImport(input.text);
@@ -686,10 +675,6 @@ class _B21LabListViewState extends State<_B21LabListView>
             });
             final bool isUrl = source == 1;
             return AlertDialog(
-              backgroundColor: glassButtonColor(
-                context,
-                Theme.of(context).colorScheme.surfaceContainerHigh,
-              ),
               title: Text(settings.title),
               content: SingleChildScrollView(
                 child: Column(
@@ -797,12 +782,6 @@ class _B21LabListViewState extends State<_B21LabListView>
                   child: Text(settings.cancelLabel),
                 ),
                 FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: glassButtonColor(
-                      context,
-                      Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
                   onPressed: () async {
                     final int port = int.tryParse(
                             proxyPortController.text.trim()) ??
@@ -850,10 +829,6 @@ class _B21LabListViewState extends State<_B21LabListView>
     if (_groups.isEmpty) return;
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: glassButtonColor(
-        context,
-        Theme.of(context).colorScheme.surfaceContainerLow,
-      ),
       builder: (BuildContext context) {
         return ListView(
           shrinkWrap: true,
@@ -971,12 +946,6 @@ class _B21LabListViewState extends State<_B21LabListView>
             Text(_errorText!),
             const SizedBox(height: 12),
             FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: glassButtonColor(
-                  context,
-                  Theme.of(context).colorScheme.primary,
-                ),
-              ),
               onPressed: _reload,
               child: Text(shell?.retryLabel ?? ''),
             ),
@@ -1040,10 +1009,6 @@ class _B21LabListViewState extends State<_B21LabListView>
                     horizontal: 12,
                     vertical: 6,
                   ),
-                  color: glassButtonColor(
-                    context,
-                    Theme.of(context).colorScheme.surfaceContainerLow,
-                  ),
                   child: ListTile(
                     leading: _packageIcon(package.iconUrl),
                     title: Text(package.titleText),
@@ -1086,10 +1051,6 @@ class _B21LabListViewState extends State<_B21LabListView>
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: glassButtonColor(
-          context,
-          Theme.of(context).colorScheme.surface,
-        ),
         title: Text(title),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -1181,10 +1142,6 @@ class _B21LabListViewState extends State<_B21LabListView>
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: glassButtonColor(
-          context,
-          Theme.of(context).colorScheme.primaryContainer,
-        ),
         tooltip: shell?.switchGroupLabel,
         onPressed: _showGroupSheet,
         child: const Icon(Icons.tune),
@@ -1454,10 +1411,6 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
               } catch (_) {}
             });
             return AlertDialog(
-              backgroundColor: glassButtonColor(
-                context,
-                Theme.of(context).colorScheme.surfaceContainerHigh,
-              ),
               title: Text(form.title),
               content: SingleChildScrollView(
                 child: Column(
@@ -1543,12 +1496,6 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
                   child: Text(form.cancelLabel),
                 ),
                 FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: glassButtonColor(
-                      context,
-                      Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
                   onPressed: () async {
                     final List<B21LabSettingValue> values =
                         form.rows.map((B21LabSettingRow row) {
@@ -1637,12 +1584,6 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
             Text(_errorText!),
             const SizedBox(height: 12),
             FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: glassButtonColor(
-                  context,
-                  Theme.of(context).colorScheme.primary,
-                ),
-              ),
               onPressed: _refresh,
               child: Text(shell?.retryLabel ?? ''),
             ),
@@ -1690,12 +1631,6 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: glassButtonColor(
-                      context,
-                      Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
                   onPressed: _download,
                   child: Text(detail.downloadLabel),
                 ),
@@ -1751,10 +1686,6 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
               ...detail.commands.map((B21LabCommand command) {
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 4),
-                  color: glassButtonColor(
-                    context,
-                    Theme.of(context).colorScheme.surfaceContainerLow,
-                  ),
                   child: ListTile(
                     leading: Container(
                       width: 10,
@@ -1771,12 +1702,6 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
                         ? Text(shell?.terminalLabel ?? '')
                         : null,
                     trailing: FilledButton.tonal(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: glassButtonColor(
-                          context,
-                          Theme.of(context).colorScheme.secondaryContainer,
-                        ),
-                      ),
                       onPressed: () => _toggleCommand(command),
                       child: Text(command.actionLabel),
                     ),
@@ -1792,10 +1717,6 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: glassButtonColor(
-          context,
-          Theme.of(context).colorScheme.surface,
-        ),
         title: Text(detail?.title ?? widget.name),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),

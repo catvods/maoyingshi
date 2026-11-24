@@ -5,7 +5,6 @@ import 'package:flutter/services.dart' show PredictiveBackEvent;
 import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b4_enhance_messages.g.dart';
-import 'ui_glass.dart';
 import 'widgets/settings_row.dart';
 
 /// B8 B4: Flutter version of the mobile enhance settings page
@@ -405,11 +404,6 @@ mixin _B4MemberState<T extends StatefulWidget> on State<T>
   Widget loadingScaffold({required String title, required VoidCallback onBack}) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        flexibleSpace: const GlassSurface(
-          showRim: false,
-          child: SizedBox.expand(),
-        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,
@@ -427,11 +421,6 @@ mixin _B4MemberState<T extends StatefulWidget> on State<T>
   }) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        flexibleSpace: const GlassSurface(
-          showRim: false,
-          child: SizedBox.expand(),
-        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,
@@ -450,11 +439,6 @@ mixin _B4MemberState<T extends StatefulWidget> on State<T>
   }) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        flexibleSpace: const GlassSurface(
-          showRim: false,
-          child: SizedBox.expand(),
-        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,

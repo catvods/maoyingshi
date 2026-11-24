@@ -4,7 +4,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/c1_messages.g.dart';
 import 'pigeon/c2_messages.g.dart';
-import 'ui_glass.dart';
 
 /// B8 C2: Flutter version of the native mobile HistoryActivity.
 ///
@@ -134,8 +133,6 @@ class _C2HistoryPageState extends State<C2HistoryPage>
       },
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          flexibleSpace: const GlassSurface(child: SizedBox.expand()),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _onBack,
@@ -212,12 +209,6 @@ class _EmptyView extends StatelessWidget {
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => C2HostApi().goHome(),
-              style: FilledButton.styleFrom(
-                backgroundColor: glassButtonColor(
-                  context,
-                  Theme.of(context).colorScheme.primary,
-                ),
-              ),
               child: Text(screen.emptyActionLabel),
             ),
           ],
@@ -331,14 +322,16 @@ class _HistoryCard extends StatelessWidget {
                           left: 0,
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 92),
-                            child: GlassSurface(
-                              solidColor: scheme.surfaceContainer,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(8),
-                                topRight: Radius.circular(8),
-                                bottomRight: Radius.circular(8),
-                              ),
+                            child: Container(
                               padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: scheme.surfaceContainer,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(8),
+                                  topRight: Radius.circular(8),
+                                  bottomRight: Radius.circular(8),
+                                ),
+                              ),
                               child: Text(
                                 item.siteName,
                                 style: TextStyle(
@@ -357,13 +350,15 @@ class _HistoryCard extends StatelessWidget {
                           left: 0,
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 100),
-                            child: GlassSurface(
-                              solidColor: scheme.surfaceContainer,
-                              borderRadius: const BorderRadius.only(
-                                topRight: Radius.circular(4),
-                                bottomRight: Radius.circular(4),
-                              ),
+                            child: Container(
                               padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: scheme.surfaceContainer,
+                                borderRadius: const BorderRadius.only(
+                                  topRight: Radius.circular(4),
+                                  bottomRight: Radius.circular(4),
+                                ),
+                              ),
                               child: Text(
                                 item.playbackText,
                                 style: TextStyle(
@@ -387,13 +382,12 @@ class _HistoryCard extends StatelessWidget {
                     color: scheme.primary,
                   ),
                 ),
-                SizedBox(
+                Container(
                   height: infoHeight,
                   width: double.infinity,
-                  child: GlassSurface(
-                    solidColor: const Color(0x66000000),
-                    padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
-                    child: Column(
+                  color: const Color(0x66000000),
+                  padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
@@ -420,7 +414,6 @@ class _HistoryCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                  ),
                   ),
                 ),
               ],

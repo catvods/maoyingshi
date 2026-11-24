@@ -659,6 +659,7 @@ public class B3HostApiImpl implements B3Messages.B3HostApi {
 
     @Override
     public void closeScreen() {
+        C1ScreenActivity.dbgToast(activity, "closeScreen B3");
         // B8 back stack (docs/b8-back-stack-fix.md): the settings
         // family's root-back signal delegates to the one host handler
         // (pop, return home, or background). The previous unconditional

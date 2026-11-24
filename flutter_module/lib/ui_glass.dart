@@ -1,7 +1,7 @@
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Global UI configuration shared by every Flutter screen in the app:
 /// the liquid-glass parameters and the user's theme colors.

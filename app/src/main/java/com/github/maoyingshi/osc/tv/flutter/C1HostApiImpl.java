@@ -137,6 +137,7 @@ public class C1HostApiImpl implements C1Messages.C1HostApi {
 
     @Override
     public void closeScreen() {
+        C1ScreenActivity.dbgToast(activity, "closeScreen C1");
         // B8 delete-native phase 3 (plan §2.5, D1): every Flutter page
         // calls this when its navigator cannot pop (the root-back
         // signal — no new MethodChannel signal was needed, this Pigeon

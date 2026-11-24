@@ -123,6 +123,14 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
     @Override
     public B7Messages.B7SettingsHome getSettingsHome() {
         consumePendingRow();
+        // One-shot delivery: the drained row goes out with this one
+        // snapshot and is then cleared. Leaving it on the instance
+        // re-delivered it with every later snapshot, and any rebuilt
+        // settings-home view (fresh Dart state, gate reset) performed
+        // the row again — e.g. backing out of Settings resurrected
+        // the TMDB member page long after the search deep link.
+        String rowToSend = pendingRowId;
+        pendingRowId = "";
         maybeComputeCacheText();
         List<B7Messages.B7SettingsGroup> groups = new ArrayList<>();
         groups.add(siteGroup());
@@ -143,7 +151,7 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
                 .setDownloadGroups(downloadGroups())
                 .setDownloadsActive(downloadsActive())
                 .setCacheScanning(cacheComputing)
-                .setPendingRowId(pendingRowId)
+                .setPendingRowId(rowToSend)
                 .build();
     }
 

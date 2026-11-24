@@ -53,6 +53,13 @@ class _B21LabPageState extends State<B21LabPage> {
 
   void _handleBack() {
     final NavigatorState? navigator = _navigatorKey.currentState;
+    // TEMP DEBUG (back-nav diagnosis, remove after).
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: const Duration(seconds: 1),
+        content: Text('B21 back canPop=${navigator?.canPop()}'),
+      ));
+    } catch (_) {}
     if (navigator != null && navigator.canPop()) {
       navigator.pop();
       return;

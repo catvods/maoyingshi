@@ -302,7 +302,7 @@ class C0ShellApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mooyingshi C0',
+      title: '陌奥影视',
       // B8 relaunch: the root navigator key lets the host-driven
       // showRoute handler reset the route stack on engine reuse.
       navigatorKey: _rootNavigatorKey,

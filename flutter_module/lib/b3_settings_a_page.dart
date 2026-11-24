@@ -9,6 +9,7 @@ import 'b5_personal_page.dart';
 import 'b6_player_page.dart';
 import 'b7_settings_home_page.dart';
 import 'pigeon/b3_settings_a_messages.g.dart';
+import 'ui_glass.dart';
 import 'widgets/settings_row.dart';
 
 /// B8 B3: Flutter version of the four mobile sub-settings pages in the
@@ -85,14 +86,6 @@ class _B3SettingsPageState extends State<B3SettingsPage> {
 
   void _handleBack() {
     final NavigatorState? navigator = _navigatorKey.currentState;
-    // TEMP DEBUG (back-nav diagnosis, remove after).
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        duration: const Duration(seconds: 1),
-        content:
-            Text('B3 back canPop=${navigator?.canPop()} member=$_currentMember'),
-      ));
-    } catch (_) {}
     if (navigator != null && navigator.canPop()) {
       navigator.pop();
       return;
@@ -110,6 +103,63 @@ class _B3SettingsPageState extends State<B3SettingsPage> {
     _api.closeScreen();
   }
 
+  /// Builds one member route. The caller's [RouteSettings] are kept
+  /// on the route: [_MemberObserver] reads route names to track the
+  /// current member, and a route built without settings has a null
+  /// name, which left the member frozen at its initState value and
+  /// sent depth-1 member backs straight to the host (skipping the
+  /// settings home).
+  Route<dynamic> _generateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/home':
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => SettingsHomeView(onBack: _handleBack),
+        );
+      case '/ai':
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => _AiSettingsView(onBack: _handleBack),
+        );
+      case '/ad':
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => _AdSettingsView(onBack: _handleBack),
+        );
+      case '/danmaku':
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => _DanmakuSettingsView(onBack: _handleBack),
+        );
+      case '/enhance':
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => EnhanceSettingsView(onBack: _handleBack),
+        );
+      case '/personal':
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => PersonalSettingsView(onBack: _handleBack),
+        );
+      case '/search':
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => SettingSearchView(onBack: _handleBack),
+        );
+      case '/player':
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => PlayerSettingsView(onBack: _handleBack),
+        );
+      case '/tmdb':
+      default:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => _TmdbSettingsView(onBack: _handleBack),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final String initial =
@@ -123,53 +173,23 @@ class _B3SettingsPageState extends State<B3SettingsPage> {
       child: Navigator(
         key: _navigatorKey,
         initialRoute: initial,
+        // Exactly one initial route. The framework's default initial
+        // routes split the initial route into its prefixes and push
+        // them all ('/tmdb' becomes '/' + '/tmdb'); the '/' route
+        // lands in the generator's default branch, which builds the
+        // TMDB view — so a phantom twin sat under every directly
+        // entered member, the first back press popped onto the
+        // identical twin (nothing visibly happened), and the member
+        // observer could not tell the stack apart either.
+        onGenerateInitialRoutes:
+            (NavigatorState navigator, String routeName) =>
+                <Route<dynamic>>[
+          _generateRoute(RouteSettings(name: routeName)),
+        ],
         observers: <NavigatorObserver>[
           _MemberObserver((String member) => _currentMember = member),
         ],
-        onGenerateRoute: (RouteSettings settings) {
-          switch (settings.name) {
-            case '/home':
-              return MaterialPageRoute(
-                builder: (_) => SettingsHomeView(onBack: _handleBack),
-              );
-            case '/tmdb':
-              return MaterialPageRoute(
-                builder: (_) => _TmdbSettingsView(onBack: _handleBack),
-              );
-            case '/ai':
-              return MaterialPageRoute(
-                builder: (_) => _AiSettingsView(onBack: _handleBack),
-              );
-            case '/ad':
-              return MaterialPageRoute(
-                builder: (_) => _AdSettingsView(onBack: _handleBack),
-              );
-            case '/danmaku':
-              return MaterialPageRoute(
-                builder: (_) => _DanmakuSettingsView(onBack: _handleBack),
-              );
-            case '/enhance':
-              return MaterialPageRoute(
-                builder: (_) => EnhanceSettingsView(onBack: _handleBack),
-              );
-            case '/personal':
-              return MaterialPageRoute(
-                builder: (_) => PersonalSettingsView(onBack: _handleBack),
-              );
-            case '/search':
-              return MaterialPageRoute(
-                builder: (_) => SettingSearchView(onBack: _handleBack),
-              );
-            case '/player':
-              return MaterialPageRoute(
-                builder: (_) => PlayerSettingsView(onBack: _handleBack),
-              );
-            default:
-              return MaterialPageRoute(
-                builder: (_) => _TmdbSettingsView(onBack: _handleBack),
-              );
-          }
-        },
+        onGenerateRoute: _generateRoute,
       ),
     );
   }
@@ -319,6 +339,11 @@ mixin _B3MemberState<T extends StatefulWidget> on State<T>
   Widget loadingScaffold({required String title, required VoidCallback onBack}) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const GlassSurface(
+          showRim: false,
+          child: SizedBox.expand(),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,
@@ -336,6 +361,11 @@ mixin _B3MemberState<T extends StatefulWidget> on State<T>
   }) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const GlassSurface(
+          showRim: false,
+          child: SizedBox.expand(),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,
@@ -353,6 +383,11 @@ mixin _B3MemberState<T extends StatefulWidget> on State<T>
   }) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const GlassSurface(
+          showRim: false,
+          child: SizedBox.expand(),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,

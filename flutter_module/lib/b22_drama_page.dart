@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b22_drama_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
+import 'ui_glass.dart';
 import 'widgets/pic_image.dart';
 
 /// B8 B22: the short-drama theater grid and history list (scheme B, see
@@ -144,7 +145,7 @@ class _B22TheaterPageState extends State<B22TheaterPage>
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
-          backgroundColor: Colors.black,
+          backgroundColor: glassButtonColor(context, Colors.black),
           foregroundColor: Colors.white,
           title: Text(screen?.title ?? ''),
           leading: const IconButton(
@@ -198,6 +199,12 @@ class _B22TheaterPageState extends State<B22TheaterPage>
               ),
               const SizedBox(height: 16),
               FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: glassButtonColor(
+                    context,
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
                 onPressed: _load,
                 child: Text(screen.retryLabel),
               ),
@@ -374,7 +381,7 @@ class _B22HistoryPageState extends State<B22HistoryPage>
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
-          backgroundColor: Colors.black,
+          backgroundColor: glassButtonColor(context, Colors.black),
           foregroundColor: Colors.white,
           title: Text(screen?.title ?? ''),
           leading: const IconButton(

@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b10_collect_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
+import 'ui_glass.dart';
 import 'widgets/pic_image.dart';
 import 'widgets/vod_card.dart';
 
@@ -310,6 +311,8 @@ class _B10CollectPageState extends State<B10CollectPage>
       },
       child: Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          flexibleSpace: const GlassSurface(child: SizedBox.expand()),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _onBack,
@@ -579,13 +582,12 @@ class _SourceRow extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: Container(
         margin: const EdgeInsets.all(8),
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainer,
+        child: GlassSurface(
+          solidColor: scheme.surfaceContainer,
           borderRadius: BorderRadius.circular(8),
+          padding: const EdgeInsets.all(8),
+          child: Center(child: label),
         ),
-        alignment: Alignment.center,
-        child: label,
       ),
     );
   }
@@ -610,11 +612,10 @@ class _B10ListRow extends StatelessWidget {
     return Container(
       height: 128,
       margin: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainer,
+      child: GlassSurface(
+        solidColor: scheme.surfaceContainer,
         borderRadius: BorderRadius.circular(8),
-      ),
-      child: InkWell(
+        child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: Row(
@@ -645,16 +646,14 @@ class _B10ListRow extends StatelessWidget {
                       left: 0,
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 90),
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: scheme.surfaceContainer,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(8),
-                              topRight: Radius.circular(8),
-                              bottomRight: Radius.circular(8),
-                            ),
+                        child: GlassSurface(
+                          solidColor: scheme.surfaceContainer,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            topRight: Radius.circular(8),
+                            bottomRight: Radius.circular(8),
                           ),
+                          padding: const EdgeInsets.all(4),
                           child: Text(
                             item.siteName,
                             style: TextStyle(
@@ -699,6 +698,7 @@ class _B10ListRow extends StatelessWidget {
             ),
           ],
         ),
+        ),
       ),
     );
   }
@@ -736,6 +736,12 @@ class _LoadErrorView extends StatelessWidget {
           const SizedBox(height: 24),
           FilledButton(
             onPressed: onRetry,
+            style: FilledButton.styleFrom(
+              backgroundColor: glassButtonColor(
+                context,
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
             child: Text(screen.retryLabel),
           ),
         ],

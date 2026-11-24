@@ -5,6 +5,7 @@ import 'package:flutter/services.dart' show PredictiveBackEvent;
 import 'package:material_ui/material_ui.dart';
 
 import 'b7_settings_home_page.dart';
+import 'ui_glass.dart';
 import 'pigeon/b5_personal_messages.g.dart';
 import 'widgets/settings_row.dart';
 
@@ -59,6 +60,10 @@ class _PersonalSettingsViewState extends State<PersonalSettingsView>
 
   @override
   Future<void> load() async {
+    // This page owns the liquid-glass rows; every reload follows a
+    // possible glass/theme change, so refresh the global UI config
+    // alongside (fire-and-forget; it never throws).
+    loadUiConfig();
     try {
       final B5PersonalSettings info = await api.getPersonalSettings();
       if (!mounted) return;

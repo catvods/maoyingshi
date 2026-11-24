@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b20_hk_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
+import 'ui_glass.dart';
 
 /// B8 B20: the mobile Hk miniapp manager page (native
 /// HkMiniappActivity, 321 lines Kotlin) as the literal `/hk-manager`
@@ -205,6 +206,10 @@ class _B20HkPageState extends State<B20HkPage> with WidgetsBindingObserver {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: glassButtonColor(
+            context,
+            Theme.of(context).colorScheme.surfaceContainerHigh,
+          ),
           title: Text(shell.pickTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -290,6 +295,10 @@ class _B20HkPageState extends State<B20HkPage> with WidgetsBindingObserver {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setDialogState) {
             return AlertDialog(
+              backgroundColor: glassButtonColor(
+                context,
+                Theme.of(context).colorScheme.surfaceContainerHigh,
+              ),
               title: Text(shell.pasteTitle),
               content: TextField(
                 controller: input,
@@ -308,6 +317,12 @@ class _B20HkPageState extends State<B20HkPage> with WidgetsBindingObserver {
                   child: Text(shell.cancelLabel),
                 ),
                 FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: glassButtonColor(
+                      context,
+                      Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                   onPressed: () async {
                     final B20HkScreen screen = await _api.importPasteJson(
                       input.text,
@@ -357,6 +372,10 @@ class _B20HkPageState extends State<B20HkPage> with WidgetsBindingObserver {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setDialogState) {
             return AlertDialog(
+              backgroundColor: glassButtonColor(
+                context,
+                Theme.of(context).colorScheme.surfaceContainerHigh,
+              ),
               title: Text(shell.cloudTitle),
               content: SingleChildScrollView(
                 child: Column(
@@ -388,6 +407,12 @@ class _B20HkPageState extends State<B20HkPage> with WidgetsBindingObserver {
                   child: Text(shell.cancelLabel),
                 ),
                 FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: glassButtonColor(
+                      context,
+                      Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                   onPressed: () async {
                     final B20HkScreen screen = await _api.importCloudCodes(
                       input.text,
@@ -443,6 +468,10 @@ class _B20HkPageState extends State<B20HkPage> with WidgetsBindingObserver {
       },
       child: Scaffold(
       appBar: AppBar(
+        backgroundColor: glassButtonColor(
+          context,
+          Theme.of(context).colorScheme.surface,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: _onBack,
@@ -519,6 +548,12 @@ class _B20HkPageState extends State<B20HkPage> with WidgetsBindingObserver {
               Text(_errorText!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
               FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: glassButtonColor(
+                    context,
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
                 onPressed: _refresh,
                 child: Text(_shell?.retryLabel ?? ''),
               ),

@@ -31,6 +31,8 @@ import com.github.maoyingshi.osc.tv.player.Source;
 import com.github.maoyingshi.osc.tv.server.Server;
 import com.github.maoyingshi.osc.tv.setting.AutoBackupPolicy;
 import com.github.maoyingshi.osc.tv.setting.Setting;
+import com.github.maoyingshi.osc.tv.theme.ThemeController;
+import com.github.maoyingshi.osc.tv.theme.ThemeTokens;
 import com.github.maoyingshi.osc.tv.utils.CrashRestartMode;
 import com.github.maoyingshi.osc.tv.utils.FileChooser;
 import com.github.maoyingshi.osc.tv.utils.Notify;
@@ -53,6 +55,8 @@ import io.flutter.plugin.common.StandardMethodCodec;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -200,6 +204,17 @@ public class C1ScreenActivity extends AppCompatActivity {
      */
     private static final String RELAUNCH_CHANNEL = "com.github.maoyingshi.osc.tv/c1_relaunch";
     private static final String RELAUNCH_METHOD_SHOW_ROUTE = "showRoute";
+
+    /**
+     * Global UI configuration channel: Dart pulls the liquid-glass
+     * parameters (Setting) and the current theme colors
+     * (ThemeController) over this raw channel so every Flutter screen
+     * shares them. Before this existed only the home screen received
+     * the glass parameters (in its B11 snapshot) and the Flutter theme
+     * was a hard-coded seed color, so the glass switch governed one
+     * screen and the theme-color editor changed nothing in Flutter.
+     */
+    private static final String UI_CONFIG_CHANNEL = "com.github.maoyingshi.osc.tv/ui_config";
 
     /**
      * B8 relaunch mechanism: live C1ScreenActivity instances. The cached
@@ -407,8 +422,6 @@ public class C1ScreenActivity extends AppCompatActivity {
         if (sRouteHistory.isEmpty()) {
             recordSwitch(mRoute);
         }
-        dbgToast(this, "CREATE route=" + mRoute + " taskRoot=" + isTaskRoot()
-                + " reused=" + engineReused);
         // Before super.onCreate(): the FragmentManager restores the
         // FlutterFragment during super.onCreate() after process death, and
         // the fragment looks the cached engine up by ID at that point.
@@ -717,6 +730,13 @@ public class C1ScreenActivity extends AppCompatActivity {
         // reads it via C1HostApi.getInitialRoute() only when the isolate
         // starts, so a rebind's fresh route value is harmless.
         C1Messages.C1HostApi.setUp(messenger, new C1HostApiImpl(this, mRoute));
+        // Global UI config (glass + theme colors) for every Dart
+        // screen; re-registered on every rebind like the Pigeon APIs
+        // above, so the handler always reads through this Activity.
+        new MethodChannel(messenger, UI_CONFIG_CHANNEL).setMethodCallHandler((call, result) -> {
+            if ("getUiConfig".equals(call.method)) result.success(buildUiConfig());
+            else result.notImplemented();
+        });
         // B8 C2: the history screen shares this engine, so register
         // C2HostApi too. See docs/b8-c2-history.md.
         C2Messages.C2HostApi.setUp(messenger, new C2HostApiImpl(this));
@@ -825,6 +845,55 @@ public class C1ScreenActivity extends AppCompatActivity {
     }
 
     /**
+     * The global UI configuration served on {@link #UI_CONFIG_CHANNEL}:
+     * the liquid-glass parameters from {@link Setting} and the full
+     * Material role set of the current {@link ThemeTokens}, so Dart can
+     * build its ColorScheme from the same theme the native UI uses.
+     */
+    private Map<String, Object> buildUiConfig() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("glassEnabled", Setting.isLiquidGlass());
+        map.put("glassBlurDp", Setting.getGlassBlur());
+        map.put("glassDistortionDp", Setting.getGlassDistortion());
+        map.put("glassTranslucency", Setting.getGlassTranslucency());
+        map.put("glassDispersion", Setting.isGlassDispersion());
+        ThemeTokens tokens = ThemeController.current();
+        map.put("darkMode", ThemeController.isNight(this));
+        map.put("primary", tokens.colorPrimary());
+        map.put("onPrimary", tokens.colorOnPrimary());
+        map.put("primaryContainer", tokens.colorPrimaryContainer());
+        map.put("onPrimaryContainer", tokens.colorOnPrimaryContainer());
+        map.put("secondary", tokens.colorSecondary());
+        map.put("onSecondary", tokens.colorOnSecondary());
+        map.put("secondaryContainer", tokens.colorSecondaryContainer());
+        map.put("onSecondaryContainer", tokens.colorOnSecondaryContainer());
+        map.put("tertiary", tokens.colorTertiary());
+        map.put("onTertiary", tokens.colorOnTertiary());
+        map.put("error", tokens.colorError());
+        map.put("onError", tokens.colorOnError());
+        map.put("errorContainer", tokens.colorErrorContainer());
+        map.put("onErrorContainer", tokens.colorOnErrorContainer());
+        map.put("surface", tokens.colorSurface());
+        map.put("onSurface", tokens.colorOnSurface());
+        map.put("onSurfaceVariant", tokens.colorOnSurfaceVariant());
+        map.put("outline", tokens.colorOutline());
+        map.put("outlineVariant", tokens.colorOutlineVariant());
+        map.put("surfaceContainerLowest", tokens.colorSurfaceContainerLowest());
+        map.put("surfaceContainerLow", tokens.colorSurfaceContainerLow());
+        map.put("surfaceContainer", tokens.colorSurfaceContainer());
+        map.put("surfaceContainerHigh", tokens.colorSurfaceContainerHigh());
+        map.put("surfaceContainerHighest", tokens.colorSurfaceContainerHighest());
+        map.put("surfaceDim", tokens.colorSurfaceDim());
+        map.put("surfaceBright", tokens.colorSurfaceBright());
+        map.put("inverseSurface", tokens.colorInverseSurface());
+        map.put("inverseOnSurface", tokens.colorInverseOnSurface());
+        map.put("inversePrimary", tokens.colorInversePrimary());
+        map.put("scrim", tokens.colorScrim());
+        map.put("shadow", tokens.colorShadow());
+        return map;
+    }
+
+    /**
      * B8 relaunch mechanism: fire-and-forget route push to Dart. Used
      * for the early hint in onCreate() on engine reuse; the recorded
      * assertion lives in {@link #assertRouteIfNeeded()}. A no-op when
@@ -856,7 +925,6 @@ public class C1ScreenActivity extends AppCompatActivity {
         }
         sAssertedRoute = mRoute;
         sRouteOwnerToken = mRouteToken;
-        dbgToast(this, "ASSERT " + mRoute);
         sendRouteToDart(mRoute);
     }
 
@@ -875,19 +943,7 @@ public class C1ScreenActivity extends AppCompatActivity {
     private void assertRouteForced() {
         sAssertedRoute = mRoute;
         sRouteOwnerToken = mRouteToken;
-        dbgToast(this, "ASSERT-F " + mRoute);
         sendRouteToDart(mRoute);
-    }
-
-    /** TEMP DEBUG (back-nav diagnosis, remove after): a toast the
-     * screen recorder can see, showing what the host did with a back
-     * press. */
-    public static void dbgToast(android.content.Context ctx, String msg) {
-        try {
-            android.widget.Toast.makeText(ctx, "BK " + msg,
-                    android.widget.Toast.LENGTH_SHORT).show();
-        } catch (Exception ignored) {
-        }
     }
 
     /**
@@ -908,9 +964,6 @@ public class C1ScreenActivity extends AppCompatActivity {
      * exit path, and the M2 teardown does not run on home-back).
      */
     public void handleRootBack() {
-        dbgToast(this, "ROOTBACK taskRoot=" + isTaskRoot()
-                + " hist=" + sRouteHistory + " mRoute=" + mRoute
-                + " inst=" + Integer.toHexString(System.identityHashCode(this)));
         if (!isTaskRoot()) {
             finish();
             return;
@@ -1081,7 +1134,6 @@ public class C1ScreenActivity extends AppCompatActivity {
             recordSwitch(ROUTE_HOME);
         }
         assertRouteIfNeeded();
-        dbgToast(this, "NAV mRoute=" + mRoute + " hist=" + sRouteHistory);
         if (flutterFragment != null) {
             flutterFragment.onNewIntent(intent);
         }

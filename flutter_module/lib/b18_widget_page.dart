@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b18_widget_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
+import 'ui_glass.dart';
 import 'widgets/pic_image.dart';
 
 /// B8 B18: the mobile widget browse page (native WidgetBrowseActivity,
@@ -222,6 +223,10 @@ class _B18BrowsePageState extends State<B18BrowsePage>
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
+            backgroundColor: glassButtonColor(
+              context,
+              Theme.of(context).colorScheme.surfaceContainerHigh,
+            ),
             title: Text(param.title),
             content: SingleChildScrollView(
               child: RadioGroup<String>(
@@ -265,6 +270,10 @@ class _B18BrowsePageState extends State<B18BrowsePage>
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
+            backgroundColor: glassButtonColor(
+              context,
+              Theme.of(context).colorScheme.surfaceContainerHigh,
+            ),
             title: Text(param.title),
             content: TextField(
               controller: controller,
@@ -278,6 +287,12 @@ class _B18BrowsePageState extends State<B18BrowsePage>
                 child: Text(_shell?.negativeLabel ?? ''),
               ),
               FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: glassButtonColor(
+                    context,
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
                 onPressed: () =>
                     Navigator.of(context).pop(controller.text.trim()),
                 child: Text(_shell?.positiveLabel ?? ''),
@@ -330,6 +345,10 @@ class _B18BrowsePageState extends State<B18BrowsePage>
       },
       child: Scaffold(
       appBar: AppBar(
+        backgroundColor: glassButtonColor(
+          context,
+          Theme.of(context).colorScheme.surface,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: _onBack,
@@ -367,6 +386,12 @@ class _B18BrowsePageState extends State<B18BrowsePage>
               ),
               const SizedBox(height: 16),
               FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: glassButtonColor(
+                    context,
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
                 onPressed: _loading ? null : _loadInitial,
                 child: Text(_shell?.retryLabel ?? ''),
               ),

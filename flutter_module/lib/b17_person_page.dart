@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'pigeon/b17_person_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
 import 'widgets/pic_image.dart';
+import 'ui_glass.dart';
 
 /// B8 B17: the mobile TMDB person page (TmdbPersonActivity), as the
 /// '/person' route on the shared C1 engine. Person data, photos and
@@ -562,6 +563,12 @@ class _B17PersonPageState extends State<B17PersonPage>
           Text(text),
           const SizedBox(height: 12),
           FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: glassButtonColor(
+                context,
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
             onPressed: onRetry,
             child: Text(_shell?.retryLabel ?? ''),
           ),
@@ -595,6 +602,10 @@ class _B17PersonPageState extends State<B17PersonPage>
       },
       child: Scaffold(
       appBar: AppBar(
+        backgroundColor: glassButtonColor(
+          context,
+          Theme.of(context).colorScheme.surface,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: _onBack,
@@ -708,6 +719,10 @@ class _PhotoViewerState extends State<_PhotoViewer> {
       context: context,
       builder: (BuildContext context) {
         return SimpleDialog(
+          backgroundColor: glassButtonColor(
+            context,
+            Theme.of(context).colorScheme.surfaceContainerHigh,
+          ),
           children: <Widget>[
             SimpleDialogOption(
               onPressed: () => Navigator.of(context).pop('save'),

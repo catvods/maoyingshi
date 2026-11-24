@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b15_local_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
+import 'ui_glass.dart';
 
 /// B8 B15: the mobile local-file browser (FileActivity) and the app
 /// branding page (AppBrandingActivity), as two routes on the shared C1
@@ -143,6 +144,10 @@ class _B15LocalPageState extends State<B15LocalPage>
       },
       child: Scaffold(
         appBar: AppBar(
+          backgroundColor: glassButtonColor(
+            context,
+            Theme.of(context).colorScheme.surface,
+          ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _onBack,
@@ -290,6 +295,10 @@ class _B15BrandingPageState extends State<B15BrandingPage>
     final B15BrandingScreen? screen = _screen;
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: glassButtonColor(
+          context,
+          Theme.of(context).colorScheme.surface,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => _c1Api.closeScreen(),
@@ -361,6 +370,12 @@ class _B15BrandingPageState extends State<B15BrandingPage>
               ),
               const SizedBox(width: 8),
               FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: glassButtonColor(
+                    context,
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
                 onPressed: _saving ? null : _save,
                 child: Text(screen.saveLabel),
               ),
@@ -452,6 +467,12 @@ class _CenterMessage extends StatelessWidget {
             ],
             const SizedBox(height: 16),
             FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: glassButtonColor(
+                  context,
+                  Theme.of(context).colorScheme.primary,
+                ),
+              ),
               onPressed: onAction,
               child: Text(actionLabel),
             ),

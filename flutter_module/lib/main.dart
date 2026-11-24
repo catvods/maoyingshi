@@ -1,6 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'ui_glass.dart';
+
 import 'b10_collect_page.dart';
 import 'b11_home_page.dart';
 import 'b14_following_page.dart';
@@ -46,6 +48,11 @@ String? _currentTopRoute;
 /// reuse, when the app is already built). An unknown route name leaves
 /// the current screen untouched; the host re-asserts on the next resume.
 void _showRoute(String route) {
+  // A host-driven switch is also the moment a native screen (theme
+  // editor, native dialogs) may have changed the global UI config;
+  // refresh it fire-and-forget so the newly shown screen and the app
+  // theme pick the change up.
+  loadUiConfig();
   if (route == _currentTopRoute) return;
   final NavigatorState? navigator = _rootNavigatorKey.currentState;
   if (navigator == null) return;
@@ -104,6 +111,10 @@ void main() async {
     }
     return null;
   });
+  // Global UI config (liquid glass + theme colors) before the first
+  // frame, so no screen ever paints with the fallback palette and
+  // then snaps. loadUiConfig never throws.
+  await loadUiConfig();
   String initialRoute = '/';
   try {
     initialRoute = await C1HostApi().getInitialRoute();
@@ -293,7 +304,10 @@ Route<dynamic>? _c0GenerateRoute(RouteSettings settings) {
 }
 
 /// B8 screens, routed by the host.
-/// Theme seed stays the Mooyingshi accent #0B57D0 for every route.
+/// The theme comes from the host's current theme colors (ui_glass),
+/// so the native theme-color editor recolors every Flutter screen;
+/// the historical Mooyingshi accent #0B57D0 seed remains only as the
+/// fallback before the host answers.
 class C0ShellApp extends StatelessWidget {
   const C0ShellApp({super.key, required this.initialRoute});
 
@@ -301,14 +315,18 @@ class C0ShellApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '陌奥影视',
-      // B8 relaunch: the root navigator key lets the host-driven
-      // showRoute handler reset the route stack on engine reuse.
-      navigatorKey: _rootNavigatorKey,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0B57D0)),
-      ),
+    return ValueListenableBuilder<UiConfig>(
+      valueListenable: uiConfig,
+      builder: (BuildContext context, UiConfig cfg, Widget? _) {
+        return MaterialApp(
+          title: '陌奥影视',
+          // B8 relaunch: the root navigator key lets the host-driven
+          // showRoute handler reset the route stack on engine reuse.
+          navigatorKey: _rootNavigatorKey,
+          theme: ThemeData(
+            colorScheme: cfg.scheme ??
+                ColorScheme.fromSeed(seedColor: const Color(0xFF0B57D0)),
+          ),
       initialRoute: initialRoute,
       routes: _c0Routes,
       // B8 B8: the category list cannot use the literal routes table —
@@ -340,7 +358,9 @@ class C0ShellApp extends StatelessWidget {
       // way (widgetId is URL-encoded in the query); it takes over the
       // native WidgetBrowseActivity and the B13 home-block "more"
       // opening (see docs/b8-b18-widget.md).
-      onGenerateRoute: _c0GenerateRoute,
+          onGenerateRoute: _c0GenerateRoute,
+        );
+      },
     );
   }
 }

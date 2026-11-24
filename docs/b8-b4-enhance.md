@@ -26,11 +26,11 @@
   `flutter_module/lib/main.dart`、
   `flutter_module/lib/b3_settings_a_page.dart`、
   `flutter_module/lib/widgets/settings_row.dart`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B4HostApiImpl.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/SettingFragment.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B4HostApiImpl.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java`、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/SettingFragment.java`、
   `.gitignore`、`.github/workflows/b8-c0.yml`、`docs/b8-b4-enhance.md`。
 - 预存脏文件：无（开始时工作树干净）。
 - 时间/时区：2026-11-17 12:11 CST（Asia/Shanghai）开始。
@@ -323,11 +323,11 @@ Store/Config 与两个 Activity 入口**全部在 main 源码集**，可直接�
 | 3 | `flutter_module/lib/main.dart` | 改：`/settings?member=enhance` 路由 + 实验屏 B4 开关 |
 | 4 | `flutter_module/lib/b3_settings_a_page.dart` | 改：只加 `'enhance'` 成员与 `'/enhance'` 分支（加法） |
 | 5 | `flutter_module/lib/widgets/settings_row.dart` | 改：只加可选参数 `onLongPress`（加法） |
-| 6 | `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B4HostApiImpl.java` | 新：host 实现（快照/开关/弹窗/长按/外链） |
-| 7 | `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java` | 改：注册 `B4HostApi` + 类注释提及增强页 |
-| 8 | `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java` | 改：C0 引擎注册 `B4HostApi`（只为开关） |
-| 9 | `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java` | 改：加 `flutter_b4_enabled` 开关方法 |
-| 10 | `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/SettingFragment.java` | 改：增强行 + `performRow` 深链分流（共用新方法 `openEnhanceSettings()`） |
+| 6 | `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B4HostApiImpl.java` | 新：host 实现（快照/开关/弹窗/长按/外链） |
+| 7 | `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java` | 改：注册 `B4HostApi` + 类注释提及增强页 |
+| 8 | `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java` | 改：C0 引擎注册 `B4HostApi`（只为开关） |
+| 9 | `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java` | 改：加 `flutter_b4_enabled` 开关方法 |
+| 10 | `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/SettingFragment.java` | 改：增强行 + `performRow` 深链分流（共用新方法 `openEnhanceSettings()`） |
 | 11 | `.gitignore` | 改：加 `B4Messages.java` |
 | 12 | `.github/workflows/b8-c0.yml` | 改：Pigeon 步骤加 b4 生成 + 存在性检查 |
 | 13 | `docs/b8-b4-enhance.md` | 新：本文档 |

@@ -12,7 +12,7 @@
   `app/src/main/java/com/fongmi/android/tv/api/hk/`。
 - 移植方式：机械搬运脚本 `/tmp/xc4/port4.py`（包名改写 + 文件头插入，
   零适配；不随仓库走）。包名改写 `com.fongmi.android.tv` →
-  `com.github.moyingshi.osc.tv`。每个新文件在 package 行后加一行文件头
+  `com.github.maoyingshi.osc.tv`。每个新文件在 package 行后加一行文件头
   移植说明（3a/3b/3e/4a 同款）。
 - 交叉验证：oktv 反编译源 `~/workspace/hk-ref/src/sources/` 有
   `HkPageParser$HkPage` 类文件，未逐行对位——星辰真源码为准；语义参考

@@ -119,8 +119,8 @@
 | 文件 | 动作 | 说明 |
 |---|---|---|
 | `docs/miniapp-cloudcode.md` | 新建（本文档） | 设计评审 + 实现记录 + 回滚 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkCloudImport.java` | 新建 | 云口令提取 + 全分流取回 + 逐条导入（`importCloudCodes`） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkMiniappActivity.kt` | 改 | 加“云口令导入”按钮 + 对话框（剪贴板预提取、零条不发请求、导入中禁用按钮） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkCloudImport.java` | 新建 | 云口令提取 + 全分流取回 + 逐条导入（`importCloudCodes`） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkMiniappActivity.kt` | 改 | 加“云口令导入”按钮 + 对话框（剪贴板预提取、零条不发请求、导入中禁用按钮） |
 | `app/src/mobile/res/layout/activity_hk_miniapp.xml` | 改 | 加第 5 个按钮 `btnCloudCode`（同款 outlined MaterialButton，导出按钮之下） |
 | `app/src/main/res/values/lab_strings.xml` | 改 | 加 4 条字符串（见下） |
 

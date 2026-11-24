@@ -19,7 +19,7 @@
   `HkFavoriteStore.java`（293 行）、`HkHistoryRecorder.java`（132 行）、
   `api/hk/event/home/ToastEvent.java`（星辰 `app/src/main/java/.../api/hk/event/home/ToastEvent.java`）。
 - 机械搬运优先：星辰原文原样 + 只做必要的适配（包名 `com.fongmi.android.tv` →
-  `com.github.moyingshi.osc.tv`；`History.getHk()` 我方无，见 §3.2；其余不自造行为）。
+  `com.github.maoyingshi.osc.tv`；`History.getHk()` 我方无，见 §3.2；其余不自造行为）。
 - 只改 §0 允许路径。品牌/包名、液态玻璃、短剧、本地源、实验室、TV/leanback、设置页、播放器、
   下载、检查更新一律不动；BaseLoader 零改动；底栏仍 6 项；不引入 LitePal、dex 动态加载、Clash、XPopup。
   绝对不推、不编、不触发任何 workflow。

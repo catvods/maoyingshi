@@ -8,7 +8,7 @@
 
 | 我方文件 | 星辰来源 | 说明 |
 |---|---|---|
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkRule.java`（重写，220 行 → 约 660 行） | `~/workspace/xingchen-ref/app/src/main/java/com/fongmi/android/tv/api/hk/HkRule.java`（656 行） | 包名 `com.fongmi.android.tv` → `com.github.moyingshi.osc.tv`；其余为准 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkRule.java`（重写，220 行 → 约 660 行） | `~/workspace/xingchen-ref/app/src/main/java/com/fongmi/android/tv/api/hk/HkRule.java`（656 行） | 包名 `com.fongmi.android.tv` → `com.github.maoyingshi.osc.tv`；其余为准 |
 | `.../api/hk/HkUaEnum.java`（新建，56 行） | 星辰同目录 `HkUaEnum.java`（56 行） | 只改包名，全文照搬；构造器参数顺序 code/name/content 原样 |
 | `.../api/hk/HkSettingConfig.java`（新建，17 行） | 星辰同目录 `HkSettingConfig.java`（17 行） | 只改包名，全文照搬；仅 `nowLoadRulesTime` 一位 |
 | 移植计划 | `docs/miniapp-xingchen-port-plan.md` §阶段 2（L145–146）、文件映射 L34/L44/L54 | 本步是阶段 2 的 2a：只做规则模型，HkRuleManager/HkStore 是 2b |

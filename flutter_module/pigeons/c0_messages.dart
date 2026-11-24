@@ -8,9 +8,9 @@ import 'package:pigeon/pigeon.dart';
     // root, see .github/workflows/b8-c0.yml).
     dartOut: 'lib/pigeon/c0_messages.g.dart',
     javaOut:
-        '../app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0Messages.java',
+        '../app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0Messages.java',
     javaOptions: JavaOptions(
-      package: 'com.github.moyingshi.osc.tv.flutter',
+      package: 'com.github.maoyingshi.osc.tv.flutter',
       className: 'C0Messages',
     ),
   ),

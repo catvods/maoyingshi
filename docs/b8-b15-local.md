@@ -76,7 +76,7 @@
 
 ### 2.6 文件清单
 
-- 新 4 个：`flutter_module/pigeons/b15_local_messages.dart`、`flutter_module/lib/b15_local_page.dart`、`app/src/main/java/com/github/moyingshi/osc/tv/flutter/B15HostApiImpl.java`、本文档。
+- 新 4 个：`flutter_module/pigeons/b15_local_messages.dart`、`flutter_module/lib/b15_local_page.dart`、`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B15HostApiImpl.java`、本文档。
 - 改 9 个：`flutter_module/lib/main.dart`（`/branding` 字面路由 + `/local` 的 onGenerateRoute 分支 + B15 开关）、`C1ScreenActivity.java`（`ROUTE_LOCAL` / `ROUTE_BRANDING` + 注册 B15HostApi）、`C0ShellActivity.java`（注册 B15HostApi，仅开关用）、`Setting.java`（`flutter_b15_enabled`）、`app/src/main/java/.../utils/FileChooser.java`（`localBrowserIntent` 分流）、`B4HostApiImpl.java`（`openLocalReader` 分流，§5 V3）、`app/src/main/java/.../ui/activity/AppBrandingActivity.java`（`start` 分流，§5 V4）、`.gitignore`（`B15Messages.java`）、`.github/workflows/b8-c0.yml`（Pigeon 步骤加 b15 生成 + 存在性检查）。
 - 未动：`FileActivity`（两端）/ `FileAdapter` / `AppBranding` / `WebReaderActivity` / TV 入口 / C0–C2/B2–B14 合约与实现（除 B4 一处 §5 V3 分流）/ 共享组件（本批不用 VodCard/PicImage，无图）。
 

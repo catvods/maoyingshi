@@ -108,7 +108,7 @@
   我方自研 `HkRefreshPageEvent`（`post` 方法零调用方），故刷新事件投出后无人接。
 - 改动：
   - 三个 Fragment 的订阅方法改成 `OnRefreshPageEvent`：方法名 `onHkRefreshPage` 不动，
-    参数类型换成 `com.github.moyingshi.osc.tv.api.hk.event.home.OnRefreshPageEvent`，
+    参数类型换成 `com.github.maoyingshi.osc.tv.api.hk.event.home.OnRefreshPageEvent`，
     `event.isToTop()` → `event.isScrollTop()`（`OnRefreshPageEvent` 的 getter 名；
     `forceRefresh` 字段本桥不用——`reloadPage()` 本就重跑当前页，与 `forceRefresh` 同效，
     写清不取该字段的理由）。

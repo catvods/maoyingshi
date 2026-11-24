@@ -1,10 +1,10 @@
-# 包名迁移 com.github.moyingshi.osc.tv
+# 包名迁移 com.github.maoyingshi.osc.tv
 
-任务来源：用户 2026-11-11 18:36 说“把整个仓库换名成这个包名也改成这个，迁移所有代码，断开与之前版本的连接”。新包名 `com.github.moyingshi.osc.tv`。只在本地改、不推、不编，等做完汇报再定。
+任务来源：用户 2026-11-11 18:36 说“把整个仓库换名成这个包名也改成这个，迁移所有代码，断开与之前版本的连接”。新包名 `com.github.maoyingshi.osc.tv`。只在本地改、不推、不编，等做完汇报再定。
 
 ## Recovery anchor
 
-- 目标：全仓库包名改成 `com.github.moyingshi.osc.tv`；applicationId 两变体（mobile/leanback 共用 defaultConfig，无 per-flavor 后缀）、源码包 `com.fongmi.android.tv` 全部迁移、authority 与硬编码包名全改、全仓库 grep 旧包名零残留（历史文档例外见下）；不做旧版数据迁移。
+- 目标：全仓库包名改成 `com.github.maoyingshi.osc.tv`；applicationId 两变体（mobile/leanback 共用 defaultConfig，无 per-flavor 后缀）、源码包 `com.fongmi.android.tv` 全部迁移、authority 与硬编码包名全改、全仓库 grep 旧包名零残留（历史文档例外见下）；不做旧版数据迁移。
 - 基线：本地 main `e435e251`（设置页+详情页+播放器+首页 chips 改版已推，构建 run 42998181049 在跑那份代码，不受这次改动影响）；工作树干净。
 - 进度：调查完成（见“现状清单”）；Phase 1 已完成（commit `38ab810b`）；Phase 2 已完成（commit `71283605`）；Phase 3 已完成（commit `42c06784`）；Phase 4 已完成（活文档更新，见“结果”）。全部做完，本地 main `e435e251` → 4 笔新提交，未推、未编，等用户定推不推。
 - 风险：预编译 `third_party/exo-ass-native/prebuilt/arm64-v8a/libexo_ass.so` 含旧 JNI 符号（`Java_com_fongmi_android_tv_player_exo_ass_AssNative_*`），本机无 NDK 重编不了；下次发版前必须用 `scripts/build_exo_ass_native.py`（NDK 29）重编，否则 Exo ASS 字幕渲染报 UnsatisfiedLinkError。
@@ -14,15 +14,15 @@
 
 | 旧 | 新 |
 |---|---|
-| applicationId `com.github.mooyingshi.osc` | `com.github.moyingshi.osc.tv` |
-| 源码包 `com.fongmi.android.tv` | `com.github.moyingshi.osc.tv` |
-| 源码包 `com.fongmi.android.tv.nodejs` | `com.github.moyingshi.osc.tv.nodejs` |
-| 源码包 `com.fongmi.quickjs` | `com.github.moyingshi.osc.tv.quickjs` |
-| 源码包 `com.fongmi.chaquo` | `com.github.moyingshi.osc.tv.chaquo` |
-| namespace `com.fongmi.android.tv` | `com.github.moyingshi.osc.tv` |
-| namespace `com.fongmi.android.tv.nodejs` / `.quickjs` | `com.github.moyingshi.osc.tv.nodejs` / `.quickjs` |
-| namespace `com.fongmi.chaquo` | `com.github.moyingshi.osc.tv.chaquo` |
-| FileProvider authority `${applicationId}.provider` | 自动跟随 applicationId → `com.github.moyingshi.osc.tv.provider` |
+| applicationId `com.github.mooyingshi.osc` | `com.github.maoyingshi.osc.tv` |
+| 源码包 `com.fongmi.android.tv` | `com.github.maoyingshi.osc.tv` |
+| 源码包 `com.fongmi.android.tv.nodejs` | `com.github.maoyingshi.osc.tv.nodejs` |
+| 源码包 `com.fongmi.quickjs` | `com.github.maoyingshi.osc.tv.quickjs` |
+| 源码包 `com.fongmi.chaquo` | `com.github.maoyingshi.osc.tv.chaquo` |
+| namespace `com.fongmi.android.tv` | `com.github.maoyingshi.osc.tv` |
+| namespace `com.fongmi.android.tv.nodejs` / `.quickjs` | `com.github.maoyingshi.osc.tv.nodejs` / `.quickjs` |
+| namespace `com.fongmi.chaquo` | `com.github.maoyingshi.osc.tv.chaquo` |
+| FileProvider authority `${applicationId}.provider` | 自动跟随 applicationId → `com.github.maoyingshi.osc.tv.provider` |
 | androidx-startup authority `${applicationId}.androidx-startup` | 自动跟随 |
 
 不动：`com.github.catvod.crawler`（catvod 模块 namespace 与源码包）、`com.whl.quickjs.*`（外部 quickjs AAR 的包）、`androidx.media3.*`（vendored 代码的包）、JS 桥名 `window.fongmi` / `fongmiBridge` / `fongmiRemote`（网页桥契约，改了会断）、上游 webhtv 本身的包名（上游代码仍是 `com.fongmi.android.tv`，只在本文档与历史文档里出现）。
@@ -55,12 +55,12 @@
 ## 结果（Phase 4，2026-11-11 18:56）
 
 - 提交（本地 main `e435e251` → 4 笔，未推、未编）：
-  - `38ab810b` chore(pkg)：applicationId `com.github.moyingshi.osc.tv`、namespace（app/nodejs/quickjs/chaquo）、eventBusIndex、Manifest 全限定名、工作流测试过滤器、proguard。
+  - `38ab810b` chore(pkg)：applicationId `com.github.maoyingshi.osc.tv`、namespace（app/nodejs/quickjs/chaquo）、eventBusIndex、Manifest 全限定名、工作流测试过滤器、proguard。
   - `71283605` refactor(pkg)：源码 2495 文件目录迁移 + 2606 文件内容替换 + 仓库地址 `xinyonghuu/Mooyingshi` → `xinyonghuu/moyingshi`（Github.java 等 12 个 app 文件 + widget_host.js）。
   - `42c06784` chore(pkg)：authority 扫尾 + 全仓库验证 + config 仓库地址。
   - Phase 4（本文档提交）：活文档更新（README、b-ui/b5/b6/ui-restyle）+ 本文档收尾。
 - 每笔都有 recovery tag：`recovery/pkg-rename-osc-tv-p1|p2|p3|p4/<时间戳>-<短 hash>`。
-- 新旧包名对照：applicationId `com.github.moyingshi.osc.tv`；源码包 `com.github.moyingshi.osc.tv`（+ `.nodejs` / `.quickjs` / `.chaquo` 子包）；namespace 同上；authority `${applicationId}.provider` 自动跟随。
+- 新旧包名对照：applicationId `com.github.maoyingshi.osc.tv`；源码包 `com.github.maoyingshi.osc.tv`（+ `.nodejs` / `.quickjs` / `.chaquo` 子包）；namespace 同上；authority `${applicationId}.provider` 自动跟随。
 - 新仓库 `moyingshi`（全小写）：代码里写死的仓库地址已全改小写；GitHub 上须先删旧仓库 `Mooyingshi` 才能建新仓库（顺序由主对话办）；本地 git remote 仍指向旧仓库地址，推新仓库前须改 remote（主对话办）。
 - 未做完/风险：① 预编译 `libexo_ass.so` 须用 `scripts/build_exo_ass_native.py`（NDK 29）重编，否则 Exo ASS 字幕渲染 UnsatisfiedLinkError；② 没编译、没真机测（本机无 SDK），第一次编译检查靠推上去后的 GitHub 构建；③ 历史文档（251 个 md）保留旧包名原样（见“现状清单”），那是写下当时的真实记录，有些还是上游自身的包名。
 - 建议先测（推上去编完之后）：安装新包 APK 与老版并存、互不干扰；设置/历史/收藏全新空白（旧数据不迁移）；更新检查走新仓库地址（beta 渠道能看到新版、能下载）；老版 App 检查更新被 validatePackage 挡住（下新包、校验失败、删包、老 App 原样保留）；进短剧、播 ASS 字幕（.so 重编前会崩，须先重编）；底栏仍 6 项。

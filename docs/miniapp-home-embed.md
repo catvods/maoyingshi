@@ -53,8 +53,8 @@
 | 文件 | 动作 | 说明 |
 |---|---|---|
 | `docs/miniapp-home-embed.md` | 新建（本文档） | 设计评审 + 实现记录 + 回滚 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/VodFragment.java` | 改 | hk 渲染分支 + 回落 + 搜索路由 + 可见性守卫 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkListFragment.java` | 改 | 内嵌模式（`newInstance(title, embedded)` + `EmbedHost` 回调） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/VodFragment.java` | 改 | hk 渲染分支 + 回落 + 搜索路由 + 可见性守卫 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkListFragment.java` | 改 | 内嵌模式（`newInstance(title, embedded)` + `EmbedHost` 回调） |
 | `app/src/mobile/res/layout/fragment_vod.xml` | 改 | 加 `FrameLayout`（`@+id/hkContainer`，默认 GONE，与 pager 同款 `appbar_scrolling_view_behavior`） |
 
 ### 关键契约

@@ -41,7 +41,7 @@
 
 ## 硬限制
 - 底栏 menu_nav.xml 已 6 项满额，第 7 项启动就崩，**绝对不加底栏项**。
-- TV 端不动；品牌、包名 com.github.moyingshi.osc.tv、玻璃、短剧、本地源、实验室、隐藏下载全保留。
+- TV 端不动；品牌、包名 com.github.maoyingshi.osc.tv、玻璃、短剧、本地源、实验室、隐藏下载全保留。
 - 不动 .github/workflows/*（gh token 无 workflow 权限）；不动 libexo_ass.so、keystore。
 - 本机无 JDK/Android SDK，不尝试本地编译；唯一编译检查是 GitHub Actions。
 

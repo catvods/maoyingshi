@@ -32,10 +32,10 @@ causeTypes=j14 <- java.io.IOException <- java.lang.ClassNotFoundException
 | 检查项 | 结果 |
 | --- | --- |
 | `app/src/arm64_v8a/assets/mpv-libs/arm64-v8a/libplayer.so` 含旧名字符串 `com/fongmi/android/tv/player/iso/IsoSessionManager` | 1 处 |
-| 同文件含新名字符串 `com/github/moyingshi/osc/tv/player/iso/IsoSessionManager` | 0 处 |
+| 同文件含新名字符串 `com/github/maoyingshi/osc/tv/player/iso/IsoSessionManager` | 0 处 |
 | `app/src/armeabi_v7a/assets/mpv-libs/armeabi-v7a/libplayer.so` 含旧名 / 新名 | 1 处 / 0 处 |
-| JNI 源码 `third_party/mpv-player-jni/src/iso_dvd.cpp:468` | `FindClass("com/github/moyingshi/osc/tv/player/iso/IsoSessionManager")`（新名） |
-| `app/proguard-rules.pro:10` | `-keep class com.github.moyingshi.osc.tv.player.iso.IsoSessionManager`（新名） |
+| JNI 源码 `third_party/mpv-player-jni/src/iso_dvd.cpp:468` | `FindClass("com/github/maoyingshi/osc/tv/player/iso/IsoSessionManager")`（新名） |
+| `app/proguard-rules.pro:10` | `-keep class com.github.maoyingshi.osc.tv.player.iso.IsoSessionManager`（新名） |
 | 两份二进制最后一次改动 | 导入提交 `da729e1b7522c93c18b612ea4d06ba1a79f6b25f`（改名快照），之后未重编 |
 | 其它 mpv-libs `.so` 含 `fongmi` 残留 | 无；残留仅此一处 |
 

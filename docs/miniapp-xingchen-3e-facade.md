@@ -13,7 +13,7 @@
 ## 1. 来源与方法
 
 - 星辰原文：`~/workspace/xingchen-ref`（HEAD 52450c0），包名
-  `com.fongmi.android.tv` → `com.github.moyingshi.osc.tv`（RequireUtils 及其
+  `com.fongmi.android.tv` → `com.github.maoyingshi.osc.tv`（RequireUtils 及其
   model 类保持原包名 `com.example.hikerview.*`，见 §2.3）。
 - 移植方式：机械抽取脚本 `/tmp/xc3e/port3e1.py`（包名改写 + 文件头插入 +
   §3 所列适配；不随仓库走）+ 独立验证脚本 `/tmp/xc3e/verify3e1.py`。
@@ -129,7 +129,7 @@
 
 ## 3. 3e-1 适配点（差异只剩这些）
 
-1. **包名**：`com.fongmi.android.tv` → `com.github.moyingshi.osc.tv`
+1. **包名**：`com.fongmi.android.tv` → `com.github.maoyingshi.osc.tv`
    （事件/HkCryptoFileUtil/HkItem/SearchResult/HkHikerRuleUtil 的 package 行与
    全限定引用；`com.fongmi.quickjs` 未出现，无须处理）。RequireUtils 及其
    model 类保持原包名 `com.example.hikerview.*`。

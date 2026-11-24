@@ -1,7 +1,7 @@
 # 小程序第 2 轮没数据修复（miniapp-nodata-fix2）
 
 - 完成句：补上海阔 JS 内置 API `config`/`initConfig`/`rc`（海W剧汇 preRule 报 `initConfig` 未定义），require 报错带上 HTTP 状态码，并把 foundation 文档里 batchFetch 未实现的两行过时描述改掉；gitcode 418 经多形状 curl 证实无法从本端绕过，只留证据不上代理；一个 guard 会话、一个本地原子提交，不推、不编、不动版本记录空间。
-- 允许路径：`docs/miniapp-nodata-fix2.md`、`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkEngine.java`、`docs/miniapp-foundation.md`。
+- 允许路径：`docs/miniapp-nodata-fix2.md`、`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkEngine.java`、`docs/miniapp-foundation.md`。
 - 保护路径：无（开始时工作区干净，main = `f0c10fb7`）。
 - 时间：2026-11-15 21:52 CST；预计 30 分钟，22:25 前交回。
 - 最便宜的决定性验证：本地无 JDK/SDK，编译等推上去后的 GitHub 构建；本地只做逐行重读 + `git diff --check` + 关键符号 grep + 确认 TV/leanback、`BaseLoader`、`menu_nav.xml` 未动。

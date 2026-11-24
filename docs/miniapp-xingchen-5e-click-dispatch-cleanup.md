@@ -10,8 +10,8 @@
 > 待 `task_guard.sh finish` 提交；HEAD `f2d5aa3d`（5d）。下一步唯一动作：finish 提交并打 recovery tag。
 
 - 完成句：阶段 5 收尾——点击分流改走新引擎、旧链路删除、col_type 按星辰重做、3e 缺口收尾，提交后阶段 5 完工。
-- 允许路径：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/*`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/*`、`docs/miniapp-xingchen-5-*.md`。
+- 允许路径：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/*`、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/*`、`docs/miniapp-xingchen-5-*.md`。
   例外（只改 hk 分支调用点，不动播放器本身）：`ui/activity/VideoActivity.java` 不动——5e 不需要改它。
   `HkListActivity`/`HkListFragment`/`HkSearchFragment`/`HkDetailFragment` 在 `ui/hk/` 内，属允许路径。
 - 保护路径：无初始脏文件（`git status` 干净，HEAD `f2d5aa3d`）。
@@ -339,7 +339,7 @@
   的 `putFunction("proxyClearM3u8", …)` 逐字搬入我方
   `HkJsRuntime.registerApi`，插在 `putFunction("setPageTitle", …)`（我方 `:4482`，星辰同款邻位）
   之前；唯一改动是包名 `com.fongmi.android.tv.api.hk.HkM3u8ClearUtil` →
-  `com.github.moyingshi.osc.tv.api.hk.HkM3u8ClearUtil`。
+  `com.github.maoyingshi.osc.tv.api.hk.HkM3u8ClearUtil`。
 - 依赖核对（5b 已断言，本笔实现时再 grep 一遍）：`toStringMap`（我方 `:2593`）、
   `argStr`、`md5(String)`（我方 `:2601`）、`App.get()`、
   `HkM3u8ClearUtil.getRules()`/`.getProxyContent(url, headers, adRules)`/`.pruneCacheDir()`

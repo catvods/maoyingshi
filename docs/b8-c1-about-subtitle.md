@@ -18,12 +18,12 @@
 - 允许路径：`flutter_module/pigeons/c1_messages.dart`、
   `flutter_module/lib/main.dart`、`flutter_module/lib/c1_about_page.dart`、
   `flutter_module/lib/c1_subtitle_page.dart`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1HostApiImpl.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/ui/dialog/AboutDialog.java`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/SettingFragment.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1HostApiImpl.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/ui/dialog/AboutDialog.java`、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/SettingFragment.java`、
   `app/src/main/res/layout/activity_b8_c1.xml`、
   `app/src/mobile/AndroidManifest.xml`、`.gitignore`、
   `.github/workflows/b8-c0.yml`、`docs/b8-c1-about-subtitle.md`。
@@ -171,15 +171,15 @@ class C1SubtitleInfo {
 * flutter_module/lib/c1_about_page.dart     关于页（Flutter）
 * flutter_module/lib/c1_subtitle_page.dart  字幕设置页（Flutter）
 M flutter_module/lib/main.dart              路由分发 + C0 实验屏加 C1 开关
-* app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java
-* app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1HostApiImpl.java
-M app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java
+* app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java
+* app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1HostApiImpl.java
+M app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java
                                             C0 engine 上也注册 C1HostApi（只为实验屏的开关用）
-M app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java
+M app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java
                                             + isFlutterC1Enabled / putFlutterC1Enabled
-M app/src/main/java/com/github/moyingshi/osc/tv/ui/dialog/AboutDialog.java
+M app/src/main/java/com/github/maoyingshi/osc/tv/ui/dialog/AboutDialog.java
                                             showGithubProxy 由 private 改 public（仅此一词）
-M app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/SettingFragment.java
+M app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/SettingFragment.java
                                             onVersion + 字幕行查开关分流
 * app/src/main/res/layout/activity_b8_c1.xml
 M app/src/mobile/AndroidManifest.xml        加 C1ScreenActivity（无 launcher 入口）
@@ -192,7 +192,7 @@ CI 生成、永不提交的文件（已在 `.gitignore` 中）：
 
 ```
 flutter_module/lib/pigeon/c1_messages.g.dart
-app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1Messages.java
+app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1Messages.java
 ```
 
 ## 4. 逐项对照清单（Wei 真机验收用）

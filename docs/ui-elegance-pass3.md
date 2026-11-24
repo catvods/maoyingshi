@@ -8,7 +8,7 @@
 
 首页顶部栏精修做完并编进测试版：历史 + ⋮ 两个图标从工具栏右上角移到搜索条右侧（行为不变），搜索条右侧的站名文字彻底去掉，切站走点工具栏标题（标题仍是当前站名、唯一指示），工具栏只剩 logo + 标题。
 
-- Lane：standard。允许路径（guard scope）：`app/src/mobile/res/layout/fragment_vod.xml`、`app/src/mobile/res/menu/menu_vod.xml`、`app/src/mobile/res/menu/menu_vod_more.xml`（新建）、`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/VodFragment.java`、本计划 `docs/ui-elegance-pass3.md`。
+- Lane：standard。允许路径（guard scope）：`app/src/mobile/res/layout/fragment_vod.xml`、`app/src/mobile/res/menu/menu_vod.xml`、`app/src/mobile/res/menu/menu_vod_more.xml`（新建）、`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/VodFragment.java`、本计划 `docs/ui-elegance-pass3.md`。
 - 保护的脏路径：无（开始时工作树干净）。
 - 当前时间：2026-11-13 约 15:40 CST。估计：实施约 20 分钟 + 静态核对约 5 分钟 + 构建约 25 分钟；合计约 50 分钟，预计 16:35 CST 前汇报。
 - 最便宜的决定性验证：推后 GitHub 构建一次通过（本机无 SDK、无真机，编译检查只靠构建）+ 用户真机截图复核观感。

@@ -180,15 +180,15 @@ jobs:
           chmod +x ./gradlew
           ./gradlew \
             :app:testMobileArm64_v8aDebugUnitTest \
-            --tests 'com.github.moyingshi.osc.tv.player.danmaku.*' \
-            --tests 'com.github.moyingshi.osc.tv.utils.GithubProxyTest' \
-            --tests 'com.github.moyingshi.osc.tv.ui.dialog.AboutDialogLayoutTest' \
-            --tests 'com.github.moyingshi.osc.tv.ui.adapter.VodAdapterLayoutTest' \
+            --tests 'com.github.maoyingshi.osc.tv.player.danmaku.*' \
+            --tests 'com.github.maoyingshi.osc.tv.utils.GithubProxyTest' \
+            --tests 'com.github.maoyingshi.osc.tv.ui.dialog.AboutDialogLayoutTest' \
+            --tests 'com.github.maoyingshi.osc.tv.ui.adapter.VodAdapterLayoutTest' \
             --no-daemon
           ./gradlew \
             :app:testLeanbackArm64_v8aDebugUnitTest \
-            --tests 'com.github.moyingshi.osc.tv.player.danmaku.*' \
-            --tests 'com.github.moyingshi.osc.tv.utils.GithubProxyTest' \
+            --tests 'com.github.maoyingshi.osc.tv.player.danmaku.*' \
+            --tests 'com.github.maoyingshi.osc.tv.utils.GithubProxyTest' \
             --no-daemon
 
   build:

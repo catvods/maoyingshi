@@ -9,9 +9,9 @@ import 'package:pigeon/pigeon.dart';
     // root, see .github/workflows/b8-c0.yml).
     dartOut: 'lib/pigeon/b18_widget_messages.g.dart',
     javaOut:
-        '../app/src/main/java/com/github/moyingshi/osc/tv/flutter/B18Messages.java',
+        '../app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B18Messages.java',
     javaOptions: JavaOptions(
-      package: 'com.github.moyingshi.osc.tv.flutter',
+      package: 'com.github.maoyingshi.osc.tv.flutter',
       className: 'B18Messages',
     ),
   ),

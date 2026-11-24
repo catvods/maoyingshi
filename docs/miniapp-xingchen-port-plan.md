@@ -4,12 +4,12 @@
 
 - 用户 2026-11-16 09:16–09:18 定：推倒重来，完全按星辰（+ oktv）的实现方法重写 hk 引擎，不再打补丁。原话：“别努力了推倒重来吧，你完全按星辰的代码弄吧”“你的路不通”“参考这两个的实现方法”。
 - “两个软件”：oktv APK（`~/workspace/hk-ref/`，反编译源码 `src/sources/`，报告 `ANALYSIS.md`；用户 09:16 发的 Drive 文件经核对与该 APK 字节相同，SHA-256 `75106a82…07d5a8`，不必再下）与星辰 GitHub 源码（`~/workspace/xingchen-ref`，HEAD `52450c0`，包名 `com.fongmi.android.tv`）。
-- 现状：我们的 hk 引擎是按公开规则文档手写的（`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/` 19 文件 + `ui/hk/` 9 文件，共 9764 行），屡次与官方行为对不上（replace 正则重载、UniqueTag 漏出、x5 卡、gitcode 418 回退等都是补丁式修法，0836 版刚又因此返工一次）。
+- 现状：我们的 hk 引擎是按公开规则文档手写的（`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/` 19 文件 + `ui/hk/` 9 文件，共 9764 行），屡次与官方行为对不上（replace 正则重载、UniqueTag 漏出、x5 卡、gitcode 418 回退等都是补丁式修法，0836 版刚又因此返工一次）。
 - 目标：把 hk 引擎换成星辰实现（以星辰真源码为准，oktv 反编译源码作交叉验证），只重写 hk 引擎本身。
 
 ## 0.1 边界（不动的东西）
 
-只搬 hk 引擎，不动：品牌与包名 `com.github.moyingshi.osc.tv`、液态玻璃导航、短剧专区、Archive.org 爬虫、本地源（LocalSource/扫目录/PHP/Python/Node 运行环境）、实验室、TV/leanback 端、设置页、播放器（Exo/ijk/mpv）、下载功能、检查更新通道。星辰独有的 Clash 代理配置界面、它自己的主题/播放器改动、WebDAV、DLAN 投屏、EPUB、首页订阅、dex 动态加载，一律不搬（见 §6）。
+只搬 hk 引擎，不动：品牌与包名 `com.github.maoyingshi.osc.tv`、液态玻璃导航、短剧专区、Archive.org 爬虫、本地源（LocalSource/扫目录/PHP/Python/Node 运行环境）、实验室、TV/leanback 端、设置页、播放器（Exo/ijk/mpv）、下载功能、检查更新通道。星辰独有的 Clash 代理配置界面、它自己的主题/播放器改动、WebDAV、DLAN 投屏、EPUB、首页订阅、dex 动态加载，一律不搬（见 §6）。
 
 ## 0.2 证据与版本基线（2026-11-16 核对）
 
@@ -244,7 +244,7 @@
 
 ### 6.1 包名改写点
 
-- `com.fongmi.android.tv` → `com.github.moyingshi.osc.tv`：源码级替换。`R` 资源、`BuildConfig`、Manifest action 前缀 `${applicationId}` 都走我们的 applicationId；星辰代码里硬编码的 `com.fongmi.android.tv` 字符串要扫一遍（重点是 `HkJsRuntime` 注释里的类名引用与 `HkHostClasses` 的宿主类表）。
+- `com.fongmi.android.tv` → `com.github.maoyingshi.osc.tv`：源码级替换。`R` 资源、`BuildConfig`、Manifest action 前缀 `${applicationId}` 都走我们的 applicationId；星辰代码里硬编码的 `com.fongmi.android.tv` 字符串要扫一遍（重点是 `HkJsRuntime` 注释里的类名引用与 `HkHostClasses` 的宿主类表）。
 - 资源：星辰 hk 相关的 layout / drawable / string 只搬 hk 引擎需要的；主题色、启动图标、导航样式一律用墨影视现有的。
 
 ### 6.2 App 类接缝

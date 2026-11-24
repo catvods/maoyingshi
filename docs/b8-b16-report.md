@@ -72,7 +72,7 @@
 
 ### 2.6 文件清单
 
-- 新 4 个：`flutter_module/pigeons/b16_report_messages.dart`、`flutter_module/lib/b16_report_page.dart`、`app/src/main/java/com/github/moyingshi/osc/tv/flutter/B16HostApiImpl.java`、本文档。
+- 新 4 个：`flutter_module/pigeons/b16_report_messages.dart`、`flutter_module/lib/b16_report_page.dart`、`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B16HostApiImpl.java`、本文档。
 - 改 9 个：`flutter_module/lib/main.dart`（`/report` 的 onGenerateRoute 分支 + B16 开关）、`C1ScreenActivity.java`（`ROUTE_REPORT` + 注册 B16HostApi）、`C0ShellActivity.java`（注册 B16HostApi，仅开关用）、`Setting.java`（`flutter_b16_enabled`）、`app/src/mobile/java/.../ui/activity/HistoryActivity.java`（`onReport` 分流，§5 V1）、`C2HostApiImpl.java`（`openViewingReport` 分流，§5 V1）、`.gitignore`（`B16Messages.java`）、`.github/workflows/b8-c0.yml`（Pigeon 步骤加 b16 生成 + 存在性检查）。
 - 未动：`ViewingReportActivity` / `ViewingReport*` / `ViewingReportRangeDialog` / leanback HistoryActivity / TV 入口 / C0–C2/B2–B15 合约与实现（除 C2 一处 §5 V1 分流）/ 共享组件（本批不用 VodCard/PicImage，无图）。
 

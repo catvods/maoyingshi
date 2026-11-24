@@ -10,7 +10,7 @@
 
 ### 1.1 管理页
 
-`app/src/main/java/com/github/moyingshi/osc/tv/ui/activity/PluginManagerActivity.java`（1040 行，main 源集，手机 + TV 共用）：
+`app/src/main/java/com/github/maoyingshi/osc/tv/ui/activity/PluginManagerActivity.java`（1040 行，main 源集，手机 + TV 共用）：
 
 - **列表数据来源**：`PluginSourceConfig.get().entries()`（SharedPreferences 键 `plugin_source_config`，`Entry` 记录：`id / name / version / runtimeApi / directory / enabled / importedAt`，插入顺序）；每次操作后都以后台重读出来的快照为准（开关与删除都先写配置再重读，界面状态与持久化状态一致）。
 - **后台模型**：单线程执行器 `mWorker` + `mBusy` + `mReloadQueued`。类注释说明原因：`PluginBootstrap.installAndReloadQuietly()` 是阻塞调用（QuickJS 初始化最长 5 秒），`PluginController.reload` 不可重入；单线程队列把“装载”天然串行化。连点开关时 `mReloadQueued` 把多次重装合并成一次。

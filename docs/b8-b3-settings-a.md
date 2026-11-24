@@ -24,11 +24,11 @@
   `flutter_module/lib/b3_settings_a_page.dart`、
   `flutter_module/lib/widgets/settings_row.dart`、
   `flutter_module/lib/main.dart`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B3HostApiImpl.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/SettingFragment.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B3HostApiImpl.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java`、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/SettingFragment.java`、
   `.gitignore`、`.github/workflows/b8-c0.yml`、`docs/b8-b3-settings-a.md`。
 - 预存脏文件：无（开始时工作树干净）。
 - 时间/时区：2026-11-17 12:02 CST（Asia/Shanghai）开始。
@@ -298,11 +298,11 @@ impl 在 main 源码集（leanback 构建也要编译它），4 个弹窗只在 
 | 2 | `flutter_module/lib/b3_settings_a_page.dart` | 新：`B3SettingsPage`（族壳 + 族内 Navigator）+ 4 个成员页（TMDB / AI / 广告 / 弹幕） |
 | 3 | `flutter_module/lib/widgets/settings_row.dart` | 新：共享 `SettingsRow` + `SettingsGroupHeader`（见 §2.10 V8） |
 | 4 | `flutter_module/lib/main.dart` | 改：`/settings` 家族路由 5 条 + 实验屏 B3 开关 |
-| 5 | `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B3HostApiImpl.java` | 新：host 实现（快照/弹窗/反射/轮询快照字段） |
-| 6 | `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java` | 改：`ROUTE_SETTINGS` + 注册 `B3HostApi` + 类注释提及设置族 |
-| 7 | `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java` | 改：C0 引擎注册 `B3HostApi`（只为开关） |
-| 8 | `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java` | 改：加 `flutter_b3_enabled` 开关方法 |
-| 9 | `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/SettingFragment.java` | 改：4 行入口 + 4 处 `performRow` 深链分流（共用 4 个新方法） |
+| 5 | `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B3HostApiImpl.java` | 新：host 实现（快照/弹窗/反射/轮询快照字段） |
+| 6 | `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java` | 改：`ROUTE_SETTINGS` + 注册 `B3HostApi` + 类注释提及设置族 |
+| 7 | `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java` | 改：C0 引擎注册 `B3HostApi`（只为开关） |
+| 8 | `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java` | 改：加 `flutter_b3_enabled` 开关方法 |
+| 9 | `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/SettingFragment.java` | 改：4 行入口 + 4 处 `performRow` 深链分流（共用 4 个新方法） |
 | 10 | `.gitignore` | 改：加 `B3Messages.java` |
 | 11 | `.github/workflows/b8-c0.yml` | 改：Pigeon 步骤加 b3 生成 + 存在性检查 |
 | 12 | `docs/b8-b3-settings-a.md` | 新：本文档 |

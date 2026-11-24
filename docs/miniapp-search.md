@@ -85,12 +85,12 @@ GET/POST、选择器/JS、`fypage`；取数与解析全部复用第 1 步的引�
 | 文件 | 动作 | 说明 |
 |---|---|---|
 | `docs/miniapp-search.md` | 新建（本文档） | 设计评审 + 实现记录 + 回滚 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkRule.java` | 改 | 加 `isSearchable()`（`E()` 对应物：search_url 与 searchFind 都非空） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkExecutor.java` | 改 | 加 `search(rule, keyword, page)` + `buildSearchRequest`；`RequestSpec` 加 `method`/`body`（默认 GET）；`fetch` 支持 POST（body 进 `application/x-www-form-urlencoded`）；`;` 修饰符解析抽成 `splitUrlModifiers`（`buildHomeRequest` 与 `buildSearchRequest` 共用，行为不变） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkParser.java` | 改 | 加 `parseSearchList(html, searchFind, baseUrl, engine)`（字段序 列表;标题;链接;描述;详情;图片，前三个必选） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkSearchActivity.java` | 新建 | 搜索页壳：Toolbar（返回 + EditText + 搜索按钮）+ `FrameLayout`（`@+id/hk_search_container`，挂 Fragment）；`open(Context, ruleTitle)` / `open(Context, ruleTitle, keyword)` 启动入口；壁纸由 `BaseActivity.setContentView` 自动加 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkSearchFragment.java` | 新建 | 搜索 Fragment：后台线程调 `HkExecutor.search` → `pickCards`/`toVods` → `VodAdapter`；下拉刷新（重搜第 1 页）+ 滑到底翻页（`fypage`）+ 加载/空/错三态 + 换关键词重搜；点卡片进详情页 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkListActivity.java` | 改 | 工具栏加搜索菜单项（`menu_hk_list.xml`，`ic_search`）：点开进搜索页（带规则标题）；规则不可搜索时该项隐藏 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkRule.java` | 改 | 加 `isSearchable()`（`E()` 对应物：search_url 与 searchFind 都非空） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkExecutor.java` | 改 | 加 `search(rule, keyword, page)` + `buildSearchRequest`；`RequestSpec` 加 `method`/`body`（默认 GET）；`fetch` 支持 POST（body 进 `application/x-www-form-urlencoded`）；`;` 修饰符解析抽成 `splitUrlModifiers`（`buildHomeRequest` 与 `buildSearchRequest` 共用，行为不变） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkParser.java` | 改 | 加 `parseSearchList(html, searchFind, baseUrl, engine)`（字段序 列表;标题;链接;描述;详情;图片，前三个必选） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkSearchActivity.java` | 新建 | 搜索页壳：Toolbar（返回 + EditText + 搜索按钮）+ `FrameLayout`（`@+id/hk_search_container`，挂 Fragment）；`open(Context, ruleTitle)` / `open(Context, ruleTitle, keyword)` 启动入口；壁纸由 `BaseActivity.setContentView` 自动加 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkSearchFragment.java` | 新建 | 搜索 Fragment：后台线程调 `HkExecutor.search` → `pickCards`/`toVods` → `VodAdapter`；下拉刷新（重搜第 1 页）+ 滑到底翻页（`fypage`）+ 加载/空/错三态 + 换关键词重搜；点卡片进详情页 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkListActivity.java` | 改 | 工具栏加搜索菜单项（`menu_hk_list.xml`，`ic_search`）：点开进搜索页（带规则标题）；规则不可搜索时该项隐藏 |
 | `app/src/mobile/res/layout/activity_hk_search.xml` | 新建 | 照 `activity_hk_list.xml`：MaterialToolbar（内嵌 EditText + 搜索按钮，照本 App `fragment_search.xml` 的样式）+ `FrameLayout`（container） |
 | `app/src/mobile/res/layout/fragment_hk_search.xml` | 新建 | 照 `fragment_hk_list.xml`：`diagText` + SwipeRefreshLayout → ProgressLayout → CustomRecyclerView（无分类 chips） |
 | `app/src/mobile/res/menu/menu_hk_list.xml` | 新建 | 一个搜索项（`@+id/action_search`，`@drawable/ic_search`，`showAsAction="always"`） |
@@ -275,7 +275,7 @@ GET/POST、选择器/JS、`fypage`；取数与解析全部复用第 1 步的引�
   的 toast 文案改用新串 `hk_search_empty_keyword`，不留“复用硬编码串还是
   新串”的待定。
 - `HkSearchFragment.loadPage` 里初版写了全限定名
-  `com.github.moyingshi.osc.tv.api.hk.HkCard`，已改成 import（纯风格，
+  `com.github.maoyingshi.osc.tv.api.hk.HkCard`，已改成 import（纯风格，
   无行为变化）。
 - 其余实现与设计一致，无需纠正：逐行重读未发现返回类型误用、泛型原始
   类型、悬空 import、布局 id 与 binding 不一致；`RequestBody.create(String,

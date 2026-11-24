@@ -2,7 +2,7 @@
 
 ## Cause
 
-`app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java:18`
+`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java:18`
 imported `com.catvod.net.OkHttp`, which does not exist. The real class is
 `com.github.catvod.net.OkHttp` (module `:catvod`), used by every other file in
 the repo (e.g. `Startup.java`, `DanmakuApi.java`, and `HomeActivity` on main,
@@ -44,7 +44,7 @@ further fix needed.
 
 - Objective: fix run #151 Java compile failure (wrong OkHttp import package).
 - Branch `b8-flutter-rewrite`, base HEAD `b4d4f6b3`.
-- Files: `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java`
+- Files: `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java`
   (1-line import fix), `docs/b8-ci151-okhttp.md` (this doc).
 - Status: fixed locally, committed; **not pushed** (parent pushes via browser).
 - Next action: parent pushes the commit via the browser upload route and creates

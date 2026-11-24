@@ -2,7 +2,7 @@
 
 > Recovery anchor：目标是把 `HkEngine.Bridge.batchFetch` 按官方改成 `{url, options}`
 > 嵌套入参 + `min(n,16)` 并发 + 官方失败语义；options 键真正生效。只改
-> `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkEngine.java`（+
+> `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkEngine.java`（+
 > 本文档）。本地提交、不推、不编、不动版本记录。验收：① 草莓 preRule 调用链与
 > 官方一致 ② 并发上限 `min(n,16)` ③ 单项失败返回值与官方一致 ④ 3 条验收规则
 > 零回归（均不用 batchFetch）。下一步：写代码 → 逐行重读 → guard finish 提交 + tag。
@@ -15,7 +15,7 @@ batchFetch 按官方改成 `{url, options}` 嵌套入参 + `min(n,16)` 并发 +
 真正生效；草莓 preRule 调用链通，3 条验收规则零回归。
 
 - 允许路径：`docs/miniapp-align-4-batch-fetch.md`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkEngine.java`
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkEngine.java`
 - 保护路径：HEAD 已含第 1/2/3 项（31fd3c80 等），一律不动；TV/leanback、
   BaseLoader、底栏（menu_nav.xml 6 项）不动。
 - 当前时间：2026-11-15 23:04 CST；预计 45 分钟，约 23:50 完成。

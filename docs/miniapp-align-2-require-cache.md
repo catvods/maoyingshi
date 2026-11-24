@@ -5,7 +5,7 @@
 > 当前状态：main = 4022e7bc（第 1 项本地未推），工作区干净；本文档先写，代码未改；下一步：guard start → 改 HkEngine → Node 转写校验 isJsCode 决策表 + 逐行重读 → guard finish 提交 + recovery tag。
 
 - 完成句：墨影视海阔小程序的 `require`/`rc` 按官方行为补上 MD5 文件缓存 + isJsCode 校验 + 坏内容静默回退旧缓存，本地提交完成。
-- 允许路径：`docs/miniapp-align-2-require-cache.md`、`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkEngine.java`。
+- 允许路径：`docs/miniapp-align-2-require-cache.md`、`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkEngine.java`。
 - 保护：TV/leanback 不动，BaseLoader 不动，底栏仍 6 项（`app/src/mobile/res/menu/menu_nav.xml`，提交前核对）；不推、不编、不动版本记录空间；不碰其余 4 项（第 1 项已做完的也不改）。
 - 本地时间：2026-11-15 22:44 CST；预计：文档 20 分钟 + 实现 25 分钟 + 校验提交 20 分钟，约 23:50 前完成。
 - 最便宜的决定性验证：Node 逐字转写 `isJsCode`/`isGoodLib` 决策表（真库 / 418 HTML / 空 / 小写 doctype / 纯导出对象）+ 逐行重读 diff + menu 6 项核对；本地无 JDK，编译等推上去之后的 GitHub 构建；真机行为（缓存回退实际生效）只能等推上去编好后在手机上验。

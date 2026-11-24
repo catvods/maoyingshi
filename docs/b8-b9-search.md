@@ -11,8 +11,8 @@
 
 ### 1.1 两个原生文件（mobile 源集）
 
-- `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/activity/SearchActivity.java`（132 行）：`start()` 各重载汇入 5 参 `start(activity, keyword, siteKey, pic, wallPic)`；`direct()` 各重载在同一 5 参上加 `direct=true`；`directFromHistory()` 另加历史续看参数。`initView`：direct → `CollectFragment.newInstance(keyword, siteKey, "", pic, wallPic, hrCid, hrKey, hrTargetCid)`；否则 → `SearchFragment.newInstance(keyword, siteKey, pic, wallPic)`。`onBackInvoked`：有 fragment 回退栈则弹栈，否则走系统返回。
-- `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/SearchFragment.java`（479 行）：输入框（TextInputEditText，hint `search_keyword`，IME 搜索动作，maxLength 255，单行）；搜索记录（Flexbox 列表，`Setting.getKeyword()` JSON，最新在前、去重、上限 10，点按填入并搜索，长按直接删除无确认框，提交时 250ms 延迟落盘）；热词（三组 TV / 电影 / 综艺，每组上限 10，先显示 `Setting.getHotTv/Movie/Variety` 缓存，再并行请求 360kan rank 接口 cat 3/2/4，Referer `https://www.360kan.com/rank/general`，成功后存回 Setting）；联想（`SearchSuggest`：爱奇艺 + 腾讯两路并行，各自到达即显示，合并去重上限 20，清除 `</hl>` 标签、压缩空白、繁转简，`mSuggestSeq` 丢弃过期结果）；范围弹窗（全部 / 当前站源 / 分组，当前站源要求首页站源可搜索，否则 toast `detail_site_not_searchable`）；站源按钮（`SiteDialog.create().search().show(this)`）；提交（`collect()`：CollectFragment 盖在 SearchFragment 之上并入回退栈）；带关键词打开时 `initView` 自动提交；空关键词时弹键盘；CollectFragment 的 "result" edit=true 回调 → 弹键盘。
+- `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/activity/SearchActivity.java`（132 行）：`start()` 各重载汇入 5 参 `start(activity, keyword, siteKey, pic, wallPic)`；`direct()` 各重载在同一 5 参上加 `direct=true`；`directFromHistory()` 另加历史续看参数。`initView`：direct → `CollectFragment.newInstance(keyword, siteKey, "", pic, wallPic, hrCid, hrKey, hrTargetCid)`；否则 → `SearchFragment.newInstance(keyword, siteKey, pic, wallPic)`。`onBackInvoked`：有 fragment 回退栈则弹栈，否则走系统返回。
+- `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/SearchFragment.java`（479 行）：输入框（TextInputEditText，hint `search_keyword`，IME 搜索动作，maxLength 255，单行）；搜索记录（Flexbox 列表，`Setting.getKeyword()` JSON，最新在前、去重、上限 10，点按填入并搜索，长按直接删除无确认框，提交时 250ms 延迟落盘）；热词（三组 TV / 电影 / 综艺，每组上限 10，先显示 `Setting.getHotTv/Movie/Variety` 缓存，再并行请求 360kan rank 接口 cat 3/2/4，Referer `https://www.360kan.com/rank/general`，成功后存回 Setting）；联想（`SearchSuggest`：爱奇艺 + 腾讯两路并行，各自到达即显示，合并去重上限 20，清除 `</hl>` 标签、压缩空白、繁转简，`mSuggestSeq` 丢弃过期结果）；范围弹窗（全部 / 当前站源 / 分组，当前站源要求首页站源可搜索，否则 toast `detail_site_not_searchable`）；站源按钮（`SiteDialog.create().search().show(this)`）；提交（`collect()`：CollectFragment 盖在 SearchFragment 之上并入回退栈）；带关键词打开时 `initView` 自动提交；空关键词时弹键盘；CollectFragment 的 "result" edit=true 回调 → 弹键盘。
 
 ### 1.2 入口（只改分流处）
 
@@ -65,11 +65,11 @@
 | `flutter_module/pigeons/b9_search_messages.dart` | 新，176 行 |
 | `flutter_module/lib/b9_search_page.dart` | 新，466 行 |
 | `flutter_module/lib/main.dart` | 改：`b9_search_page.dart` 与 `b9_search_messages.g.dart` 导入；`onGenerateRoute` 加 `/search` 分支；实验屏加 B9 开关（`_b9Api` / `_b9Enabled` / `_loadB9Flag` / `_setB9Flag` / SwitchListTile）。已有路由不动 |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B9HostApiImpl.java` | 新，444 行 |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java` | 改：加 `ROUTE_SEARCH` 常量；`ensureFlutterEngine` 注册 `B9HostApi`；类注释补一行 |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java` | 改：C0 引擎注册 `B9HostApi`（只为实验屏开关用） |
-| `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java` | 改：加 `isFlutterB9Enabled` / `putFlutterB9Enabled`（`flutter_b9_enabled`，默认 false） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/activity/SearchActivity.java` | 改：只改 `start` 5 参漏斗（分流 + 3 个导入）；`direct()` / `directFromHistory()` / `initView` / 其余不动 |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B9HostApiImpl.java` | 新，444 行 |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java` | 改：加 `ROUTE_SEARCH` 常量；`ensureFlutterEngine` 注册 `B9HostApi`；类注释补一行 |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java` | 改：C0 引擎注册 `B9HostApi`（只为实验屏开关用） |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java` | 改：加 `isFlutterB9Enabled` / `putFlutterB9Enabled`（`flutter_b9_enabled`，默认 false） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/activity/SearchActivity.java` | 改：只改 `start` 5 参漏斗（分流 + 3 个导入）；`direct()` / `directFromHistory()` / `initView` / 其余不动 |
 | `.gitignore` | 改：加 `B9Messages.java` |
 | `.github/workflows/b8-c0.yml` | 改：Pigeon 步骤加 `b9_search_messages.dart` 生成 + Dart/Java 存在性检查（B8 同款） |
 | `docs/b8-b9-search.md` | 新，本文档 |
@@ -174,7 +174,7 @@
 
 - 目标：B8 全量迁移 B9——手机端搜索输入页迁移到 Flutter，结果暂走原生直出模式；开关默认关；只改 `SearchActivity.start` 分流处；不推送。
 - 状态：已完成，本地未提交。分支 `b8-flutter-rewrite`，HEAD `1ba0675f`（B8 提交），main `f39a6e0` 不动。
-- 文件：新 `flutter_module/pigeons/b9_search_messages.dart`、`flutter_module/lib/b9_search_page.dart`、`app/src/main/java/com/github/moyingshi/osc/tv/flutter/B9HostApiImpl.java`、本文档；改 `flutter_module/lib/main.dart`、两 flutter Activity、Setting、mobile `SearchActivity`（只改分流处）、`.gitignore`、`.github/workflows/b8-c0.yml`。
+- 文件：新 `flutter_module/pigeons/b9_search_messages.dart`、`flutter_module/lib/b9_search_page.dart`、`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B9HostApiImpl.java`、本文档；改 `flutter_module/lib/main.dart`、两 flutter Activity、Setting、mobile `SearchActivity`（只改分流处）、`.gitignore`、`.github/workflows/b8-c0.yml`。
 - 验证：`git diff --check` 干净；作用域 diff 已逐项复核，共享文件只含加法行；新文件括号嵌套校验通过；main 仍为 `f39a6e0`；构建与运行未验证（无 SDK），留给联合 CI + 设备验收；§6 第 3 项含 B5 键盘依赖标注。
 - 未决风险：§6 第 1/2 项（Pigeon 生成与 analyze，联合 CI 证明）、第 3 项（键盘行为，B5 联合验收决定 B9 是否继续）。
 - 下一步（恰好一个）：B10 聚合搜索页迁移。

@@ -12,10 +12,10 @@
 > 提交并打 recovery tag；阶段 6 随即完工。
 
 - 完成句：授权链落地并接进 JS 引擎、异步版恢复，6c 提交后阶段 6 完工。
-- 允许路径：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkAuthDialog.java`（新）、
+- 允许路径：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkAuthDialog.java`（新）、
   `HkAuthManager.java`（新）、`HkJsRuntime.java`（只加两个 putFunction）、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/util/HkHikerRuleUtil.java`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/util/HkCodeUtil.java`、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/util/HkHikerRuleUtil.java`、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/util/HkCodeUtil.java`、
   `docs/miniapp-xingchen-6c-auth.md`（本文档）。
 - 保护路径：无初始脏文件（`git status` 干净，HEAD `ceb6795d`，6b 已提交）。
 - 本地时间：2026-11-19 17:15 CST（Asia/Shanghai）。

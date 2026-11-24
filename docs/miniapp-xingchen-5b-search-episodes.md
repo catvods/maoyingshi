@@ -15,7 +15,7 @@
   `app/src/main/java/com/fongmi/android/tv/api/hk/` 与
   `app/src/mobile/java/com/fongmi/android/tv/ui/hk/HkColType.java`。
 - 移植方式：机械搬运脚本 `/tmp/xc5/port5b.py`（包名改写 + 文件头插入；不随仓库走）。
-  包名改写 `com.fongmi.android.tv` → `com.github.moyingshi.osc.tv`。每个新文件在
+  包名改写 `com.fongmi.android.tv` → `com.github.maoyingshi.osc.tv`。每个新文件在
   package 行后加一行文件头移植说明（3a/3b/3e/4a/4b/4c/5a 同款）。
 - 本笔 10 个新文件全部只 import `java.*` / `android.*` / `com.google.gson` /
   `okhttp3`，无跨包依赖（逐文件 grep 核对，见 §2），故全部逐字节原文搬运、

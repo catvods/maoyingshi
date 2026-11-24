@@ -3,7 +3,7 @@
 任务来源：用户 2026-11-11 14:38 说“b6”。B6 是 B 档最后一项待做的功能级工程（1–2 周）。
 参考：`~/workspace/ui-ref/analysis.md`（B6 在第 4 节；播放器在第 2.4 节）、BieCuiLe 解包 `~/workspace/ui-ref/extracted/`（`assets/flutter_assets/assets/shaders/Anime4K_Upscale_CNN_x2_S.glsl`、`assets/flutter_assets/assets/i18n/en.json`）。
 基线：main `d3f2b211`（B5 之后，已推到线上 main，本地与线上一致，工作树干净）。
-约束：只在本地改、本地提交，**不推 GitHub**；不编测试版；每完成一个逻辑单元走一次 task_guard finish（一个 guard 会话 = 一次原子提交 + recovery tag）；保留墨影视已有改动（品牌/包名 com.github.moyingshi.osc.tv、液态玻璃、短剧、Archive.org 爬虫、本地源、默认搜索本站、底栏 6 项、B1–B5）；底栏上限 6 项；本机无 Android SDK，编译检查靠 GitHub 构建。
+约束：只在本地改、本地提交，**不推 GitHub**；不编测试版；每完成一个逻辑单元走一次 task_guard finish（一个 guard 会话 = 一次原子提交 + recovery tag）；保留墨影视已有改动（品牌/包名 com.github.maoyingshi.osc.tv、液态玻璃、短剧、Archive.org 爬虫、本地源、默认搜索本站、底栏 6 项、B1–B5）；底栏上限 6 项；本机无 Android SDK，编译检查靠 GitHub 构建。
 
 完成句：播放器里加“画面”入口，五项调节（亮度/对比度/饱和度/色相/伽马）在 Exo 与 mpv 内核实时生效、ijk 明确不支持，Anime4K 开关只在 mpv 内核可用（默认关），调节值持久化，黑边虚化本期不做。
 

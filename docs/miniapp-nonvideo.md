@@ -28,10 +28,10 @@
 | 报告 `pickEpisodes`（选集识别） | 逆向报告 §7.1（L582–606，全文可读） | 章节与选集是同一套识别（`text_5` 优先，否则第二遍谓词）；小说/漫画的“章节”就是详情切分出的选集卡片，不用另建章节模型 |
 | 音乐类真实写法 | 4255 合集样例（麦田音乐网，music） | 列表选择器版，`detail_find_rule` 是 JS，输出 `rich_text` 卡片，内嵌 `mp3` 地址与“点击试听”链接；`sdetail_find_rule = *`。结论：音乐详情的音频地址藏在详情卡片里，点选集后的懒解析（第 5 步）才能拿到它 |
 | 图片类真实写法 | 4255 合集样例（千叶网壁纸，picture，`col_type = pic_2`；小鸟壁纸，`col_type = pic_1_card`） | 列表/详情都是标准卡片（标题/封面/链接），与影视规则同款取数链；图集内容在懒解析结果里以 `pics://url1&&url2` 形式出现 |
-| 音频播放已有能力 | `app/src/main/java/com/github/moyingshi/osc/tv/ui/activity/AudioActivity.java` L176 | `start(Activity, key, url, title, subtitle, pic, headers, lrc)`——直接接受音频地址 + 请求头 + 歌词（lrc 地址或内嵌文本）；`AudioUtil.isAudioUrl` 认 mp3/flac/m4a/aac/wav/ogg/oga/opus/ape/wma/amr/mka + `mp3://`/`music://` 前缀 |
+| 音频播放已有能力 | `app/src/main/java/com/github/maoyingshi/osc/tv/ui/activity/AudioActivity.java` L176 | `start(Activity, key, url, title, subtitle, pic, headers, lrc)`——直接接受音频地址 + 请求头 + 歌词（lrc 地址或内嵌文本）；`AudioUtil.isAudioUrl` 认 mp3/flac/m4a/aac/wav/ogg/oga/opus/ape/wma/amr/mka + `mp3://`/`music://` 前缀 |
 | 歌词已接通 | 第 8 步 `HkExecutor.PlayOutcome.lyric`（`docs/miniapp-playback-params.md`） | 多线路 JSON 的 `lyric` 字段已解析进 `PlayOutcome.lyric`（.lrc 地址已补全，或内嵌歌词文本原样保留）；本步只确认音乐规则走同一条路，不另做歌词解析 |
-| 阅读器已有能力 | `app/src/main/java/com/github/moyingshi/osc/tv/ui/web/WebReaderActivity.java` L41–42 | “加载本地 assets/reader.html 阅读器模板（自带小说翻页 / 漫画瀑布流 / 目录 / 主题 / 自动滚动 UI）”；payload 口径：小说 `novel://{title,content}` JSON（非 JSON 的纯文本也当正文），漫画 `pics://url1&&url2...`（`&&` 分隔，或单个 PDF） |
-| 阅读器入口已有 | `app/src/main/java/com/github/moyingshi/osc/tv/ui/novel/NovelRouter.java` | `openReader(ctx, siteKey, flag, vod, ep, payload)`（kind=1 小说）、`openPics(ctx, siteKey, flag, vod, ep, payload)`（kind=2 漫画/图集）；`Flag(String)` + `Episode.create(name, url)` 可直接构造章节表，不依赖蜘蛛 `Result` |
+| 阅读器已有能力 | `app/src/main/java/com/github/maoyingshi/osc/tv/ui/web/WebReaderActivity.java` L41–42 | “加载本地 assets/reader.html 阅读器模板（自带小说翻页 / 漫画瀑布流 / 目录 / 主题 / 自动滚动 UI）”；payload 口径：小说 `novel://{title,content}` JSON（非 JSON 的纯文本也当正文），漫画 `pics://url1&&url2...`（`&&` 分隔，或单个 PDF） |
+| 阅读器入口已有 | `app/src/main/java/com/github/maoyingshi/osc/tv/ui/novel/NovelRouter.java` | `openReader(ctx, siteKey, flag, vod, ep, payload)`（kind=1 小说）、`openPics(ctx, siteKey, flag, vod, ep, payload)`（kind=2 漫画/图集）；`Flag(String)` + `Episode.create(name, url)` 可直接构造章节表，不依赖蜘蛛 `Result` |
 | 图集现行状态 | `HkExecutor.dispatchResolved` pics:// 分支 + `HkActionHandler.java` L270–271 | 两处都弹 `hk_action_pics_unsupported`“图集浏览暂不支持（pics://）”——第 7 步的结论基于“图集浏览暂不支持”的前提；本步核实到 `NovelRouter.openPics` + `WebReaderActivity` kind=2 已在 main 源集里存在，所以 `pics://` 可以接通，不再是“不支持” |
 | 三条影视验收规则 | `~/workspace/miniapp/test-rules/` | 奇优影院♔/童话/臻品fix 都是 video 类型，无 `last_chapter_rule`/`chapter_find`/`sdetail` 非 `*` 字段；本步的分支只在 type 为 read/cartoon/music/picture 时触发，三条规则走原路 |
 
@@ -58,12 +58,12 @@
 | 文件 | 动作 | 说明 |
 |---|---|---|
 | `docs/miniapp-nonvideo.md` | 新建（本文档） | 设计评审 + 实现记录 + 回滚 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkNonVideo.java` | 新建 | 非影视类分流（见下）：type 判定 + 点选集后台解析 + 阅读器/音频页/提示三路出口 + payload 拼装 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkEngine.java` | 改 | Bridge.`setResult` 同步记 `resultRaw`（原始交值）；新增 `evalTextRule(String)`（跑一段 JS 规则，取 `setResult` 原值或直接返回值当字符串；字符串原值优先，否则卡片首标题，否则 ""） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkExecutor.java` | 改 | 新增 `DetailOutcome {cards, lastChapter}` + `detailOutcome(...)`（`detail()` 委托给它，签名与行为不变）；新增 `lastChapter(rule, detailUrl, pageText)`（复用已抓的详情页正文求值，失败回 ""，绝不炸详情页）；新增 `sdetail(rule, url, initialVars, host)`（`*` 继承主规则、非 `*` 跑二级规则、空返回空列表）；`PlayOutcome` 加 `pics` 字段（pics:// 分支同时填 `pics` 与 `notice`，老调用方只读 `notice`，行为不变） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkParser.java` | 改 | `parseHomeListDetailed`：列表字段是 `*` 且走详情路（`keepTitleOnly`）时，整页当一个条目（`doc.body()`）；`selectSegments`：`el.select(seg)` 包 try/catch，非法 CSS 记日志跳过，不炸整次解析 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkPlayer.java` | 改 | `play()` 里拼 Vod 的部分抽成包内可见 `buildVod(rule, detail, detailUrl)`（行为不变），供 `HkNonVideo` 给阅读器拼 Vod/Flag 复用 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkDetailFragment.java` | 改 | `loadDetail` 改调 `detailOutcome`，`lastChapter` 非空时按 `hk_detail_last_chapter` 格式追加到简介末尾；`onEpisodeClick`：`HkNonVideo.isNonVideoRule(mRule)` 时走 `HkNonVideo.routeEpisode(...)`，否则原 `HkPlayer.play(...)` |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkNonVideo.java` | 新建 | 非影视类分流（见下）：type 判定 + 点选集后台解析 + 阅读器/音频页/提示三路出口 + payload 拼装 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkEngine.java` | 改 | Bridge.`setResult` 同步记 `resultRaw`（原始交值）；新增 `evalTextRule(String)`（跑一段 JS 规则，取 `setResult` 原值或直接返回值当字符串；字符串原值优先，否则卡片首标题，否则 ""） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkExecutor.java` | 改 | 新增 `DetailOutcome {cards, lastChapter}` + `detailOutcome(...)`（`detail()` 委托给它，签名与行为不变）；新增 `lastChapter(rule, detailUrl, pageText)`（复用已抓的详情页正文求值，失败回 ""，绝不炸详情页）；新增 `sdetail(rule, url, initialVars, host)`（`*` 继承主规则、非 `*` 跑二级规则、空返回空列表）；`PlayOutcome` 加 `pics` 字段（pics:// 分支同时填 `pics` 与 `notice`，老调用方只读 `notice`，行为不变） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkParser.java` | 改 | `parseHomeListDetailed`：列表字段是 `*` 且走详情路（`keepTitleOnly`）时，整页当一个条目（`doc.body()`）；`selectSegments`：`el.select(seg)` 包 try/catch，非法 CSS 记日志跳过，不炸整次解析 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkPlayer.java` | 改 | `play()` 里拼 Vod 的部分抽成包内可见 `buildVod(rule, detail, detailUrl)`（行为不变），供 `HkNonVideo` 给阅读器拼 Vod/Flag 复用 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkDetailFragment.java` | 改 | `loadDetail` 改调 `detailOutcome`，`lastChapter` 非空时按 `hk_detail_last_chapter` 格式追加到简介末尾；`onEpisodeClick`：`HkNonVideo.isNonVideoRule(mRule)` 时走 `HkNonVideo.routeEpisode(...)`，否则原 `HkPlayer.play(...)` |
 | `app/src/main/res/values/lab_strings.xml` | 改 | 加 2 条：`hk_detail_last_chapter`（`最新章节：%1$s`）、`hk_nonvideo_no_content`（`章节内容未解析出`） |
 
 ### 关键契约

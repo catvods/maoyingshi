@@ -29,7 +29,7 @@ import 'pigeon/c1_messages.g.dart';
 /// request/response call. The host only ever sends on engine reuse; the
 /// initial-route flow below is untouched.
 const MethodChannel _relaunchChannel =
-    MethodChannel('com.github.moyingshi.osc.tv/c1_relaunch');
+    MethodChannel('com.github.maoyingshi.osc.tv/c1_relaunch');
 
 /// The root navigator, so the relaunch handler can reset the route stack.
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();

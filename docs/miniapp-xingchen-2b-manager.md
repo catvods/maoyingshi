@@ -8,8 +8,8 @@
 
 | 我方文件 | 星辰来源 | 说明 |
 |---|---|---|
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkRuleManager.java`（新建，1314 行） | `~/workspace/xingchen-ref/app/src/main/java/com/fongmi/android/tv/api/hk/HkRuleManager.java`（2058 行） | 移植星辰行号 48–1163 与 1887–2058；包名改为墨影视侧 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkStore.java`（834 行 → 约 640 行） | 同上（接管方）+ 原 HkStore 自有能力 | 瘦身成门面，public API 与旧版逐项比对一致 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkRuleManager.java`（新建，1314 行） | `~/workspace/xingchen-ref/app/src/main/java/com/fongmi/android/tv/api/hk/HkRuleManager.java`（2058 行） | 移植星辰行号 48–1163 与 1887–2058；包名改为墨影视侧 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkStore.java`（834 行 → 约 640 行） | 同上（接管方）+ 原 HkStore 自有能力 | 瘦身成门面，public API 与旧版逐项比对一致 |
 | 本文档 | 移植计划 `docs/miniapp-xingchen-port-plan.md` §阶段 2 | 本步是阶段 2 的 2b：只做管理器核心 + 门面 |
 
 行号说明：任务书写作“约 48–1160 行”，实测星辰 `importJsRule` 方法体在
@@ -72,7 +72,7 @@ SCHEME`）、`importCacheDir/libsDir`、`lastError/lastError()`、`readTextFile`
 
 ## 适配点逐条核对
 
-1. **包名**：星辰包改为 `com.github.moyingshi.osc.tv.api.hk`；`App` 用我们自己的
+1. **包名**：星辰包改为 `com.github.maoyingshi.osc.tv.api.hk`；`App` 用我们自己的
    `App`（`App.get()` 在 `app/src/main/java/.../App.java:87` 存在，`App.gson()` 是
    普通 `new Gson()`，与 manager 内 `new Gson()` 等价）。
 2. **HkJsRuntime 引用（阶段 3 才有，2b 不得引用）**：`get()` 里星辰 :104-107 的

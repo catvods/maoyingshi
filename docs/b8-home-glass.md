@@ -51,7 +51,7 @@ native home shows a floating capsule over a blurred purple wallpaper.
 | File | Change |
 |---|---|
 | `flutter_module/pigeons/b11_home_messages.dart` | Two additive fields at the end of `B11HomeScreen`: `wallpaperPath` (String) + `wallpaperColor` (int). No existing method or field changed. |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B11HostApiImpl.java` | `resolveWallpaper()` + `snapshotDrawable()` mirroring `CustomWallView.load()`; two builder calls in `buildScreen`. |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B11HostApiImpl.java` | `resolveWallpaper()` + `snapshotDrawable()` mirroring `CustomWallView.load()`; two builder calls in `buildScreen`. |
 | `flutter_module/lib/b11_home_page.dart` | Stack layout (wallpaper + content + floating capsule), `_WallpaperBackground`, capsule `_GlassBottomBar`, grid bottom padding. Top bar, search pill, tab bar, B12/B13 widgets, routing untouched. |
 | `docs/b8-home-glass.md` | This file. |
 
@@ -214,7 +214,7 @@ it from the existing `glassEnabled` field.
 - Status: implemented, local commit only (no push — CI run #55
   was building head `ae99879a` when this work started).
 - Files: `flutter_module/pigeons/b11_home_messages.dart`,
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B11HostApiImpl.java`,
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B11HostApiImpl.java`,
   `flutter_module/lib/b11_home_page.dart`, `docs/b8-home-glass.md`.
 - Next action: parent pushes after run #55 resolves, then device
   acceptance against the checklist above.

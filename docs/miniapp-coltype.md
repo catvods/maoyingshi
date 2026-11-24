@@ -61,10 +61,10 @@
 | 文件 | 动作 | 说明 |
 |---|---|---|
 | `docs/miniapp-coltype.md` | 新建（本文档） | 设计评审 + 全表 + 实现记录 + 回滚 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkListHelper.java` | 改 | `styleFor` 升级成全表；新增 `columnsFor`；两者共用一张内部表（`formFor`）；`toVods` 仅对 rich_text/long_text 卡片去 HTML 标签 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkListFragment.java` | 改 | `setStyle(Style)` → `setStyle(String colType)`：内部同时取 `styleFor` + `columnsFor`，列数与尺寸成对传给 adapter/layout |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkSearchFragment.java` | 改 | 同上（搜索页与列表页同一处取样式；内嵌首页复用 `HkListFragment`，自动受益） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/Product.java` | 改 | 加 `getSpec(Context, Style, int column)` 重载：与现有 `getSpec(Context, Style)` 同款算式，只把列数换成显式值；不改现有方法 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkListHelper.java` | 改 | `styleFor` 升级成全表；新增 `columnsFor`；两者共用一张内部表（`formFor`）；`toVods` 仅对 rich_text/long_text 卡片去 HTML 标签 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkListFragment.java` | 改 | `setStyle(Style)` → `setStyle(String colType)`：内部同时取 `styleFor` + `columnsFor`，列数与尺寸成对传给 adapter/layout |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkSearchFragment.java` | 改 | 同上（搜索页与列表页同一处取样式；内嵌首页复用 `HkListFragment`，自动受益） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/Product.java` | 改 | 加 `getSpec(Context, Style, int column)` 重载：与现有 `getSpec(Context, Style)` 同款算式，只把列数换成显式值；不改现有方法 |
 
 ### 关键契约
 

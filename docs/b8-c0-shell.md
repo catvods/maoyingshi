@@ -17,7 +17,7 @@
   专用 CI workflow + 本笔记，本地提交，不推送，不动 `main`。
 - 允许路径：`flutter_module/`、`settings.gradle`、`app/build.gradle`、
   `app/src/mobile/AndroidManifest.xml`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/`、
   `app/src/main/res/layout/activity_b8_c0.xml`、
   `app/src/main/res/values/b8_c0_strings.xml`、`.gitignore`、
   `.github/workflows/b8-c0.yml`、`docs/b8-c0-shell.md`。
@@ -84,8 +84,8 @@ CI 增加 Flutter 构建步骤。验收标准见评估文档 §6（5 条），�
 * flutter_module/.metadata               project_type: module，version 3.50.0
 * flutter_module/.gitignore              忽略 .android/.dart_tool/生成代码
 * flutter_module/README.md               指向本文档的短说明
-* app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java
-* app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0HostApiImpl.java
+* app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java
+* app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0HostApiImpl.java
 * app/src/main/res/layout/activity_b8_c0.xml
 * app/src/main/res/values/b8_c0_strings.xml
 M settings.gradle                        加 download.flutter.io 仓 + hook 求值
@@ -102,7 +102,7 @@ CI 生成、永不提交的文件（已在 `.gitignore` 中）：
 flutter_module/.android/                 （flutter pub get 生成的包装工程）
 flutter_module/.dart_tool/
 flutter_module/lib/pigeon/c0_messages.g.dart
-app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0Messages.java
+app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0Messages.java
 ```
 
 有意省略（`flutter create -t module` 模板有、但 C0 不需要）：`test/widget_test.dart`
@@ -154,7 +154,7 @@ mpv 内核（在播放设置里切换内核）。任一失败即 C0 不通过—
 3. `app/build.gradle`：删掉 `implementation project(':flutter')` 一行及注释。
 4. `app/src/mobile/AndroidManifest.xml`：删掉 `C0ShellActivity` 的 `<activity>`
    条目及注释。
-5. 删除 `app/src/main/java/com/github/moyingshi/osc/tv/flutter/`、
+5. 删除 `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/`、
    `app/src/main/res/layout/activity_b8_c0.xml`、
    `app/src/main/res/values/b8_c0_strings.xml`、`.github/workflows/b8-c0.yml`、
    `docs/b8-c0-shell.md`。

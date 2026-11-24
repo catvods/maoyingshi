@@ -7,8 +7,8 @@
 
 ## §1 原生页
 
-原生实现：`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/activity/HomeActivity.java`（703 行）+
-`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/VodFragment.java`（1210 行）。
+原生实现：`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/activity/HomeActivity.java`（703 行）+
+`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/VodFragment.java`（1210 行）。
 
 - **HomeActivity（宿主壳 + 底栏）**：`change(position)` 是分流点（1=设置，0=首页）；`handleNavItem` 处理底栏与玻璃条点按（玻璃条 `onSelect` 直接调 `handleNavItem`）；`selectNavigation` 同步选中项；`changeFragment` 切 fragment；`setNavigation()` 定 6 项可见规则（vod/setting 常显；live 需 `LiveConfig.hasUrl()`；drama 需 `DramaSites.hasDramaSites() && Setting.isShortDramaCollected()`；following 需 `FollowingSettings.isEnabled()`；第 5 项 lab/local_source 由 `Setting.isLabNav()` 定）；`syncGlassState()` 组玻璃条（可见项过滤 + 徽章 + blur/distortion/translucency/dispersion + 暗色 + colorPrimary）；`restorePosition()` 进程恢复直接调 `changeFragment`；`onDestroy()` 停服务、清 VodConfig、退 Source；`launchMode=singleTop`。
 - **VodFragment（首页复合壳）**：AppBar 含 toolbar（logo 36dp + 标题跑马灯）、搜索条（40dp 圆角 pill）、banner ViewPager2（188dp）、继续观看行、JS 小部件区、横向分类 Tab（`TypeAdapter`，14sp 白字 chip）；下方 `CustomViewPager`，页为 `FolderFragment`（分类列表）、`hkContainer`（hk:// 内嵌）、`homeWeb`（WebView）；3 个 FAB（浏览/链接/回顶）；工具栏菜单 `menu_vod.xml`、⋮ 菜单 `menu_vod_more.xml`。
@@ -31,7 +31,7 @@
 
 ## §3 文件清单
 
-新：`flutter_module/pigeons/b11_home_messages.dart`（`B11HostApi` + `B11HomeScreen` / `B11HomeTab` / `B11NavItem` / `B11MenuItem`）、`flutter_module/lib/b11_home_page.dart`、`app/src/main/java/com/github/moyingshi/osc/tv/flutter/B11HostApiImpl.java`、`docs/b8-b11-home.md`。
+新：`flutter_module/pigeons/b11_home_messages.dart`（`B11HostApi` + `B11HomeScreen` / `B11HomeTab` / `B11NavItem` / `B11MenuItem`）、`flutter_module/lib/b11_home_page.dart`、`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B11HostApiImpl.java`、`docs/b8-b11-home.md`。
 改（只加法）：`flutter_module/lib/main.dart`（`/home` 路由 + B11 开关）、`flutter/C1ScreenActivity.java`（`ROUTE_HOME` + 注册 B11HostApi）、`flutter/C0ShellActivity.java`（C0 引擎注册，仅开关用）、`setting/Setting.java`（`flutter_b11_enabled`，默认 false）、`app/src/mobile/.../ui/activity/HomeActivity.java`（两处分流 + `isFlutterHomeFallback()` + 2 个 import）、`.gitignore`（+`B11Messages.java`）、`.github/workflows/b8-c0.yml`（Pigeon 步骤 +b11 生成与存在性检查）。
 未动：C0/C1/C2/B2–B10 合约与实现、原生首页实现、TV、Room/schema、播放器、`android-release.yml`、无新 Dart 依赖。
 

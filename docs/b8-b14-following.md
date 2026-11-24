@@ -7,11 +7,11 @@
 
 ## §1 原生实现（只读发现）
 
-原生实现：`app/src/main/java/com/github/moyingshi/osc/tv/ui/activity/FollowingActivity.java`（562 行，main 源集，与 TV 共用）+ `app/src/main/java/com/github/moyingshi/osc/tv/ui/adapter/FollowingAdapter.java`（187 行，main 源集）。
+原生实现：`app/src/main/java/com/github/maoyingshi/osc/tv/ui/activity/FollowingActivity.java`（562 行，main 源集，与 TV 共用）+ `app/src/main/java/com/github/maoyingshi/osc/tv/ui/adapter/FollowingAdapter.java`（187 行，main 源集）。
 
 ### 1.1 入口
 
-- 手机端：`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/activity/HomeActivity.java:520`，`handleNavItem(R.id.following)` → `FollowingActivity.start(this, null)`。`start(Activity, String identityKey)`：identityKey 为空时不聚焦，否则渲染后滚动到该行。
+- 手机端：`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/activity/HomeActivity.java:520`，`handleNavItem(R.id.following)` → `FollowingActivity.start(this, null)`。`start(Activity, String identityKey)`：identityKey 为空时不聚焦，否则渲染后滚动到该行。
 - TV 端：leanback `HomeActivity` 两处调用（菜单 + 按键 10）——**TV 不动**。
 - 另一入口：`B11HostApiImpl.java:631` 的 `openBottomBarItem("following")` 直接调 `FollowingActivity.start(activity, null)`——B11 已冻结，本批不改（见 V9）。
 
@@ -107,7 +107,7 @@
 
 ### 2.6 文件清单
 
-- 新 4 个：`flutter_module/pigeons/b14_following_messages.dart`、`flutter_module/lib/b14_following_page.dart`、`app/src/main/java/com/github/moyingshi/osc/tv/flutter/B14HostApiImpl.java`、本文档。
+- 新 4 个：`flutter_module/pigeons/b14_following_messages.dart`、`flutter_module/lib/b14_following_page.dart`、`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B14HostApiImpl.java`、本文档。
 - 改 7 个：`flutter_module/lib/main.dart`（`/following` 路由 + B14 开关）、`C1ScreenActivity.java`（`ROUTE_FOLLOWING` + 注册 B14HostApi）、`C0ShellActivity.java`（注册 B14HostApi，仅开关用）、`Setting.java`（`flutter_b14_enabled`）、`app/src/mobile/.../HomeActivity.java`（底栏追更项分流）、`.gitignore`（`B14Messages.java`）、`.github/workflows/b8-c0.yml`（Pigeon 步骤加 b14 生成 + 存在性检查）。
 - 未动：`FollowingActivity` / `FollowingAdapter` / 全部 following 包 / TV 入口 / B11 / C0–C2/B2–B13 合约与实现 / 共享组件（只读复用 `PicImage`，无改动）。
 

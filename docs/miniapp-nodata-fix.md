@@ -1,7 +1,7 @@
 # 小程序 4 条规则没数据修复（miniapp-nodata-fix）
 
 - 完成句：修掉 4 条规则没数据里属于代码的 3 处根因（UA 简写原样发出、batchFetch 仍是抛错桩、require 把拦截页 HTML 当 JS 执行），站点/规则本身的问题只留证据不上代码；一个 guard 会话、一个本地原子提交，不推、不编、不动版本记录空间。
-- 允许路径：`docs/miniapp-nodata-fix.md`、`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkEngine.java`、`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkExecutor.java`。
+- 允许路径：`docs/miniapp-nodata-fix.md`、`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkEngine.java`、`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkExecutor.java`。
 - 保护路径：无（开始时工作区干净，main = `b57287bd`）。
 - 时间：2026-11-15 21:03 CST；预计 20 分钟，21:25 前交回。
 - 最便宜的决定性验证：本地无 JDK/SDK，编译等推上去后的 GitHub 构建；本地只做逐行重读 + `git diff --check` + 关键符号 grep + 确认 TV/leanback、`BaseLoader`、`menu_nav.xml` 未动。

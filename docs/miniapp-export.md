@@ -86,8 +86,8 @@
 | 文件 | 动作 | 说明 |
 |---|---|---|
 | `docs/miniapp-export.md` | 新建（本文档） | 设计评审 + 实现记录 + 回滚 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkCloudExport.java` | 新建 | 云 2 textdb 上传（`i22.h()` 直译）+ 分享文本拼装（面板标题用字符串资源） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkMiniappActivity.kt` | 改 | 加“导出”按钮 + 开启多选框 + 导出流程（后台上传 → 主线程分享/提示） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkCloudExport.java` | 新建 | 云 2 textdb 上传（`i22.h()` 直译）+ 分享文本拼装（面板标题用字符串资源） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkMiniappActivity.kt` | 改 | 加“导出”按钮 + 开启多选框 + 导出流程（后台上传 → 主线程分享/提示） |
 | `app/src/mobile/res/layout/activity_hk_miniapp.xml` | 改 | 加第 4 个按钮 `btnExport`（同款 outlined MaterialButton，同步按钮之下） |
 | `app/src/main/res/values/lab_strings.xml` | 改 | 加 8 条字符串（见下） |
 

@@ -44,7 +44,7 @@ e: HkMiniappActivity.kt:57:41 Cannot infer type for value parameter 'added'.
 
 ## 修复
 
-`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkMiniappActivity.kt:57`
+`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkMiniappActivity.kt:57`
 改成具名参数，1 行：
 
 ```kotlin

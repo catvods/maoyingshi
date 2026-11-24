@@ -3,7 +3,7 @@
 > Recovery anchor（任务：miniapp-xingchen-3b-runtime-1；lane：standard；分支 main；HEAD 8c07e058）
 > 目标：新建 `HkJsRuntime.java`（星辰 14836 行的第 1 部分：骨架 + 内置 API 注册 + 自包含实现助手）
 > + `HkHttpClient` 接入 CookieJar/ContentType 拦截器/10s 超时 + DoH 重配入口；本地提交 + recovery tag。
-> 范围（仅 4 路径）：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkJsRuntime.java`（新建）、
+> 范围（仅 4 路径）：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkJsRuntime.java`（新建）、
 > `.../api/hk/HkHttpClient.java`、`docs/miniapp-xingchen-3b-runtime-1.md`（本文件）、
 > `docs/miniapp-xingchen-2b-manager.md`（第 202 行一句话）。
 > 状态：已完成，待 guard finish 提交。验收：脚本抽取 + 自校验 + 独立 verify 均通过（见 §7）。
@@ -14,7 +14,7 @@
 ## 1. 来源与方法
 
 - 星辰原文：`~/workspace/xingchen-ref/app/src/main/java/com/fongmi/android/tv/api/hk/HkJsRuntime.java`，
-  14836 行（HEAD 52450c0）。输出：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkJsRuntime.java`，
+  14836 行（HEAD 52450c0）。输出：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkJsRuntime.java`，
   9739 行。
 - 移植方式：机械抽取脚本 `/tmp/xc3b/port3b.py`（span 表 + registerApi 手术 + 文本适配；
   不随仓库走，见 `/tmp/xc3b/`）+ 独立验证脚本 `/tmp/xc3b/verify.py`。逐段对照原则：
@@ -231,12 +231,12 @@ optFlagFromJson 11694–11704、wrapFetch 11719–11727、extractArrayBody 11735
 
 ## 6. 适配点（差异只剩这些）
 
-1. **包名**：`com.fongmi.android.tv` → `com.github.moyingshi.osc.tv`（全文含注释与全限定引用，
+1. **包名**：`com.fongmi.android.tv` → `com.github.maoyingshi.osc.tv`（全文含注释与全限定引用，
    59 处 `api.hk.` 全限定引用 + package/import 行）；`com.fongmi.quickjs` 包名保持原样
    （3a 有意保留）。每个新文件在 package 行后加一行文件头移植说明（3a 同款）。
 2. **ToastUtil → Notify**（2 处）：toast lambda（星辰 :3881）与 hkToast（:7141）的
    `ToastUtil.show(App.get(), msg, android.widget.Toast.LENGTH_SHORT)` 改为 `Notify.show(msg)`；
-   `Notify`（`com.github.moyingshi.osc.tv.utils.Notify`）无时长参数。第三处 :12306 在
+   `Notify`（`com.github.maoyingshi.osc.tv.utils.Notify`）无时长参数。第三处 :12306 在
    callbackKeySink 内，归 3d（LONG 时长丢失，3d 处理时注明）。两 import 行已删 ToastUtil、
    已加 Notify import。
 3. **按源定向标记改空操作**：`swapHkMark` 改 `private Object swapHkMark() { return null; }`，

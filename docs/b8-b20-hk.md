@@ -10,7 +10,7 @@
 
 ### 1.1 管理页
 
-`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkMiniappActivity.kt`（321 行，mobile 源集，手机专属）：
+`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkMiniappActivity.kt`（321 行，mobile 源集，手机专属）：
 
 - **列表数据来源**：`LocalSource.getSites()` 过滤 `HkStore.isMiniapp(it)`（api 或 key 以 `hk://` 开头）；行显示 `Site.name`（`标题⁽ʰᵏ⁾┃[类型]`，`HkStore.siteOf` 的格式）。`LocalSourceAdapter` 设为可勾选（`setCheckable(true)`），多选框只为导出服务，无选中计数 UI。`onResume` 时 `refreshList()` 重取。
 - **五个按钮**（纵向全宽描边按钮，顺序见 `activity_hk_miniapp.xml`）：导入文件/目录、粘贴 JSON、同步已装规则、导出、云口令导入。
@@ -64,7 +64,7 @@
 | `app/src/main/.../flutter/C0ShellActivity.java` | main | 同上（C0 引擎只为实验屏开关用） |
 | `flutter_module/pigeons/b20_hk_messages.dart` | — | 合约；生成的 `B20Messages.java` 落 main 源集（与其他批一致，leanback 也编译它，但无人注册） |
 
-**为什么不用接口**：注册器只有两个静态方法（`register` / `unregister`），主源集侧只用反射调静态方法，不需要一个 main 源集的接口类型；静态方法 + `Class.forName` 是仓库里已有的形态（`C2HostApiImpl` 的 `SyncDialog` 反射、`Startup` 的事件索引反射）。类名与方法名能过 R8：`app/proguard-rules.pro:38` 有 `-keep class com.github.moyingshi.osc.tv.** { *; }`，整个包都不混淆、不裁剪。
+**为什么不用接口**：注册器只有两个静态方法（`register` / `unregister`），主源集侧只用反射调静态方法，不需要一个 main 源集的接口类型；静态方法 + `Class.forName` 是仓库里已有的形态（`C2HostApiImpl` 的 `SyncDialog` 反射、`Startup` 的事件索引反射）。类名与方法名能过 R8：`app/proguard-rules.pro:38` 有 `-keep class com.github.maoyingshi.osc.tv.** { *; }`，整个包都不混淆、不裁剪。
 
 **为什么每引擎一份 impl（per-messenger map）**：C0 与 C1 是两个引擎、两个 Activity；impl 持有 Activity（SAF picker + 分享面板 + 剪贴板）与单线程 worker，必须按引擎隔离。map 的 key 是 `BinaryMessenger`（即 `engine.getDartExecutor()`），与引擎同生命周期。
 

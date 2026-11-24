@@ -37,7 +37,7 @@
 
 ## 3. 宿主实现
 
-`app/src/main/java/com/github/moyingshi/osc/tv/flutter/B11HostApiImpl.java`（只加法）：
+`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B11HostApiImpl.java`（只加法）：
 
 - **状态字段**：`homeTypes`（最近一次成功 shell 加载的 types，即对话框的
   items 与筛选来源，与原生 mAdapter items 同源；超时/失败时保留旧值）、
@@ -62,7 +62,7 @@
   记 tab + version+1）、`onFabFilterSet`（写 overrides + version+1）、
   `fabFiltersForPosition`（原生 `getFiltersForPosition` 的等价实现）。
 
-`app/src/mobile/java/com/github/moyingshi/osc/tv/flutter/B11FabHostFragment.java`
+`app/src/mobile/java/com/github/maoyingshi/osc/tv/flutter/B11FabHostFragment.java`
 （新建，mobile 源集）：无 UI 的 headless fragment，实现
 `TypeAdapter.OnClickListener` + `FilterListener` +
 `TypeFilterDialog.FilterProvider`，全部回调转发给 `B11HostApiImpl`。必须放

@@ -182,7 +182,7 @@ pending row 与点行同一处理：`vod/live/wall` → 对应管理弹窗；`ap
 - **G1（最担心）Pigeon 代码生成 + 手写 impl 签名**：33 个方法 + 5 个数据类 + `List<>` 返回 + `Long` 字段 + `@async VoidResult`，只有 CI 的 Pigeon 生成 + Gradle 编译能证明。尤其 6 处反射链（History/Site/Live/Appearance/LocalSource/Restore）的方法名、静态/实例、参数类型须逐字对 CI 日志（C1 `setSubtitleAutoMatch` 教训：Pigeon 方法名原样保留，绝不推断大小写）。
 - **G2（最担心）Flutter→Flutter 跨屏导航的引擎复用竞态**：`openAbout` / `openSubtitle` 在 C1 开时先 start 后 finish（B5 同款写法）；新 Activity 的 `ensureFlutterEngine` 可能复用旧引擎旧路由，随后旧 Activity `onDestroy` 销毁引擎。B5 的 subtitle 深链路径有同一风险，两处都未经设备验证；若复现，需在 `C1ScreenActivity` 加 relaunch 机制（跨批修复，本批不做）。
 - **G3 四味 release 构建**：impl 在 main 源集，全部 `R.string` 已核 main res；反射只在 mobile 跑；leanback 构建仍需 CI 证明（C0/C1 的 4 味成功不覆盖本批新增代码）。
-- **G4 反射与 R8/minify**：6 处反射 + 1 处 Proxy 在 release 构建下是否存活（ProGuard 有 `-keep com.github.moyingshi.osc.tv.**`，但仍需 CI + 设备验证；失效时对应弹窗打不开，可关开关回退）。
+- **G4 反射与 R8/minify**：6 处反射 + 1 处 Proxy 在 release 构建下是否存活（ProGuard 有 `-keep com.github.maoyingshi.osc.tv.**`，但仍需 CI + 设备验证；失效时对应弹窗打不开，可关开关回退）。
 - **G5 缓存文本时序**：有界轮询（15×1s）能否覆盖后台清理完成的时刻；`CacheCenter.requestSnapshot` 回调线程与 `FileUtil.getCacheSize` 回调线程是否都在主线程。
 - **G6 权限分支**：`requestFile` 用 Activity overload（B4 V9 模式）；legacy 存储路径走 `onRequestPermissionsResult`，而 `C1ScreenActivity` 在 flutterFragment 非空时不调 super——旧设备/无文件管理器时可能挂起。常见路径（已授权直接短路）与 MANAGE 路径（经 `onActivityResult`→super）不受影响。
 - **G7 下载列表轮询等价性**：500ms 轮询 vs 原生 `VideoDownloadManager.Listener` 事件驱动；暂停/恢复/重试后状态是否及时刷新；`getTasks()` 快照拷贝在轮询下的开销。

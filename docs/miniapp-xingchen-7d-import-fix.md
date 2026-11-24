@@ -8,9 +8,9 @@
 
 阶段 7 完成后，协调人做全树 import 解析核对（所有 hk import 逐条对类文件）：
 `HkEngineManager` 的唯一定义在 `ui/hk/HkEngineManager.java`（package
-`com.github.moyingshi.osc.tv.ui.hk`，星辰同款位置
+`com.github.maoyingshi.osc.tv.ui.hk`，星辰同款位置
 `app/src/mobile/java/com/fongmi/android/tv/ui/hk/HkEngineManager.java`），
-但三处 import 写成了 `com.github.moyingshi.osc.tv.api.hk.HkEngineManager`：
+但三处 import 写成了 `com.github.maoyingshi.osc.tv.api.hk.HkEngineManager`：
 
 | 文件 | 错误行 |
 |---|---|
@@ -28,8 +28,8 @@
 三行 import 一字改包名，其余零改动：
 
 ```diff
--import com.github.moyingshi.osc.tv.api.hk.HkEngineManager;
-+import com.github.moyingshi.osc.tv.ui.hk.HkEngineManager;
+-import com.github.maoyingshi.osc.tv.api.hk.HkEngineManager;
++import com.github.maoyingshi.osc.tv.ui.hk.HkEngineManager;
 ```
 
 ## 3. 验收证据

@@ -377,7 +377,7 @@ keyPassword=your_key_password
 
 ```bash
 scripts/build_media_deps.sh
-bash gradlew :app:testMobileArm64_v8aDebugUnitTest --tests 'com.github.moyingshi.osc.tv.player.danmaku.*'
+bash gradlew :app:testMobileArm64_v8aDebugUnitTest --tests 'com.github.maoyingshi.osc.tv.player.danmaku.*'
 bash gradlew :app:assembleMobileArm64_v8aDebug :app:assembleLeanbackArm64_v8aDebug
 ```
 

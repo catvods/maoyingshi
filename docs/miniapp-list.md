@@ -8,7 +8,7 @@
 > - 计划状态：第 1 步地基（f9f6b234）、第 2 步导入（a2e06441）已在 main 上；
 >   本步 = 设计评审（本文档）+ 实现，见下文“实现清单”。
 > - 当前文件/符号：
->   `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/` 下 `HkRule` / `HkCard` /
+>   `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/` 下 `HkRule` / `HkCard` /
 >   `HkStore` / `HkEngine` / `HkParser` / `HkExecutor`（`home(rule, page, classId)` 已有，
 >   覆盖页码 + 分类）；`ui/hk/HkMiniappActivity.kt`（管理页）；
 >   占位在三处：`HkMiniappActivity.onItemClick`、`LabActivity.onItemClick`（main 源集）、
@@ -80,19 +80,19 @@ UI 全部复用首页同款组件，不引入新设计语言；回滚 = 删新�
 | 文件 | 动作 | 说明 |
 |---|---|---|
 | `docs/miniapp-list.md` | 新建（本文档） | 设计评审 + 实现记录 + 回滚 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkListHelper.java` | 新建 | `pickCards` / `toVods` / `isActionUrl` / `styleFor`（直译 + 窄化映射） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkListActivity.java` | 新建 | 列表页壳：Toolbar（规则标题 + 返回）+ `FrameLayout`（`@+id/hk_list_container`，挂 Fragment）；`open(Context, String title)` 启动入口；壁纸由 `BaseActivity.setContentView` 自动加 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkListFragment.java` | 新建 | kv1 对应物：分类 chips + 下拉刷新 + 滑到底翻页 + 加载/空/错三态；后台线程调 `HkExecutor.home` |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkListHelper.java` | 新建 | `pickCards` / `toVods` / `isActionUrl` / `styleFor`（直译 + 窄化映射） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkListActivity.java` | 新建 | 列表页壳：Toolbar（规则标题 + 返回）+ `FrameLayout`（`@+id/hk_list_container`，挂 Fragment）；`open(Context, String title)` 启动入口；壁纸由 `BaseActivity.setContentView` 自动加 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkListFragment.java` | 新建 | kv1 对应物：分类 chips + 下拉刷新 + 滑到底翻页 + 加载/空/错三态；后台线程调 `HkExecutor.home` |
 | `app/src/mobile/res/layout/activity_hk_list.xml` | 新建 | 纵向 `LinearLayoutCompat`：MaterialToolbar + `FrameLayout`（container） |
 | `app/src/mobile/res/layout/fragment_hk_list.xml` | 新建 | 纵向根布局：分类 `RecyclerView`（横向，`@+id/classRecycler`，无分类时 GONE）+ `fragment_type.xml` 同款 SwipeRefreshLayout → ProgressLayout → CustomRecyclerView |
 | `app/src/mobile/AndroidManifest.xml` | 改 | 注册 `HkListActivity`：intent-filter action `${applicationId}.hk_list` + DEFAULT（供 main 源集的实验室页隐式启动；照 `HkMiniappActivity` 的写法，targetSdk 28，不用写 `exported`）；`parentActivityName=".lab.LabActivity"` |
 | `app/src/main/res/values/lab_strings.xml` | 改 | 加 3 条：`hk_list_detail_pending`（详情页还在做）、`hk_list_rule_missing`（规则不存在或已删除）、`hk_list_load_failed`（加载失败：%1$s） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkExecutor.java` | 改 | `buildHomeRequest` 加 `fyAll` 替换（见下） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkMiniappActivity.kt` | 改 | `onItemClick`：hk 站源 → `HkListActivity.open(this, title)`，不再弹占位 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/dialog/LocalSourceDialog.java` | 改 | `onItemClick` hk 分支：开列表页 + `dismiss()`，不再弹占位 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/dialog/SiteDialog.java` | 改 | `onTextClick` hk 分支：开列表页 + `dismiss()`，不再弹占位 |
-| `app/src/main/java/com/github/moyingshi/osc/tv/lab/LabActivity.java` | 改 | `onItemClick` hk 分支：隐式 intent（action `${applicationId}.hk_list`，extra `title`）开列表页，不 `finish()`（返回键回实验室，与管理页一致）；分组本身不动 |
-| `app/src/main/java/com/github/moyingshi/osc/tv/utils/LocalSource.java` | 改 | 加 `miniappTitle(Site)`：从 api/key 去掉 `hk://` 前缀（`HkStore.titleOf` 的 main 源集版，纯字符串操作） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkExecutor.java` | 改 | `buildHomeRequest` 加 `fyAll` 替换（见下） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkMiniappActivity.kt` | 改 | `onItemClick`：hk 站源 → `HkListActivity.open(this, title)`，不再弹占位 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/dialog/LocalSourceDialog.java` | 改 | `onItemClick` hk 分支：开列表页 + `dismiss()`，不再弹占位 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/dialog/SiteDialog.java` | 改 | `onTextClick` hk 分支：开列表页 + `dismiss()`，不再弹占位 |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/lab/LabActivity.java` | 改 | `onItemClick` hk 分支：隐式 intent（action `${applicationId}.hk_list`，extra `title`）开列表页，不 `finish()`（返回键回实验室，与管理页一致）；分组本身不动 |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/utils/LocalSource.java` | 改 | 加 `miniappTitle(Site)`：从 api/key 去掉 `hk://` 前缀（`HkStore.titleOf` 的 main 源集版，纯字符串操作） |
 
 ### 关键契约
 
@@ -227,7 +227,7 @@ UI 全部复用首页同款组件，不引入新设计语言；回滚 = 删新�
   恒返回 `""` 的桩函数——`Vod` 没有 `setStyle`，卡片 colType 带不过来。
   已删掉这段：样式只按规则 `col_type` 定（空则默认 rect），卡片 colType
   只用于 `pickCards` 筛选。文档“`col_type` 映射”一节已同步改掉。
-- `HkListActivity` 初版漏了 `import com.github.moyingshi.osc.tv.R`
+- `HkListActivity` 初版漏了 `import com.github.maoyingshi.osc.tv.R`
  （`R.id.hk_list_container`）；`SiteDialog` 改完后 `Notify`  import 悬空，
   已删。`HkExecutor` 的 `fyAll` 三元表达式按优先级本是对的，但改写成
   if/else 更直白。

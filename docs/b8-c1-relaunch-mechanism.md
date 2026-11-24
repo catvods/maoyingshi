@@ -99,7 +99,7 @@
 负责让 Dart 显示自己的路由：
 
 - host 侧：一条原始 `MethodChannel`（名
-  `com.github.moyingshi.osc.tv/c1_relaunch`，方法 `showRoute`，参数为
+  `com.github.maoyingshi.osc.tv/c1_relaunch`，方法 `showRoute`，参数为
   路由字符串）。不用 Pigeon：C1 合约已冻结，且这是 host→Dart 单向推送，
   不是请求/响应；不用 EventChannel：每次断言都是一次性消息，规划
   §4.6 的“无流式通道”纪律不受影响。

@@ -26,7 +26,7 @@ behavior check.
 
 ## Native semantics, verified against the current tree
 
-Read from `app/src/main/java/com/github/moyingshi/osc/tv/lab/LabActivity.java`
+Read from `app/src/main/java/com/github/maoyingshi/osc/tv/lab/LabActivity.java`
 (kept native Activity, still present). Every claim below was
 confirmed in code; corrections to the diagnosis doc are marked.
 

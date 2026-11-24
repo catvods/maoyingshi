@@ -123,8 +123,8 @@
 
 **① 圆角/间距/字号统一：**
 - `app/src/main/res/values/styles.xml`：`Vod.Grid` → 四角 12dp；`Vod.Grid.Large` → 16dp。
-- `app/src/main/java/com/github/moyingshi/osc/tv/ui/adapter/TmdbCastAdapter.java:138`：尾间距 12dp → 8dp（cinema 模式 18dp 不动）。
-- `app/src/main/java/com/github/moyingshi/osc/tv/ui/adapter/TmdbEpisodeAdapter.java:333/341`：网格间距 12dp → 8dp（`:514` 是徽章背景圆角，不是卡片，**不动**；选集/演员项卡片已是 16dp，见 `adapter_tmdb_episode.xml:12` / `adapter_tmdb_cast.xml:15`）。
+- `app/src/main/java/com/github/maoyingshi/osc/tv/ui/adapter/TmdbCastAdapter.java:138`：尾间距 12dp → 8dp（cinema 模式 18dp 不动）。
+- `app/src/main/java/com/github/maoyingshi/osc/tv/ui/adapter/TmdbEpisodeAdapter.java:333/341`：网格间距 12dp → 8dp（`:514` 是徽章背景圆角，不是卡片，**不动**；选集/演员项卡片已是 16dp，见 `adapter_tmdb_episode.xml:12` / `adapter_tmdb_cast.xml:15`）。
 - `app/src/main/res/layout/activity_tmdb_detail.xml`：hero 顶部标题 17sp bold → 18sp bold（`:64`）。
 - `app/src/mobile/res/layout/item_setting_card_row.xml`：副标题 13sp → 14sp；数值 15sp → 14sp。
 - `app/src/mobile/res/layout/adapter_banner.xml`：内缩左右 12dp → 16dp（上下 4dp 不动）。
@@ -144,10 +144,10 @@
 
 ### 提交 B（②真模糊——已改机制；quick-fix 修复提交 A 的构建失败，会话 elegance-pass-b-fix）
 
-- `app/src/main/java/com/github/moyingshi/osc/tv/ui/custom/CustomWallView.java`：新增 `public void setBlurRadius(float radiusPx)`（API 31+ 守卫；`RenderEffect.createBlurEffect(radius, radius, CLAMP)` 模糊整张壁纸，`<= 0` 清除；视频壁纸不受父视图 RenderEffect 影响）。
-- `app/src/main/java/com/github/moyingshi/osc/tv/theme/ThemeController.java`：删掉编译不过的 `applyViewBlur/applyCardBlur`；新增 `applyWallpaperBlur/clearWallpaperBlur(Activity)`（找到 `android.R.id.content` 第 0 个子视图 `CustomWallView`，半径取 `Setting.getGlassBlur()` dp × density；液态玻璃关/半径 0/低版本时清除）。
-- `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/activity/HomeActivity.java`：`changeFragment` 里一切换就开关（位置 1–10 设置页开、0 首页关）；全部设置屏（主设置页 + 8 子页 + 搜索页）都覆盖。
-- `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/VodFragment.java`：去掉搜索条与 FAB 的 `applyViewBlur` 调用（方法已删）与无用 import；FAB 只留半透明底。
+- `app/src/main/java/com/github/maoyingshi/osc/tv/ui/custom/CustomWallView.java`：新增 `public void setBlurRadius(float radiusPx)`（API 31+ 守卫；`RenderEffect.createBlurEffect(radius, radius, CLAMP)` 模糊整张壁纸，`<= 0` 清除；视频壁纸不受父视图 RenderEffect 影响）。
+- `app/src/main/java/com/github/maoyingshi/osc/tv/theme/ThemeController.java`：删掉编译不过的 `applyViewBlur/applyCardBlur`；新增 `applyWallpaperBlur/clearWallpaperBlur(Activity)`（找到 `android.R.id.content` 第 0 个子视图 `CustomWallView`，半径取 `Setting.getGlassBlur()` dp × density；液态玻璃关/半径 0/低版本时清除）。
+- `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/activity/HomeActivity.java`：`changeFragment` 里一切换就开关（位置 1–10 设置页开、0 首页关）；全部设置屏（主设置页 + 8 子页 + 搜索页）都覆盖。
+- `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/VodFragment.java`：去掉搜索条与 FAB 的 `applyViewBlur` 调用（方法已删）与无用 import；FAB 只留半透明底。
 - 不透明度不动（`setting_card_bg` 保持 #BF 75%）；模糊半径不动（默认 5dp，用户设置 0–40 可调）。
 - 性能注：整张静态壁纸模糊一次，滚动不重模糊，成本低于原计划的逐卡片模糊；开关可关、滑杆可调；低端机若卡，用户关液态玻璃即回原样。
 

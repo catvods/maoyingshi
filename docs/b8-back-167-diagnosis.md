@@ -29,7 +29,7 @@
 链条（按执行顺序，断在第 3 步）：
 
 1. **Manifest 打开了 predictive back。** `app/src/main/AndroidManifest.xml:36`：`<application android:enableOnBackInvokedCallback="true">`。API 33+ 上返回手势走平台 `OnBackInvokedDispatcher`，不再走 legacy `onBackPressed()`。
-2. **C1 没有注册任何返回回调。** `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java` 全文件 grep：无 `OnBackPressedCallback`、无 `onBackInvoked()` 重写（仅 `:866` 注释提到原生 `HomeActivity.onBackInvoked`）。这是唯一一个没跟原生一致的地方——原生 `WebHomeShellActivity.java:269`、`AudioActivity.java:1373` 都重写了 `onBackInvoked()`。
+2. **C1 没有注册任何返回回调。** `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java` 全文件 grep：无 `OnBackPressedCallback`、无 `onBackInvoked()` 重写（仅 `:866` 注释提到原生 `HomeActivity.onBackInvoked`）。这是唯一一个没跟原生一致的地方——原生 `WebHomeShellActivity.java:269`、`AudioActivity.java:1373` 都重写了 `onBackInvoked()`。
 3. **FlutterFragment 也没开自动处理。** `C1ScreenActivity.java:436`：`FlutterFragment.withCachedEngine(ENGINE_ID).build()`，没有 `.shouldAutomaticallyHandleOnBackPressed(true)`（默认关闭）。Flutter 官方文档（add-to-app / add-flutter-fragment）写明：API 33+ 上要自动处理系统返回与 predictive back 手势，须在构造 fragment 时开此项，“without manually forwarding `onBackPressed()`”；API 文档补充：开启后“do not invoke `FlutterFragment.onBackPressed()` manually”。
 4. **C1 唯一的返回接线是 legacy 重写**，`C1ScreenActivity.java:1052-1063`：`onBackPressed()` → `flutterFragment.onBackPressed()`。predictive back 开启后，系统返回不再经过这个重写：手势 → `OnBackInvokedDispatcher` → `ComponentActivity` 的 dispatcher → 无 enabled 回调 → fallback → 平台默认 `finish()`。Dart 收不到 `popRoute`，host 的 `handleRootBack` 收不到 `closeScreen`，菜单路由收不到 `maybePop`。
 5. **旁证（Android 16 行为变更报道）：** 目标 API 36 的应用在 Android 16 上“`onBackPressed` is not called and `KeyEvent.KEYCODE_BACK` is no longer dispatched”；本应用 `targetSdk=28`（`gradle/libs.versions.toml:8`），但 manifest 的 `enableOnBackInvokedCallback="true"` 是同一机制的手动 opt-in，在 API 33+ 设备（用户手机 SDK 36）上同样启用 dispatcher 路径。OsmAnd 的同类修复记录也写明：无默认回调注册时，`ViewRootImpl` 把返回直接路由给窗口顶层 `OnBackInvokedCallback`。
@@ -40,7 +40,7 @@
 
 ### 流程 1：首页 → 底栏 → 实验室 → 返回 → 桌面（应回首页）
 
-- **前向链路正确（已逐行核对）。** Dart 底栏点按只调 host：`flutter_module/lib/b11_home_page.dart:460-463` `_onBottomBarTap` → `_b11Api.openBottomBarItem(item.token)`。`app/src/main/java/com/github/moyingshi/osc/tv/flutter/B11HostApiImpl.java:1306`（`local_source` + `Setting.isLabNav()`）→ `C1ScreenActivity.start(activity, ROUTE_LAB)` → `C1ScreenActivity.java:1034-1037` `onNewIntent`（无 switch 标记）→ `recordPush("/lab")`，历史 `[/home, /lab]`。`handleRootBack`（`:875-885`）在该历史下必 pop 回 `/home`。
+- **前向链路正确（已逐行核对）。** Dart 底栏点按只调 host：`flutter_module/lib/b11_home_page.dart:460-463` `_onBottomBarTap` → `_b11Api.openBottomBarItem(item.token)`。`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B11HostApiImpl.java:1306`（`local_source` + `Setting.isLabNav()`）→ `C1ScreenActivity.start(activity, ROUTE_LAB)` → `C1ScreenActivity.java:1034-1037` `onNewIntent`（无 switch 标记）→ `recordPush("/lab")`，历史 `[/home, /lab]`。`handleRootBack`（`:875-885`）在该历史下必 pop 回 `/home`。
 - **断点：** 返回按压在 §2 的分发层被系统默认 `finish()` 吃掉，`B21LabPage` 的 `PopScope(canPop: false)`（`flutter_module/lib/b21_lab_page.dart:69-73`）与 `_handleBack`（`:54-66`，内层 Navigator 不能 pop 时调 `_c1Api.closeScreen()`）从未执行。30fps 无首页闪现（§1 证据 1）是直接证明。
 - **修复：** 见 §5 F1（只需修分发层；本流程的 host/Dart 代码不动）。
 

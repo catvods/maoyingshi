@@ -7,7 +7,7 @@
 
 ## §1 原生页
 
-原生实现：`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/CollectFragment.java`（780 行），
+原生实现：`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/CollectFragment.java`（780 行），
 宿主 `SearchActivity`（mobile，154 行）+ 输入页 `SearchFragment`（479 行）。
 
 ### §1.1 入口（全部被本批接管）
@@ -158,12 +158,12 @@ SearchFragment 传预解析的 siteKey + currentSite 标志；`direct()` 传显�
 | `flutter_module/lib/b10_collect_page.dart`（新，~24 KB） | `B10CollectPage` + `_SourceRow` / `_B10ListRow` / `_LoadErrorView` |
 | `flutter_module/lib/main.dart` | `/collect` 路由（onGenerateRoute）+ B10 开关；B9 开关副标题改一字（"结果页由'聚合搜索'开关控制"） |
 | `flutter_module/lib/b9_search_page.dart` | 仅 `_submit` + imports + 一行类注释：B10 开关开时族内 push（V5/V8 恢复项，任务冻结条款的例外） |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B10HostApiImpl.java`（新，~1300 行） | 会话 + 3 观察者 + 快照构建 + 相似度对话框 + 点击分流 |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java` | 注册 `B10HostApi`、加 `ROUTE_COLLECT = "/collect"` |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java` | C0 引擎注册 `B10HostApi`（仅开关方法） |
-| `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java` | `isFlutterB10Enabled()` / `putFlutterB10Enabled(boolean)`（`flutter_b10_enabled`，默认 false） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/activity/SearchActivity.java` | `direct()` / `directFromHistory()` 分流 + G2 护栏；`start()` 注释更新 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/SearchFragment.java` | `collect()` 分流（预解析 siteKey/group，pic/wallPic null 守卫） |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B10HostApiImpl.java`（新，~1300 行） | 会话 + 3 观察者 + 快照构建 + 相似度对话框 + 点击分流 |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java` | 注册 `B10HostApi`、加 `ROUTE_COLLECT = "/collect"` |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java` | C0 引擎注册 `B10HostApi`（仅开关方法） |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java` | `isFlutterB10Enabled()` / `putFlutterB10Enabled(boolean)`（`flutter_b10_enabled`，默认 false） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/activity/SearchActivity.java` | `direct()` / `directFromHistory()` 分流 + G2 护栏；`start()` 注释更新 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/SearchFragment.java` | `collect()` 分流（预解析 siteKey/group，pic/wallPic null 守卫） |
 | `.gitignore` | 加 `B10Messages.java` |
 | `.github/workflows/b8-c0.yml` | Pigeon 步骤加 b10 生成 + 2 个存在性检查（B9 同款） |
 | `docs/b8-b10-collect.md`（本文件） | 任务文档 |

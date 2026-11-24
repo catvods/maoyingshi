@@ -4,7 +4,7 @@
 
 - 目标：修复 CI run #153 在 Java 编译步骤的失败，`WebHomeShellActivity` 的私有方法与 `Activity` 公共方法同名导致访问权限冲突。
 - 分支/HEAD：`b8-flutter-rewrite`，基线 `0e44123a`（#151 OkHttp 导入修复已确认有效，run #153 的步骤 1–14 全部通过，含 Dart analyze）。
-- 文件：`app/src/main/java/com/github/moyingshi/osc/tv/ui/activity/WebHomeShellActivity.java`、本文档。
+- 文件：`app/src/main/java/com/github/maoyingshi/osc/tv/ui/activity/WebHomeShellActivity.java`、本文档。
 - 状态：已修复并本地提交，待推送后由 CI 验证。
 - 下一步：推送后等 CI run 结果；若 Java 编译通过，继续按删除原生计划推进。
 

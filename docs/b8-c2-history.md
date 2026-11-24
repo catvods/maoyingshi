@@ -19,11 +19,11 @@
 - 允许路径：`flutter_module/pigeons/c2_messages.dart`、
   `flutter_module/lib/c2_history_page.dart`、
   `flutter_module/lib/main.dart`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C2HostApiImpl.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/VodFragment.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C2HostApiImpl.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java`、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/VodFragment.java`、
   `.gitignore`、`.github/workflows/b8-c0.yml`、`docs/b8-c2-history.md`。
   `ImgUtil.java` 有意不在作用域内：实施决定不改它（见 §2.5）。
 - 预存脏文件：无（开始时工作树干净）。
@@ -191,7 +191,7 @@ Dart 按 `devicePixelRatio` 把 host 的 px 换算成逻辑像素；网格用固
 `SyncDialog` 只存在于 mobile 源码集，main 源码集的 impl 无法直接引用。
 `openHistorySync()` 用反射调用 `HistoryActivity.onSync()` 的同一链：
 `SyncDialog.create().history().show(activity)`。安全依据有二：
-`proguard-rules.pro` 有 `-keep class com.github.moyingshi.osc.tv.** { *; }`，
+`proguard-rules.pro` 有 `-keep class com.github.maoyingshi.osc.tv.** { *; }`，
 release 构建不改名；仓库内已有反射先例（`Startup`、`JarLoader`）。
 leanback 上此屏无入口，失败不可达，吞错处理与 `ImgUtil` 的 catch 风格一致。
 
@@ -275,15 +275,15 @@ mobile-only 引用。
 * flutter_module/pigeons/c2_messages.dart   C2 合约（§2.4，含 @async 方法）
 * flutter_module/lib/c2_history_page.dart   历史页（Flutter：网格 + 卡片 + 删除模式）
 M flutter_module/lib/main.dart              路由表加 /history；C0 实验屏加 C2 开关
-* app/src/main/java/com/github/moyingshi/osc/tv/flutter/C2HostApiImpl.java
+* app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C2HostApiImpl.java
                                             C2 合约实现（快照/图片解析/几何/弹窗/跳转）
-M app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java
+M app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java
                                             加 ROUTE_HISTORY；注册 C2HostApi
-M app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java
+M app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java
                                             C0 引擎上也注册 C2HostApi（只为实验屏的开关用）
-M app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java
+M app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java
                                             + isFlutterC2Enabled / putFlutterC2Enabled
-M app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/VodFragment.java
+M app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/VodFragment.java
                                             历史入口查开关分流（1 处 + 1 个 import）
 M .gitignore                                + C2Messages.java（CI 生成，不提交）
 M .github/workflows/b8-c0.yml               Pigeon 步骤加 c2_messages.dart 生成 + 存在性检查
@@ -294,7 +294,7 @@ CI 生成、永不提交的文件（已在 `.gitignore` 中）：
 
 ```
 flutter_module/lib/pigeon/c2_messages.g.dart
-app/src/main/java/com/github/moyingshi/osc/tv/flutter/C2Messages.java
+app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C2Messages.java
 ```
 
 ## 4. 逐项对照清单（Wei 真机验收用）

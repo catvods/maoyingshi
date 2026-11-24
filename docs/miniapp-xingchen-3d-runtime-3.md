@@ -3,7 +3,7 @@
 > Recovery anchor（任务：miniapp-xingchen-3d-runtime-3；lane：standard；分支 main；HEAD edda5cac）
 > 目标：往现有 `HkJsRuntime.java` 追加第 3 部分（解析回调 + 求值入口 + 图片/懒求值 + 定时器 +
 > JavaAdapter + 文件/种子簇），恢复 refreshPage/goTo 注册，本地提交 + recovery tag，不推不编。
-> 范围（仅 2 路径）：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkJsRuntime.java`（追加 +
+> 范围（仅 2 路径）：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkJsRuntime.java`（追加 +
 > 两处原位插入）、`docs/miniapp-xingchen-3d-runtime-3.md`（本文件）。
 > 状态：已完成，待 guard finish 提交。验收：抽取脚本自校验 + 独立 verify 均通过（见 §8）。
 > 未解决遗留（§9）：中间态不可编译（类级前向引用，3e/阶段 4–7 补）；`sel`/`newSelector` 留给阶段 4；
@@ -12,7 +12,7 @@
 ## 1. 来源与方法
 
 - 星辰原文：`~/workspace/xingchen-ref/app/src/main/java/com/fongmi/android/tv/api/hk/HkJsRuntime.java`，
-  14836 行（HEAD 52450c0）。输出：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkJsRuntime.java`，
+  14836 行（HEAD 52450c0）。输出：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkJsRuntime.java`，
   11589 行 → 13777 行（本步净增 2188 行，纯插入、零删除）。
 - 移植方式：机械抽取脚本 `/tmp/xc3d/port3d.py`（span 表 + 大括号配对定段尾 + 附着注释块上卷 +
   文本适配；不随仓库走，见 `/tmp/xc3d/`）+ 独立验证脚本 `/tmp/xc3d/verify.py`。逐段对照原则：
@@ -199,7 +199,7 @@ imageGlobalMap、ambientEvalScope。`imageScope` 是 evalImageJsInternal 内的�
 
 ## 6. 适配点（差异只剩这些）
 
-1. **包名**：`com.fongmi.android.tv` → `com.github.moyingshi.osc.tv`，共 3 处——
+1. **包名**：`com.fongmi.android.tv` → `com.github.maoyingshi.osc.tv`，共 3 处——
    refreshPage 注册内的 `event.home.OnRefreshPageEvent`（星辰 :5493）、hkGetAssetsFile 内的
    `api.hk.util.HkHikerRuleUtil.getAssetsFileByHiker`（:12372）、hkGetRulesByHiker 内的
    `api.hk.util.HkHikerRuleUtil.getRulesByHiker`（:12388）。`com.fongmi.quickjs` 未出现，

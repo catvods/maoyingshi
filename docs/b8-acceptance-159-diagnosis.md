@@ -77,12 +77,12 @@ is B9 → B10 (`flutter_module/lib/b9_search_page.dart:222`,
 `closeScreen` implementations exist, and both finish:
 
 - `C1HostApiImpl.closeScreen()`
-  (`app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1HostApiImpl.java:145-161`):
+  (`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1HostApiImpl.java:145-161`):
   task root + `PlaybackService` running → `Util.moveToBackground`,
   otherwise `activity.finish()`. Its own comment calls this "the
   root-back signal".
 - `B3HostApiImpl.closeScreen()`
-  (`app/src/main/java/com/github/moyingshi/osc/tv/flutter/B3HostApiImpl.java:661-663`):
+  (`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B3HostApiImpl.java:661-663`):
   unconditional `activity.finish()` — no background gate at all, so
   settings-family back always finishes, even during playback.
 
@@ -102,7 +102,7 @@ no `PopScope`/`closeScreen` in `b11_home_page.dart` (home),
 `b20_hk_page.dart`; `c1_about_page.dart:173` and
 `c1_subtitle_page.dart:142-143` call `closeScreen()` only from their
 AppBar button. `C1ScreenActivity.onBackPressed()`
-(`app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java:908-913`)
+(`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java:908-913`)
 delegates to `flutterFragment.onBackPressed()` and otherwise calls
 `super.onBackPressed()` — there is no hierarchy logic on the host
 side either; an unhandled pop finishes the activity. On top of that,
@@ -130,7 +130,7 @@ device — see "Undecided" below):
 
 **What native did** (read from history, not memory).
 `HomeActivity.onBackInvoked()` (deleted in phase 4a;
-`git show 25c8df20^:app/src/mobile/java/com/github/moyingshi/osc/tv/ui/activity/HomeActivity.java:731-746`)
+`git show 25c8df20^:app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/activity/HomeActivity.java:731-746`)
 was a hierarchy, not an exit:
 
 1. `mChrome.consumeBack()` (chrome restore);
@@ -144,14 +144,14 @@ was a hierarchy, not an exit:
    `super.onBackInvoked()` (finish).
 
 `FragmentStateManager.change()` (deleted in phase 4b;
-`git show c245dde6^:app/src/mobile/java/com/github/moyingshi/osc/tv/ui/custom/FragmentStateManager.java`)
+`git show c245dde6^:app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/custom/FragmentStateManager.java`)
 used hide/show with **no** `addToBackStack` — bottom-nav switches
 were switches, never history. `VodFragment.canBack()`
-(`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/VodFragment.java:976-986`)
+(`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/VodFragment.java:976-986`)
 consumed WebView back, chrome restore, and folder drill-down
 (`getFragment().goBack()`) before allowing exit; the default
 `BaseFragment.canBack()`
-(`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/base/BaseFragment.java:50`)
+(`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/base/BaseFragment.java:50`)
 returns true. Screens that were separate Activities natively (Lab,
 Search, History, Keep, Folder, WidgetBrowse) finished back to
 `HomeActivity` underneath — i.e. back always revealed the launching
@@ -190,7 +190,7 @@ when the one above it declines:
    - *Switch* (replaces the stack with a single entry): bottom-bar
      navigation and `goHome`/`openHomeAt` — mirrors native
      `change()` (no back stack). `FlutterNav.openHomeAt`
-     (`app/src/main/java/com/github/moyingshi/osc/tv/flutter/FlutterNav.java:160-164`)
+     (`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/FlutterNav.java:160-164`)
      and `goHome` are the switch entry points.
    - *Push* (appends, de-duplicated against the top): cross-screen
      `C1ScreenActivity.start(...)` calls from a C1 caller — the 20
@@ -373,7 +373,7 @@ registers a page-change listener (`onPageSelected` syncs the chip
 selection and FAB visibility); `VodFragment.java:966`
 (`onItemClick`) calls `mBinding.pager.setCurrentItem(position)`.
 `CustomViewPager`
-(`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/custom/CustomViewPager.java`)
+(`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/custom/CustomViewPager.java`)
 is a plain `androidx.viewpager.widget.ViewPager` with only an
 exception-safe touch intercept — swipe is enabled by default. So
 natively, swiping the grid area switched tabs with the ViewPager's
@@ -591,7 +591,7 @@ ending at the top of the 88dp glass slot". That assumption is wrong
 - the `glassNav` `ComposeView` is an 88dp slot aligned to the parent
   bottom; the bar inside it is 64dp tall, 24dp side insets, 16dp
   float, top edge 8dp below the slot top
-  (`git show c245dde6^:app/src/mobile/java/com/github/moyingshi/osc/tv/glass/GlassNavBar.kt`,
+  (`git show c245dde6^:app/src/mobile/java/com/github/maoyingshi/osc/tv/glass/GlassNavBar.kt`,
   `BarInsetX` / `BarTopInSlot` + geometry comment).
 
 So the bar's top edge is 80dp above the window bottom while the
@@ -771,7 +771,7 @@ settings home therefore always loads before any search interaction
 
 **Link 1 — index snapshot (BROKEN, root cause).**
 `B5HostApiImpl.getSettingSearch()`
-(`app/src/main/java/com/github/moyingshi/osc/tv/flutter/B5HostApiImpl.java:392-430`)
+(`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B5HostApiImpl.java:392-430`)
 reflects over the mobile-only index:
 
 ```java
@@ -783,7 +783,7 @@ Field titleResField = indexClass.getField("titleRes");   // throws
 
 The fields `titleRes`, `subtitleRes`, `destRes`, `page`, `rowId`
 are declared on the **nested** class `SettingSearchIndex.Entry`
-(`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/SettingSearchIndex.java:17-29`),
+(`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/SettingSearchIndex.java:17-29`),
 not on `SettingSearchIndex` itself (which declares no fields).
 `Class.getField()` searches only the class and its superclasses, so
 it throws `NoSuchFieldException` on the first field. The `catch
@@ -796,7 +796,7 @@ nested class (4a only inlined the `SettingFragment.ROW_*` literals
 into `rowId` strings). **Search therefore never returned a result
 in any Flutter build**; it was simply unreachable before #159 fixed
 navigation. R8/obfuscation is excluded as a cause: `app/proguard-rules.pro:38`
-has the blanket `-keep class com.github.moyingshi.osc.tv.** { *; }`,
+has the blanket `-keep class com.github.maoyingshi.osc.tv.** { *; }`,
 so class, method, and field names survive — the bug is purely the
 wrong class in `getField` (and `getInt(entry)` would additionally
 fail with `IllegalArgumentException`, since the field, even if

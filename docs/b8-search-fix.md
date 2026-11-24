@@ -56,7 +56,7 @@ Resolve the nested class and read the five fields from it:
 
 ```java
 Class<?> entryClass = Class.forName(
-    "com.github.moyingshi.osc.tv.ui.fragment.SettingSearchIndex$Entry");
+    "com.github.maoyingshi.osc.tv.ui.fragment.SettingSearchIndex$Entry");
 Field titleResField = entryClass.getField("titleRes");
 // ... subtitleRes, destRes, page, rowId likewise
 ```

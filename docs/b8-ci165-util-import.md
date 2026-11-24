@@ -13,7 +13,7 @@ Completion sentence: the mobile Java compile passes — the single
 - Exactly one compile error, printed twice (javac output + Gradle summary):
 
 ```text
-app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java:891: error: cannot find symbol
+app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java:891: error: cannot find symbol
     Util.moveToBackground(this);
     ^
   symbol:   variable Util
@@ -33,7 +33,7 @@ obvious. Dart analyze (run #163's gate) cannot see a Java import, so the
 defect only surfaced at the Java compile step in run #165.
 
 The method lives in the app's own class
-`app/src/main/java/com/github/moyingshi/osc/tv/utils/Util.java:57`:
+`app/src/main/java/com/github/maoyingshi/osc/tv/utils/Util.java:57`:
 
 ```java
 public static void moveToBackground(Activity activity) {
@@ -50,16 +50,16 @@ public static void moveToBackground(Activity activity) {
 The other `Util` (`com.github.catvod.utils.Util`, used by
 MpvHlsProxy/Decoder/SiteApi) has no `moveToBackground` and was NOT
 imported. The canonical import for the app's class is
-`com.github.moyingshi.osc.tv.utils.Util` (same as Device/Episode/Flag).
+`com.github.maoyingshi.osc.tv.utils.Util` (same as Device/Episode/Flag).
 
 ## Fix
 
 One line in
-`app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java`,
+`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java`,
 added alphabetically after the `UrlUtil` import:
 
 ```java
-import com.github.moyingshi.osc.tv.utils.Util;
+import com.github.maoyingshi.osc.tv.utils.Util;
 ```
 
 No change to `handleRootBack()` or any other code. `this` is a

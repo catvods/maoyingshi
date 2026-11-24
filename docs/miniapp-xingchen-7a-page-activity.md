@@ -11,14 +11,14 @@
 > 状态：文档先行（2026-11-19 17:25）；实现待 guard 会话。下一步唯一动作：开 guard 7a，按 §6 实施。
 
 - 完成句：HkPageActivity 瘦身版落地、子页面走 getNextPage、handleDealUrl 与合集浏览面闭合、HkNonVideo 删除，提交后 7a 完工。
-- 允许路径：`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/activity/HkPageActivity.java`（新）、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkListFragment.java`（规则 JSON 模式）、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkDetailFragment.java`（handleDealKind 委托 + 非影视调用点改名）、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkMiniappActivity.kt`（合集包导入后开浏览面）、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkClickDispatcher.java`（hiker://page 改走 openPage + dealKind 短路）、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkRouter.java`（接管 HkNonVideo 类型谓词）、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkShareHelper.java`（合集待浏览目录记账 + 注释更新）、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkNonVideo.java`（删除）、
+- 允许路径：`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/activity/HkPageActivity.java`（新）、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkListFragment.java`（规则 JSON 模式）、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkDetailFragment.java`（handleDealKind 委托 + 非影视调用点改名）、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkMiniappActivity.kt`（合集包导入后开浏览面）、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkClickDispatcher.java`（hiker://page 改走 openPage + dealKind 短路）、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkRouter.java`（接管 HkNonVideo 类型谓词）、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkShareHelper.java`（合集待浏览目录记账 + 注释更新）、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkNonVideo.java`（删除）、
   `app/src/mobile/AndroidManifest.xml`（仅新增 HkPageActivity 一条注册，与 HkListActivity 同形）、
   `docs/miniapp-xingchen-7a-page-activity.md`（本文档）。
 - 保护路径：无初始脏文件（`git status` 干净，HEAD `705d473a`）。

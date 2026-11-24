@@ -85,8 +85,8 @@ revert 本提交。改动只在点卡分支与 `toVods` 记表，不动存储与
   两处 `onPageLoaded` 在 `addAll` 前调去重；`git diff --check` 通过。
   3 条验收规则 col_type 全是 movie_3、0 处 x5，`toVods` 行为不变；
   去重只去掉相同 URL。
-- 文件：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkListHelper.java`，
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkListFragment.java`，
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkSearchFragment.java`，
+- 文件：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkListHelper.java`，
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkListFragment.java`，
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkSearchFragment.java`，
   `docs/miniapp-xingchen-3-x5-webview.md`。
 - 下一步：等构建 + 真机验麻花影院点卡开出网页、翻页不再重复。

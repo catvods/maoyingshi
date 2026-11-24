@@ -19,7 +19,7 @@
 
 ### 1.1 删：代码文件（48 个）
 
-每个条目标注 Flutter 对应物与代码依据。路径前缀：`app/src/mobile/java/com/github/moyingshi/osc/tv/`。
+每个条目标注 Flutter 对应物与代码依据。路径前缀：`app/src/mobile/java/com/github/maoyingshi/osc/tv/`。
 
 #### A. Activity（8 个）
 
@@ -371,7 +371,7 @@ mobile manifest `:23/:126/:131`），使旋转不再销毁重建，从根上消�
 
 - 组件名是桌面图标的身份，改名会导致已钉选图标失效；`AppBranding.applyLauncherIcon`（`App.onCreate` 调用）
   以组件名派生 alias（`AppBranding.java:140/152` 现直接引用 `HomeActivity.class`），阶段 1 改为字符串常量
-  `com.github.moyingshi.osc.tv.ui.activity.HomeActivityCurrent/History`——FQCN 双 flavor 相同，
+  `com.github.maoyingshi.osc.tv.ui.activity.HomeActivityCurrent/History`——FQCN 双 flavor 相同，
   字符串常量对 TV 同样成立，`AppBranding` 不再引用被删类。
 - alias 后缀常量 `ALIAS_SUFFIX_CURRENT="Current"` / `ALIAS_SUFFIX_HISTORY="History"`
   （`AppBranding.java:33-34`）不动；`B15HostApiImpl.java:279` 的 `launcherIntent` 用法随 alias 改向自动生效。
@@ -485,7 +485,7 @@ following/lab/setting 菜单项）、B13（`:264` widget item、`:278-290` 已�
 
 ### 5.1 阶段 1 实施记录（2026-11-18，已完成）
 
-- **产出**：新建 `app/src/main/java/com/github/moyingshi/osc/tv/flutter/FlutterNav.java`
+- **产出**：新建 `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/FlutterNav.java`
   （flavor 安全路由器；mobile 分支直接引用 `C1ScreenActivity`，TV 分支用 FQCN 字符串反射，
   `Util.isMobile()` 门控）+ 改线 **43 处调用点**，覆盖 24 个文件（`AppBranding` 2、`CrashActivity` 1、
   `TmdbDetailActivity` 4、`TmdbNavigation` 1、`HistoryResumeCoordinator` 2、`TmdbPersonActivity` 2、
@@ -841,17 +841,17 @@ following/lab/setting 菜单项）、B13（`:264` widget item、`:278-290` 已�
 
 ## 附：核查过的文件（主要）
 
-- `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/activity/HomeActivity.java`（全文）
-- `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java`（全文）
-- `app/src/main/java/com/github/moyingshi/osc/tv/App.java`（全文）
+- `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/activity/HomeActivity.java`（全文）
+- `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java`（全文）
+- `app/src/main/java/com/github/maoyingshi/osc/tv/App.java`（全文）
 - `app/src/mobile/AndroidManifest.xml`、`app/src/main/AndroidManifest.xml`（全文）、
   `app/src/leanback/AndroidManifest.xml`（grep 确认无 Flutter/C1 声明）
-- `app/src/main/java/com/github/moyingshi/osc/tv/Setting.java`（flag 段 `:416-655`）
-- `app/src/main/java/com/github/moyingshi/osc/tv/ui/activity/SearchActivity.java`（mobile 版 `:42-130`，
+- `app/src/main/java/com/github/maoyingshi/osc/tv/Setting.java`（flag 段 `:416-655`）
+- `app/src/main/java/com/github/maoyingshi/osc/tv/ui/activity/SearchActivity.java`（mobile 版 `:42-130`，
   经 `FolderActivity`/`B9` 交叉核对）、`HistoryResumeCoordinator.java`、`FileChooser.java`（`:85-110`）
-- `app/src/main/java/com/github/moyingshi/osc/tv/web/HomeWebBridge.java`（`:430-460`）、
+- `app/src/main/java/com/github/maoyingshi/osc/tv/web/HomeWebBridge.java`（`:430-460`）、
   `HomeWebController.java`（使用者核查）、`WebHomeThemeBridge.java`（`:335/:443`）
-- `app/src/main/java/com/github/moyingshi/osc/tv/flutter/` 全部 `HostApiImpl` 分流点（grep + 定向读）
+- `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/` 全部 `HostApiImpl` 分流点（grep + 定向读）
 - `flutter_module/lib/main.dart`（路由表）、`b9_search_page.dart`（`:220-250`）、
   `b7_settings_home_page.dart`（开关行与回退分支）
 - `app/src/mobile/res/` 全量布局/菜单/drawable 清单与 binding/引用逐项 grep

@@ -12,7 +12,7 @@
 
 ### 1.1 个人设置页
 
-- 文件：`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/SettingPersonalFragment.java`（327 行）+ `fragment_setting_personal.xml`。
+- 文件：`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/SettingPersonalFragment.java`（327 行）+ `fragment_setting_personal.xml`。
 - 平坦页：**0 个条件可见性**。24 行，布局 XML 顺序 = `setText()` 顺序 = 显示顺序（与增强页不同，增强页是 `reorderItems()` 顺序）。
 
 | # | 行 key | 图标 / 圆圈 | 值文本 | 行为 |
@@ -49,7 +49,7 @@
 
 ### 1.2 设置内搜索
 
-- 文件：`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/SettingSearchFragment.java`（134 行）+ 移动端专属的 `SettingSearchIndex.java` 与 `SettingSearchAdapter.java`。
+- 文件：`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/SettingSearchFragment.java`（134 行）+ 移动端专属的 `SettingSearchIndex.java` 与 `SettingSearchAdapter.java`。
 - 索引：`SettingSearchIndex.all()` 构建约 150 条，字段 `titleRes` / `subtitleRes` / `destRes` / `page` / `rowId`（全部 public final）。24 条主设置页行（`page = -1`，`rowId` 非空，`destRes = R.string.nav_setting`）+ 子页面行：播放器页 2（约 40 条）、增强页 3（28 条）、弹幕页 4（4 条）、个人页 5（24 条）、字幕页 6（3 条）、TMDB 页 7（6 条）、AI 页 8（6 条）、广告页 9（6 条）。
 - 匹配：`search(context, entries, query)`——query 为空返回空结果；否则对 `title + " " + subtitle`（subtitleRes 为 0 时不加）做 `Locale.getDefault()` 小写后的子串匹配。
 - 原生 UI：返回键 → `getRoot().change(1)`；搜索框 hint `setting_search_hint`，`imeOptions=actionSearch`，`inputType=text`，TextWatcher 触发 `onQuery`；IME 搜索键 → 隐藏键盘；空查询 → hint 视图；无结果 → 空视图（`setting_search_empty`）；有结果 → RecyclerView（`ItemSettingSearchResultBinding`：标题 16sp 标题色、副标题 13sp 副标题色且为空时隐藏、去向 13sp 值色）。`onEntry`：先隐藏键盘；`page >= 0` → `getRoot().change(page)`；否则 `SettingFragment.requestRow(rowId)` + `change(1)`。`onResume` 请求焦点 + 显示键盘（`SHOW_IMPLICIT`）。
@@ -95,11 +95,11 @@
 `SettingSearchIndex` 是 mobile-only 类，main 源集的 impl 不能直接引用。`getSettingSearch()` 用反射：
 
 ```java
-Class.forName("com.github.moyingshi.osc.tv.ui.fragment.SettingSearchIndex")
+Class.forName("com.github.maoyingshi.osc.tv.ui.fragment.SettingSearchIndex")
   .getMethod("all").invoke(null)
 ```
 
-再取各条目的 public final 字段（`titleRes` / `subtitleRes` / `destRes` / `page` / `rowId`），host 用 `activity.getString()` 解析文案。ProGuard 的 `-keep com.github.moyingshi.osc.tv.**` 覆盖（C2/B2 前例）。反射失败时退化为**空索引**（搜索屏显示 empty 文本），个人页不受影响（见 §7 V10）。
+再取各条目的 public final 字段（`titleRes` / `subtitleRes` / `destRes` / `page` / `rowId`），host 用 `activity.getString()` 解析文案。ProGuard 的 `-keep com.github.maoyingshi.osc.tv.**` 覆盖（C2/B2 前例）。反射失败时退化为**空索引**（搜索屏显示 empty 文本），个人页不受影响（见 §7 V10）。
 
 `flutterAvailable` 由 host 按各批开关算出：页 3 → `isFlutterB4Enabled()`；页 4/7/8/9 → `isFlutterB3Enabled()`；页 5 → `isFlutterB5Enabled()`；页 2（播放器）与页 6（字幕，顶层 C1 路由而非家族成员）→ false，恒走 host。
 
@@ -123,11 +123,11 @@ Dart 过滤与原生 `SettingSearchIndex.search()` 同义：trim → 小写 → 
 | `flutter_module/lib/b5_personal_page.dart` | 新 |
 | `flutter_module/lib/main.dart` | 改：import + `/settings?member=personal`、`/settings?member=search` 两条字面路由 + B5 开关（照 B4 模式） |
 | `flutter_module/lib/b3_settings_a_page.dart` | 改：import + `_members` 加两项 + `onGenerateRoute` 加两 case（只加法） |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B5HostApiImpl.java` | 新 |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java` | 改：注册 `B5HostApi`（一行 + 注释） |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java` | 改：C0 引擎上注册 `B5HostApi`（开关用） |
-| `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java` | 改：`flutter_b5_enabled`（默认 false） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/SettingFragment.java` | 改：`openPersonalSettings()` + `openSettingSearch()` 两个共享分流方法；个人行、搜索按钮、`performRow ROW_PERSONAL` 改走它们（只改分流处） |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B5HostApiImpl.java` | 新 |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java` | 改：注册 `B5HostApi`（一行 + 注释） |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java` | 改：C0 引擎上注册 `B5HostApi`（开关用） |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java` | 改：`flutter_b5_enabled`（默认 false） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/SettingFragment.java` | 改：`openPersonalSettings()` + `openSettingSearch()` 两个共享分流方法；个人行、搜索按钮、`performRow ROW_PERSONAL` 改走它们（只改分流处） |
 | `.gitignore` | 改：加 `B5Messages.java` |
 | `.github/workflows/b8-c0.yml` | 改：Pigeon 步骤加 b5 生成 + 存在性检查（B4 同款 3 行） |
 | `docs/b8-b5-personal.md` | 新（本文档） |
@@ -196,7 +196,7 @@ Dart 过滤与原生 `SettingSearchIndex.search()` 同义：trim → 小写 → 
 
 1. **G1 — Pigeon 生成与手写 impl 签名**：`B5HostApi` 29 个方法 + `List<B5PersonalRow>` / `List<B5SearchEntry>` 返回值 + `Long` 字段 + `@async VoidResult`，均为手写 Java 对 CI 生成接口的匹配。方法名须与 Dart 定义**字符级一致**（C1 `setSubtitleAutoMatch` 教训：不得推断大小写归一化）；`bool` / `int` / `double` 一律装箱；数据类 Builder 字段名须与 Pigeon 生成的一致。任一不匹配在 CI 的 Gradle 编译失败中按文件路径归属到本批。
 2. **G2 — 键盘 / 输入法行为（本批最大风险）**：`TextField` 的 autofocus、键盘弹出/收起、搜索键行为在嵌入式 `FlutterFragment` 中**本机无法验证**。**若 B5 联合验收时键盘行为异常，B9（搜索输入页）停下来等决策（规划 §4.5），不得按原计划继续做。** 验收时须逐项核对 §4 搜索对照第 2、8 条。
-3. **G3 — 反射三处 + 混淆存活**：`SettingSearchIndex.all()` + 5 个 public final 字段、`SettingFragment.requestRow(String)`，均依赖 ProGuard `-keep com.github.moyingshi.osc.tv.**`。若混淆后失效：搜索退化为空索引（G3a）、rowId 深链退化为只打开设置主屏（G3b）。验收时须在 release 包上验证搜索有结果且深链能定位到行。
+3. **G3 — 反射三处 + 混淆存活**：`SettingSearchIndex.all()` + 5 个 public final 字段、`SettingFragment.requestRow(String)`，均依赖 ProGuard `-keep com.github.maoyingshi.osc.tv.**`。若混淆后失效：搜索退化为空索引（G3a）、rowId 深链退化为只打开设置主屏（G3b）。验收时须在 release 包上验证搜索有结果且深链能定位到行。
 4. **G4 — 四风味 release 构建**：leanback 侧 `HomeActivity` 与 `AppBrandingActivity` 均双风味存在（已核对）；全部 `R.string` / `R.array` 均在 main res；`mobileString()` 不需要。但 leanback 构建仍须 CI 证明（C2 的 leanback 隐患教训：未进 CI 前不得宣称可构建）。
 5. **G5 — 搜索跳转分流**：字幕页 C1 开/关两路、rowId 深链（反射 + `onResume` 消费）、`openHomeAt` 的 `CLEAR_TOP | SINGLE_TOP` + `"nav_position"` 字面量，均须在真机上逐条验证（§4 搜索对照第 7 条）。
 6. **G6 — 族内返回语义**：搜索页内 push 成员后返回，查询与结果须保留；族壳 `_handleBack` 在栈空时关屏（原生是 `change(1)` 回设置主屏，见 V2）。

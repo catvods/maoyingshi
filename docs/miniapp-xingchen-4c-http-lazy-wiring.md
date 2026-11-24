@@ -17,7 +17,7 @@
   `app/src/main/java/com/fongmi/android/tv/api/hk/`。
 - 移植方式：机械搬运脚本 `/tmp/xc4/port4.py`（包名改写 + 文件头插入 +
   §3 所列适配；不随仓库走）。包名改写 `com.fongmi.android.tv` →
-  `com.github.moyingshi.osc.tv`；`com.fongmi.quickjs.*` 不动。
+  `com.github.maoyingshi.osc.tv`；`com.fongmi.quickjs.*` 不动。
   每个新文件在 package 行后加一行文件头移植说明（3a/3b/3e/4a/4b 同款）。
 - 交叉验证：oktv 反编译源 `~/workspace/hk-ref/src/sources/` 只有
   `HkPageParser$HkPage` 类文件可对位，无 HkHttpParser/HkLazyRuleParser

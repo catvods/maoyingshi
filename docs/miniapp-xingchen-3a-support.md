@@ -11,7 +11,7 @@
 
 | 我方文件 | 星辰来源 | 行数（星辰 → 我方） | 说明 |
 |---|---|---|---|
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkCookieJar.java` | `app/src/main/java/com/fongmi/android/tv/api/hk/HkCookieJar.java` | 142 → 143 | 除包名外与原文一致（+1 行为文件头移植说明，下同） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkCookieJar.java` | `app/src/main/java/com/fongmi/android/tv/api/hk/HkCookieJar.java` | 142 → 143 | 除包名外与原文一致（+1 行为文件头移植说明，下同） |
 | `.../api/hk/HkSsl.java` | `.../api/hk/HkSsl.java` | 50 → 51 | 除包名外与原文一致 |
 | `.../api/hk/HkContentTypePreInterceptor.java` | `.../api/hk/HkContentTypePreInterceptor.java` | 74 → 75 | 除包名外与原文一致 |
 | `.../api/hk/HkContentTypeAfterInterceptor.java` | `.../api/hk/HkContentTypeAfterInterceptor.java` | 60 → 61 | 除包名外与原文一致 |
@@ -32,7 +32,7 @@
 
 ## 适配点（每处差异的唯一原因）
 
-1. **包名**：全部 hk 文件 `com.fongmi.android.tv.api.hk` → `com.github.moyingshi.osc.tv.api.hk`；
+1. **包名**：全部 hk 文件 `com.fongmi.android.tv.api.hk` → `com.github.maoyingshi.osc.tv.api.hk`；
    每个文件在 package 行后加一行文件头移植说明（来源 + 适配摘要）。
 2. **HkHttp.client() 委托**（任务书硬性要求）：星辰 `client()` 整段（HK_AUTO_DNS、
    trust-all SSL、charset 头、ContentType 前后拦截器、CookieJar、10s 超时、dnsEnd 诊断、
@@ -56,7 +56,7 @@
    15s 超时、45s callTimeout、dispatcher maxRequestsPerHost=48、CookieJar。
    W1 注释里“独有的代理选择器（SourceGate/GlobalProxy）”一语改述为“独有的代理选择器”（注释也不留禁引标识）。
 5. **HkHttp.applyDoh() 适配而非跳过**：星辰 `XingChenDoh.currentDoh(context)` 在我方不存在，
-   但查到等价物——我方 `Setting.getDoh()`（`app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java:161`）
+   但查到等价物——我方 `Setting.getDoh()`（`app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java:161`）
    + catvod `Doh.objectFrom(...)`（`catvod/src/main/java/com/github/catvod/bean/Doh.java:38`，
    空串回空 Doh、`getUrl()`/`getHosts()` 齐全），与 `Startup.java:38` 的
    `OkHttp.dns().setDoh(() -> Doh.objectFrom(Setting.getDoh()))` 同口径；且星辰
@@ -74,9 +74,9 @@
    裁决显式 proxy 派生 client（治连接池污染），我方无此类，改成 `return client();`；
    javadoc 同步改述；`explicitProxy()` 整方法删除；随之删了 `java.net.Proxy` 与
    `java.net.InetSocketAddress` 两个不再使用的 import。
-8. **其余 import 调整**：`com.fongmi.android.tv.App` → `com.github.moyingshi.osc.tv.App`
+8. **其余 import 调整**：`com.fongmi.android.tv.App` → `com.github.maoyingshi.osc.tv.App`
    （`App.get()` 已核对存在）；新增 `android.text.TextUtils` 与
-   `com.github.moyingshi.osc.tv.setting.Setting`；`com.google.common.net.HttpHeaders` **保留原样**——
+   `com.github.maoyingshi.osc.tv.setting.Setting`；`com.google.common.net.HttpHeaders` **保留原样**——
    catvod `build.gradle:27` 有 `api libs.guava`，经 `implementation project(':catvod')` 可达 app，
    无需换成 okhttp Headers 或字符串常量。
 9. **HkHttp 子集外的跳过**：除上述 2/4/5/6/7 条外，星辰 `HkHttp.java` 其余内容**全部搬了**，
@@ -119,7 +119,7 @@
 - 包名**保持 `com.fongmi.quickjs` 不改**：这是上游 webhtv quickjs 模块的原包名，
   星辰 `HkHttp/HkHttpHelper` 按此包名引用 `com.fongmi.quickjs.bean.Req`；改写会断链。
   与我方外部 AAR `com.whl.quickjs` 包名不同，不冲突；与我方已有的
-  `com.github.moyingshi.osc.tv.quickjs.bean.Req`（另一套）包名不同，不冲突。
+  `com.github.maoyingshi.osc.tv.quickjs.bean.Req`（另一套）包名不同，不冲突。
 - 只搬了 HkJsRuntime/HkHttpHelper 链路上需要的 4 个类（Req/Cache/Crypto/Parser）；
   Parser 的 import 只有 `Cache`（`com.fongmi.quickjs.bean.Cache`，已一并搬），
   未搬整个 quickjs 模块。Req 依赖的 catvod `Json.toMap`（`Json.java:89-93`）已核对存在。
@@ -128,7 +128,7 @@
 
 - **ToastUtil**：本步不新建。星辰 `HkJsRuntime.java` 里 3 处 `ToastUtil.show(...)`
   （`:3881`、`:7141`、`:12306`，均为 `ToastUtil.show(App.get(), msg, Toast.LENGTH_SHORT)` 形），
-  在 3b–3d 移植 `HkJsRuntime` 时改走我方 `Notify`（`app/src/main/java/com/github/moyingshi/osc/tv/utils/Notify.java`，
+  在 3b–3d 移植 `HkJsRuntime` 时改走我方 `Notify`（`app/src/main/java/com/github/maoyingshi/osc/tv/utils/Notify.java`，
   `show(String)`/`show(int)`/`show(Notification)` 已核对存在；`ToastUtil.show(App, msg, LENGTH_SHORT)`
   对应 `Notify.show(msg)`）。
 - **SourceGate / GlobalProxy / ReadingProxyGate**：我方全仓库 grep 零命中（任务书已核对，本步复核仍为零）。

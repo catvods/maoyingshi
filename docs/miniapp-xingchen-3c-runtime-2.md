@@ -3,7 +3,7 @@
 > Recovery anchor（任务：miniapp-xingchen-3c-runtime-2；lane：standard；分支 main；HEAD e52aaf4e）
 > 目标：往现有 `HkJsRuntime.java` 追加第 2 部分（require/fetch 主干 + MY_* 注入 + 文件下载），
 > 另拷运行时真正读的 3 个 JS 资产进 `app/src/main/assets/`；本地提交 + recovery tag，不推不编。
-> 范围（仅 5 路径）：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkJsRuntime.java`（追加）、
+> 范围（仅 5 路径）：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkJsRuntime.java`（追加）、
 > `docs/miniapp-xingchen-3c-runtime-2.md`（本文件）、`app/src/main/assets/Hikerurl.js`、
 > `app/src/main/assets/plugin.js`、`app/src/main/assets/aes.js`。
 > 状态：已完成，待 guard finish 提交。验收：抽取脚本自校验 + 独立 verify 均通过（见 §8）。
@@ -14,7 +14,7 @@
 ## 1. 来源与方法
 
 - 星辰原文：`~/workspace/xingchen-ref/app/src/main/java/com/fongmi/android/tv/api/hk/HkJsRuntime.java`，
-  14836 行（HEAD 52450c0）。输出：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkJsRuntime.java`，
+  14836 行（HEAD 52450c0）。输出：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkJsRuntime.java`，
   9739 行 → 11590 行（本步净增 1850 行，含段首注释与 3c 分区头）。
 - 移植方式：机械抽取脚本 `/tmp/xc3c/port3c.py`（span 表 + 大括号配对定段尾 + 文本适配；
   不随仓库走，见 `/tmp/xc3c/`）+ 独立验证脚本 `/tmp/xc3c/verify.py`。逐段对照原则：
@@ -156,7 +156,7 @@
 
 ## 6. 适配点（差异只剩这些）
 
-1. **包名**：`com.fongmi.android.tv` → `com.github.moyingshi.osc.tv`。本步 58 段里
+1. **包名**：`com.fongmi.android.tv` → `com.github.maoyingshi.osc.tv`。本步 58 段里
    该字串出现 0 次（无全限定引用），替换计数 0；`com.fongmi.quickjs` 出现 1 次，
    按 3a 口径保持原样。
 2. **ToastUtil**：本步 58 段里出现 0 次，无须改（3b 说的第三处 :12306 在

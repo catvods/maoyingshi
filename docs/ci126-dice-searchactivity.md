@@ -24,10 +24,10 @@ DiceFragment 是主分支合并进来的新文件（骰子选片页），主分�
 
 ## 修复
 
-文件：`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/DiceFragment.java`
+文件：`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/DiceFragment.java`
 
-- import：`com.github.moyingshi.osc.tv.ui.activity.SearchActivity`
-  → `com.github.moyingshi.osc.tv.flutter.FlutterNav`（按包名字母序放
+- import：`com.github.maoyingshi.osc.tv.ui.activity.SearchActivity`
+  → `com.github.maoyingshi.osc.tv.flutter.FlutterNav`（按包名字母序放
   在 `db.AppDatabase` 之后、`setting.DiceSetting` 之前）。
 - `playDirect` 回落（:296）：`SearchActivity.start(requireActivity(), name)`
   → `FlutterNav.openSearch(requireActivity(), name)`。
@@ -41,7 +41,7 @@ DiceFragment 是主分支合并进来的新文件（骰子选片页），主分�
 ## 验证
 
 - `FlutterNav.openSearch(Activity, String)` 存在于
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/FlutterNav.java:214`，
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/FlutterNav.java:214`，
   注释明确写着 "Replaces {@code SearchActivity.start(Activity, String)}"，
   参数（Activity, String）与两处调用点逐字对应；移动端分支打开
   C1 `ROUTE_SEARCH` 并 URL 编码 keyword，与原 `SearchActivity.start`

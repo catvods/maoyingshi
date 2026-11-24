@@ -5,8 +5,8 @@
 > getMyVar/putMyVar，JSON 自动转换）+ 全局 `getPublicItem/setPublicItem/
 > clearPublicItem` + `getItem/setItem` 语义对齐（落盘 `kv.json`、按标题
 > 隔离、值类型与缺省值、三参跨规则读写）。只改
-> `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkEngine.java`、
-> `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkStore.java`（+
+> `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkEngine.java`、
+> `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkStore.java`（+
 > 本文档）。本地提交、不推、不编、不动版本记录。验收：① 落盘路径/隔离/
 > 类型/缺省值与官方一致 ② 同规则跨求值可读、不同规则互不串 ③ 第 1 项
 > config 共享不受影响 ④ 3 条验收规则零回归（均不用 storage/getItem/
@@ -22,8 +22,8 @@ plugin.js / HkJsRuntime 补齐；`getItem/setItem` 落盘改到每规则
 仍是两套存储、互不干扰；3 条验收规则零回归。
 
 - 允许路径：`docs/miniapp-align-5-storage.md`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkEngine.java`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkStore.java`
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkEngine.java`、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkStore.java`
 - 保护路径：HEAD 已含第 1–4 项（b7052638 等），一律不动；TV/leanback、
   BaseLoader、底栏（menu_nav.xml 6 项）不动；`myvar.json`（第 1 项）
   的读写路径不动。

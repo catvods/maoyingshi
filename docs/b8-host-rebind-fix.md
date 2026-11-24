@@ -17,7 +17,7 @@ Wei 在多个 Flutter 屏之间切换后，B7 impl 持有的 Activity 已停止�
 
 已排除的假说：
 
-- R8 混淆：`app/proguard-rules.pro:38` 有 `-keep class com.github.moyingshi.osc.tv.** { *; }` 全包保留，反射的类名/方法名不会被改名或删除；`HistoryDialog` 的 `create/vod/live/wall/manage/show(Fragment)` 齐全且 public。
+- R8 混淆：`app/proguard-rules.pro:38` 有 `-keep class com.github.maoyingshi.osc.tv.** { *; }` 全包保留，反射的类名/方法名不会被改名或删除；`HistoryDialog` 的 `create/vod/live/wall/manage/show(Fragment)` 齐全且 public。
 - Dart 侧接线：点行正确调用 `afterDialog(api.openVodManage/openLiveManage/openWallManage)`。
 - B7 的 headless fragment（`B7HomeHostFragment`）本身没问题：它实现 `ConfigListener/SiteListener/LiveListener`，`commitNow()` 同步添加。
 

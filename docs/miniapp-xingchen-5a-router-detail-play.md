@@ -16,7 +16,7 @@
   `app/src/mobile/java/com/fongmi/android/tv/ui/hk/`。
 - 移植方式：机械搬运脚本 `/tmp/xc5/port5a.py`（包名改写 + 文件头插入 +
   §3 所列适配；不随仓库走）。包名改写 `com.fongmi.android.tv` →
-  `com.github.moyingshi.osc.tv`。每个新文件在 package 行后加一行文件头移植说明
+  `com.github.maoyingshi.osc.tv`。每个新文件在 package 行后加一行文件头移植说明
   （3a/3b/3e/4a/4b/4c 同款）。
 - 交叉验证：oktv 反编译源 `~/workspace/hk-ref/src/sources/` 无 HkRouter 等独立
   文件（只有 HkJsRuntime 大文件内嵌逻辑）；本笔以星辰真源码为准。

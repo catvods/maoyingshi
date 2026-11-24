@@ -23,11 +23,11 @@
   `flutter_module/lib/widgets/vod_card.dart`、
   `flutter_module/lib/widgets/pic_image.dart`、
   `flutter_module/lib/main.dart`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B2HostApiImpl.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java`、
-  `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/VodFragment.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B2HostApiImpl.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java`、
+  `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java`、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/VodFragment.java`、
   `.gitignore`、`.github/workflows/b8-c0.yml`、`docs/b8-b2-keep.md`。
 - 预存脏文件：无（开始时工作树干净）。
 - 时间/时区：2026-11-17 10:45 CST（Asia/Shanghai）开始。
@@ -213,7 +213,7 @@ Dart 按 `devicePixelRatio` 把 host 的 px 换算成逻辑像素；网格用固
 `openKeepSync()` 用反射调用 `KeepActivity.onSync()` 的同一链：
 `SyncDialog.create().keep().show(activity)`（`keep()` 方法已核实存在）。
 安全依据与 C2 相同：`proguard-rules.pro` 有
-`-keep class com.github.moyingshi.osc.tv.** { *; }`，release 构建不改名；
+`-keep class com.github.maoyingshi.osc.tv.** { *; }`，release 构建不改名；
 仓库内已有反射先例。leanback 上此屏无入口，失败不可达，吞错处理与
 `ImgUtil` 的 catch 风格一致。
 
@@ -344,11 +344,11 @@ leanback 的命中，曾误判 B2:223 为 mobile-only；以后核查资源归属
 | 3 | `flutter_module/lib/widgets/vod_card.dart` | 新：`VodCard` 共享卡片（见 §2.5 参数化差异点） |
 | 4 | `flutter_module/lib/widgets/pic_image.dart` | 新：`PicImage` 共享图片（C2 图片逻辑复刻） |
 | 5 | `flutter_module/lib/main.dart` | 改：`/keep` 路由 + 实验屏 B2 开关 + 实验屏 `SingleChildScrollView` |
-| 6 | `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B2HostApiImpl.java` | 新：host 实现（快照/几何/图片解析/加载/删除/同步反射/回首页） |
-| 7 | `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java` | 改：`ROUTE_KEEP` + 注册 `B2HostApi` + 类注释提及收藏页 |
-| 8 | `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java` | 改：C0 引擎注册 `B2HostApi`（只为开关） |
-| 9 | `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java` | 改：加 `flutter_b2_enabled` 开关方法 |
-| 10 | `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/VodFragment.java` | 改：`R.id.keep` 入口分流（1 处） |
+| 6 | `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B2HostApiImpl.java` | 新：host 实现（快照/几何/图片解析/加载/删除/同步反射/回首页） |
+| 7 | `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java` | 改：`ROUTE_KEEP` + 注册 `B2HostApi` + 类注释提及收藏页 |
+| 8 | `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java` | 改：C0 引擎注册 `B2HostApi`（只为开关） |
+| 9 | `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java` | 改：加 `flutter_b2_enabled` 开关方法 |
+| 10 | `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/VodFragment.java` | 改：`R.id.keep` 入口分流（1 处） |
 | 11 | `.gitignore` | 改：加 `B2Messages.java` |
 | 12 | `.github/workflows/b8-c0.yml` | 改：Pigeon 步骤加 b2 生成 + 存在性检查 |
 | 13 | `docs/b8-b2-keep.md` | 新：本文档 |

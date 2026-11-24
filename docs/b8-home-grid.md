@@ -15,7 +15,7 @@ only the AppBar blocks above the tabs.
 | File | Change |
 |---|---|
 | `flutter_module/pigeons/b11_home_messages.dart` | One additive `@async` method `getTabVideos` + two new classes `B11TabVideos` / `B11TabVideoItem`. No existing method or field changed (two doc comments updated: `getHomeShell` no longer calls the tab content a placeholder, `openTabCategory` is now the folder drill-down action). |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B11HostApiImpl.java` | `getTabVideos` implementation reusing the B8 list path; shared serial guard with `getHomeShell`; B8-copied item flattening, image resolution, and grid geometry. |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B11HostApiImpl.java` | `getTabVideos` implementation reusing the B8 list path; shared serial guard with `getHomeShell`; B8-copied item flattening, image resolution, and grid geometry. |
 | `flutter_module/lib/b11_home_page.dart` | `_buildTabContent` renders the new `_TabVideoGrid` (rect/list/oval, load-more, error/empty states); folder drill-down and detail-open reuse the B8 host chain; the dead `_openTabCategory` page method is removed. Bottom bar, top bar, B12/B13 widgets untouched. |
 | `docs/b8-home-grid.md` | This file. |
 
@@ -183,7 +183,7 @@ entry from the home grid, that is a follow-up.
   via the browser route after verification.
 - Files: `flutter_module/pigeons/b11_home_messages.dart`,
   `flutter_module/lib/b11_home_page.dart`,
-  `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B11HostApiImpl.java`,
+  `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B11HostApiImpl.java`,
   `docs/b8-home-grid.md`.
 - Next action: parent verifies the commit, pushes, and waits for the
   CI build; then Wei runs the acceptance checklist above on device.

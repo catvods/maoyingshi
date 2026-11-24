@@ -85,7 +85,7 @@
 
 ### 2.6 mobile-only 类与资源（规划 §4.8）
 
-- 3 个 mobile-only 弹窗（`UaDialog` / `SpeedDialog` / `PlayerOsdDialog`）经反射 + 无头 fragment 打开；`LutDialog` 是 main 源码集的类，但其 Fragment 重载经同一无头 fragment 打开（Activity 重载要 `PlayerManager`，impl 不持有）。`UaListener` / `SpeedListener` 在 main 源码集（`impl` 包），fragment 可直接实现；`PlayerOsdDialog.Callback` 是 mobile-only 嵌套接口，用 `Proxy` 实现（B3 V5 同款）。ProGuard 已有 `com.github.moyingshi.osc.tv.**` keep（C2 D5）。
+- 3 个 mobile-only 弹窗（`UaDialog` / `SpeedDialog` / `PlayerOsdDialog`）经反射 + 无头 fragment 打开；`LutDialog` 是 main 源码集的类，但其 Fragment 重载经同一无头 fragment 打开（Activity 重载要 `PlayerManager`，impl 不持有）。`UaListener` / `SpeedListener` 在 main 源码集（`impl` 包），fragment 可直接实现；`PlayerOsdDialog.Callback` 是 mobile-only 嵌套接口，用 `Proxy` 实现（B3 V5 同款）。ProGuard 已有 `com.github.maoyingshi.osc.tv.**` keep（C2 D5）。
 - 2 个 mobile-only 数组（`select_background` = Off/On、`select_pad_live_mode` = Fullscreen/Standard）按名运行时解析（`mobileStringArray`，C2 `mobileString()` 同款），缺失时返回空数组（leanback 侧无入口，不会走到）；其余全部文案/数组均为 main-res，无需 `mobileString()`。
 - 资源核查方法：按目录分别 grep（main / leanback / mobile 三个 values 目录），不用 head 截断（B2 教训，见 B2 文档 §2.11）。
 

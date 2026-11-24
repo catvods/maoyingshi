@@ -134,7 +134,7 @@ Live 42、Player 38、Download 8、Dlna/Cast 15、History 23、Vod 26、Search 2
 
 ### 3.5 构建、签名与发布
 
-- `app/build.gradle`：命名空间/applicationId `com.github.moyingshi.osc.tv`，
+- `app/build.gradle`：命名空间/applicationId `com.github.maoyingshi.osc.tv`，
   versionName `5.6.0`、versionCode 560；`gradle/libs.versions.toml`：
   compileSdk 37、minSdk 24、targetSdk 28、AGP 9.2.1、Kotlin 2.3.21；
   Gradle 9.5.1、JDK 21、Python 3.10（Chaquopy）、NDK r29（MPV/JNI）与 r28c
@@ -420,7 +420,7 @@ Exo 与 MPV 分别验证；原生供应链（新 `.so`/AAR）须有来源与锁�
 | E3 | A，已读 | 官方 FAQ `https://docs.flutter.dev/resources/faq`“How big is the Flutter engine?” | 引擎基线仅几 MB（压缩后）；体积主要由资产/字体/第三方包决定；Dart AOT；Android 用 Impeller/Vulkan | 直接适用；未给本项目可用的具体数字 | 体积结论：引擎不是主要矛盾，G3 才是 |
 | E4 | B，已读 | media_kit README，`https://raw.githubusercontent.com/media-kit/media-kit/main/README.md` | 纯 Dart + `dart:ffi` 调 libmpv；分包与 README 标注版本；Android 路径 = SurfaceTexture + `--wid` + `--hwdec=mediacodec` + `--vo=mediacodec_embed` + JNI 辅助库；功能清单 | 项目方一手文档；版本以访问日 README 为准；未确立 gpu-next 路径 | B 方案播放降级风险的核心依据；G2/G3 来源 |
 | E5 | C，已读 | `dpad` 包文档，`https://pub.dev/documentation/dpad/latest/`（`dpad ^3.3.0`） | Flutter 内置焦点按几何最近选择，TV 布局中会跳 lane/逃出轮播/丢记忆；region/beam 模型；TV 上架清单 | 第三方包文档，有自利倾向；但焦点机制描述与多份实地报道一致 | TV 代价（G5）的依据 |
-| E6 | A，已读 | 仓库源码：`app/src/main/java/com/github/moyingshi/osc/tv/player/engine/PlayerEngine.java`（全文）、`MpvPlayerEngine.java`、`PlayerManager.java` 相关行、`PlaybackMediaFactsMapper.java:227-228`、`MpvPlayer.java` `vo` 配置 | `PlayerEngine` 约 50 方法、Media3 耦合；mpv 双路径（gpu-next/mediacodec_embed）+ DV/Vulkan/Anime4K shader 槽位 | 直接适用；基线 HEAD `b57287bd` | 与 E4 对比的决定性差异 |
+| E6 | A，已读 | 仓库源码：`app/src/main/java/com/github/maoyingshi/osc/tv/player/engine/PlayerEngine.java`（全文）、`MpvPlayerEngine.java`、`PlayerManager.java` 相关行、`PlaybackMediaFactsMapper.java:227-228`、`MpvPlayer.java` `vo` 配置 | `PlayerEngine` 约 50 方法、Media3 耦合；mpv 双路径（gpu-next/mediacodec_embed）+ DV/Vulkan/Anime4K shader 槽位 | 直接适用；基线 HEAD `b57287bd` | 与 E4 对比的决定性差异 |
 | E7 | A，已读/计数 | 仓库盘点：`git ls-files` 计数、`app/build.gradle`、`gradle/libs.versions.toml`、`.github/workflows/android-release.yml`、`README.md`、manifests | §3 全部规模/构建/原生基线数字 | 直接适用；计数方法：Python 逐文件统计，`xargs wc` 的错误中间值已废弃 | 规模与工期估计的依据 |
 | E8 | A，已读 | 仓库文档：`docs/b-ui-b1-b7-port.md`（B7 结论）、`docs/ui-restyle-biecuile.md` §0–§1.2 | B7 不做（media_kit 零播放收益）；BieCuiLe 全 Flutter UI、资产不得复用、精确数值不可恢复 | 直接适用 | B7 结论不再重议；G1 来源 |
 | E9 | D，摘要 | 两次 TV 搜索与 add-to-app 第三方报道（procedure.tech、LeanCode 案例等，仅搜索摘要） | 未找到官方 TV 指南；第三方称通用 APK 增加数十 MB、冷启动增加 | 未打开原文，不作决策依据；否定性搜索结论仅称“未找到” | 仅提示 C0/G5 须实测 |

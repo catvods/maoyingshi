@@ -98,6 +98,6 @@ revert 本提交。改动只在取值守卫条件，不动存储与结构。
   + `stringList` 共 7 处加 `NOT_FOUND` 守卫（实施中发现表单 params 循环有
   两处同款：`formParams` 与请求体构造，两处都修了）；`git diff --check` 通过。
   3 条验收规则卡片字段齐全，`jsString` 对有值字段行为不变。
-- 文件：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkEngine.java`
+- 文件：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkEngine.java`
   （7 处守卫条件），`docs/miniapp-xingchen-2-uniquetag.md`。
 - 下一步：等构建 + 真机验麻花影院列表标题显示“网页”。

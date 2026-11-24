@@ -11,12 +11,12 @@
 > 状态：文档先行（2026-11-19 17:10）；实现未开始。下一步唯一动作：开 guard 会话 6b 后实现。
 
 - 完成句：管理页五路入口改走星辰导入导出助手、旧云导入导出删除，6b 提交后可回滚。
-- 允许路径：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkShareHelper.java`（新）、
+- 允许路径：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkShareHelper.java`（新）、
   `HkPublishHelper.java`（新）、`HkQrUtil.java`（新）、`HkAccountPwd.java`（新）、
   `HkRuleManager.java`、`HkStore.java`、`HkImportPicker.kt`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkMiniappActivity.kt`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkCloudImport.java`（删）、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkCloudExport.java`（删）、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkMiniappActivity.kt`、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkCloudImport.java`（删）、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkCloudExport.java`（删）、
   `docs/miniapp-xingchen-6b-share-publish.md`（本文档）。
 - 保护路径：无初始脏文件（`git status` 干净，HEAD `4e71fb73`，6a 已提交）。
 - 本地时间：2026-11-19 17:10 CST（Asia/Shanghai）。

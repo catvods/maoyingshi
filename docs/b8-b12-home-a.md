@@ -7,7 +7,7 @@
 
 ## §1 原生实现（只读发现）
 
-原生实现：`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/VodFragment.java`（1210 行）+ 两个 mobile-only 适配器 + 三个布局。
+原生实现：`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/VodFragment.java`（1210 行）+ 两个 mobile-only 适配器 + 三个布局。
 
 ### 1.1 轮播横幅（B1，VodFragment 359–421 行）
 

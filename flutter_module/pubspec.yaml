@@ -31,5 +31,5 @@ flutter:
   uses-material-design: true
   module:
     androidX: true
-    androidPackage: com.github.moyingshi.osc.tv.flutter
-    iosBundleIdentifier: com.github.moyingshi.osc.tv.flutter
+    androidPackage: com.github.maoyingshi.osc.tv.flutter
+    iosBundleIdentifier: com.github.maoyingshi.osc.tv.flutter

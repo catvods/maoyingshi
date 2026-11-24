@@ -9,7 +9,7 @@
 > - 计划状态：第 1 步已做完（本地，未推，未编）。下一步（第 2 步）：
 >   `g22`+`i22` 补齐 + 导入（文件/粘贴 JSON/同步已装规则），再做列表页。
 > - 当前文件/符号：
->   `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/` 下
+>   `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/` 下
 >   `HkRule`（g22）、`HkCard`（uy1）、`HkStore`（i22 基础）、
 >   `HkEngine`（Rhino 封装 + JS API 桥）、`HkParser`（b32 最小实现）、
 >   `HkExecutor`（f22 首页骨架）；`gradle/libs.versions.toml`（rhino 1.7.14）、
@@ -28,7 +28,7 @@
    1.8.0）。版本与 library 坐标进 `gradle/libs.versions.toml`，
    `app/build.gradle` 加 `implementation libs.rhino`（紧跟 jsoup 那行）。
    只加依赖，不动其它配置；`proguard-rules.pro` 不用改——仓库已有
-   `-keep class com.github.moyingshi.osc.tv.** { *; }`，新 hk 类全在该包
+   `-keep class com.github.maoyingshi.osc.tv.** { *; }`，新 hk 类全在该包
    下自动 keep；解释器模式不加载 Rhino 的 Codegen（只有优化模式才反射
    加载它），R8 不会因此掉东西。若构建报 Rhino 相关问题再按报错加 keep。
 2. **最小 Rhino 引擎封装**（`HkEngine`）：`HkContextFactory` 把

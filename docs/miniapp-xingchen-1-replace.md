@@ -95,7 +95,7 @@ revert 本提交。改动只在 BOOTSTRAP 字符串常量内，不动 Java 代�
   node 模拟第 19 行三段 `.replace` 在真 JS 字符串上跑通；3 条验收规则 grep：
   find_rule 里 getVar/getMyVar 均为 0 次，臻品fix 全规则 1 处 `.replace(/` 作用于
   JS 字符串，帮手直通、行为不变。
-- 文件：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkEngine.java`
+- 文件：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkEngine.java`
   （BOOTSTRAP 内 `__jsStr` + 14 个包装函数 + 5 处赋值），
   `docs/miniapp-xingchen-1-replace.md`。
 - 下一步：等构建 + 真机验韩剧TV.Q 列表出卡。

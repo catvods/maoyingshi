@@ -10,7 +10,7 @@
 > - 计划状态：第 1 步地基（f9f6b234）、第 2 步导入（a2e06441）、第 3 步列表页
 >   （2219a72b）已在 main 上；本步 = 设计评审（本文档）+ 实现，见下文“实现清单”。
 > - 当前文件/符号：
->   `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/` 下 `HkRule` /
+>   `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/` 下 `HkRule` /
 >   `HkCard` / `HkStore` / `HkEngine` / `HkParser` / `HkExecutor`（`home()` 已有，
 >   `detail()` 未有）/ `HkListHelper`；`ui/hk/HkListActivity` /
 >   `HkListFragment`（点卡片处弹 `hk_list_detail_pending`“详情页还在做”）。
@@ -120,21 +120,21 @@
 | 文件 | 动作 | 说明 |
 |---|---|---|
 | `docs/miniapp-detail.md` | 新建（本文档） | 设计评审 + 实现记录 + 回滚 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkDetailHelper.java` | 新建 | `split`（信息卡/线路/选集切分）+ `columnsFor`（`detail_col_type` → 列数）+ `isEpisodeCard`（逐卡版 `pickEpisodes`） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkDetailActivity.java` | 新建 | 详情页壳：Toolbar（影片名 + 返回）+ `FrameLayout`（`@+id/hk_detail_container`，挂 Fragment）；`open(Context, ruleTitle, url, name, pic, desc)` 启动入口；壁纸由 `BaseActivity.setContentView` 自动加 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkDetailFragment.java` | 新建 | 详情 Fragment：后台线程调 `HkExecutor.detail` → `HkDetailHelper.split` → 单 RecyclerView（GridLayoutManager + SpanSizeLookup）渲染信息/线路头/选集；加载/空/错三态 + 下拉重载；点选集弹 `hk_detail_play_pending` |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkDetailAdapter.java` | 新建 | 多类型 Adapter：信息（海报 + 标题 + 简介）、线路头、选集 chip（复用 `adapter_episode_grid.xml` 的 `@+id/text`）；选集点击回 Fragment |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkDetailHelper.java` | 新建 | `split`（信息卡/线路/选集切分）+ `columnsFor`（`detail_col_type` → 列数）+ `isEpisodeCard`（逐卡版 `pickEpisodes`） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkDetailActivity.java` | 新建 | 详情页壳：Toolbar（影片名 + 返回）+ `FrameLayout`（`@+id/hk_detail_container`，挂 Fragment）；`open(Context, ruleTitle, url, name, pic, desc)` 启动入口；壁纸由 `BaseActivity.setContentView` 自动加 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkDetailFragment.java` | 新建 | 详情 Fragment：后台线程调 `HkExecutor.detail` → `HkDetailHelper.split` → 单 RecyclerView（GridLayoutManager + SpanSizeLookup）渲染信息/线路头/选集；加载/空/错三态 + 下拉重载；点选集弹 `hk_detail_play_pending` |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkDetailAdapter.java` | 新建 | 多类型 Adapter：信息（海报 + 标题 + 简介）、线路头、选集 chip（复用 `adapter_episode_grid.xml` 的 `@+id/text`）；选集点击回 Fragment |
 | `app/src/mobile/res/layout/activity_hk_detail.xml` | 新建 | 照 `activity_hk_list.xml`：MaterialToolbar + `FrameLayout`（container） |
 | `app/src/mobile/res/layout/fragment_hk_detail.xml` | 新建 | 照 `fragment_hk_list.xml`：SwipeRefreshLayout → ProgressLayout → CustomRecyclerView（无分类 chips） |
 | `app/src/mobile/res/layout/item_hk_detail_info.xml` | 新建 | 信息头：海报 ImageView（96×144）+ 标题（18sp 粗体）+ 简介（14sp，最多 6 行）；根布局套 `shape_lab_card`（黑 20% 底，白字在亮壁纸上可读，与 aa77b6d9 同款） |
 | `app/src/mobile/res/layout/item_hk_detail_line.xml` | 新建 | 线路头：一行 16sp 粗体白字（上下 12dp 边距） |
 | `app/src/mobile/AndroidManifest.xml` | 改 | 注册 `HkDetailActivity`（无 intent-filter，只有 mobile 代码直接启动；`parentActivityName=".ui.hk.HkListActivity"`；照 `HkListActivity` 的写法） |
 | `app/src/main/res/values/lab_strings.xml` | 改 | 加 4 条：`hk_detail_play_pending`（播放还在做）、`hk_detail_error`（详情加载失败）、`hk_detail_retry`（重试）、`hk_detail_no_episodes`（暂无选集）；删 1 条：`hk_list_detail_pending`（列表页不再用，本步唯一引用点改掉后无引用） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkExecutor.java` | 改 | 加 `detail(rule, detailUrl)`（见下）+ `HomeOutcome`/`homeDetailed`（列表 0 条命中诊断，见下） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkEngine.java` | 改 | 两处引擎补丁（见下）：`cardsFromJs` 拆 `res.data`；`getVar`/`getMyVar` 支持默认值 |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkParser.java` | 改 | 加 `parseDetailList`（详情选择器解析，标题-only 的头卡片保留）+ `parseHomeListDetailed`（返回命中数，供诊断） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkListHelper.java` | 改 | 不改——`pickCards`/`toVods`/`isActionUrl`/`styleFor` 原样复用（详情切分另放 `HkDetailHelper`，不扩 `HkListHelper` 的职责） |
-| `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/hk/HkListFragment.java` | 改 | 点卡片改成开详情页（`HkDetailActivity.open(…)`，传规则标题 + 卡片 URL + Vod 的标题/海报/简介）；`loadPage` 改调 `homeDetailed`，首屏 0 条时把诊断写进新增的 `diagText` |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkExecutor.java` | 改 | 加 `detail(rule, detailUrl)`（见下）+ `HomeOutcome`/`homeDetailed`（列表 0 条命中诊断，见下） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkEngine.java` | 改 | 两处引擎补丁（见下）：`cardsFromJs` 拆 `res.data`；`getVar`/`getMyVar` 支持默认值 |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkParser.java` | 改 | 加 `parseDetailList`（详情选择器解析，标题-only 的头卡片保留）+ `parseHomeListDetailed`（返回命中数，供诊断） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkListHelper.java` | 改 | 不改——`pickCards`/`toVods`/`isActionUrl`/`styleFor` 原样复用（详情切分另放 `HkDetailHelper`，不扩 `HkListHelper` 的职责） |
+| `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/hk/HkListFragment.java` | 改 | 点卡片改成开详情页（`HkDetailActivity.open(…)`，传规则标题 + 卡片 URL + Vod 的标题/海报/简介）；`loadPage` 改调 `homeDetailed`，首屏 0 条时把诊断写进新增的 `diagText` |
 | `app/src/mobile/res/layout/fragment_hk_list.xml` | 改 | 加一行 `diagText`（12sp，默认 GONE，只在首屏 0 条时显示命中诊断） |
 | `docs/miniapp-foundation.md` | 改 | 删过时的“`fyAll` 未替换”缺口句（第 3 步已补 `fyAll`） |
 

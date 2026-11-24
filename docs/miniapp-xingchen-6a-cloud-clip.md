@@ -12,14 +12,14 @@
 > 状态：文档先行（2026-11-19 17:04）；实现未开始。下一步唯一动作：开 guard 会话 6a 后实现。
 
 - 完成句：云剪贴板客户端与云口令分发表按星辰落地，parsePaste 调用闭合，6a 提交后可回滚。
-- 允许路径：`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkCloudClip.java`（新）、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkRuleManager.java`、
-  `app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkStore.java`（仅 `importJsonText`
+- 允许路径：`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkCloudClip.java`（新）、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkRuleManager.java`、
+  `app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkStore.java`（仅 `importJsonText`
   处一条过时注释）、`docs/miniapp-xingchen-6a-cloud-clip.md`（本文档）。
 - 保护路径：无初始脏文件（`git status` 干净，HEAD `99c33321`，领先 origin/main 26 笔）。
 - 本地时间：2026-11-19 17:04 CST（Asia/Shanghai）。
 - 预计：实现约 1.5 小时；验收约 20 分钟；预计 19:00 前提交。
-- 最便宜的决定性验证：`grep -rn "HkCloudImport" app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkRuleManager.java`
+- 最便宜的决定性验证：`grep -rn "HkCloudImport" app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkRuleManager.java`
   为零（新路不引用旧类）+ `git diff --check` 通过 + 云号逐行对照表（§3）。
 
 ## 1. 来源与范围
@@ -53,7 +53,7 @@
 
 ### 2.2 `HkCloudClip`：星辰原文 + 两处适配
 
-- 包名 `com.fongmi.android.tv` → `com.github.moyingshi.osc.tv`（含 import）。
+- 包名 `com.fongmi.android.tv` → `com.github.maoyingshi.osc.tv`（含 import）。
 - 星辰 `HkCloudClip.pastebinUpload` 用 `ThirdPartyKeys.PASTEBIN_DEV_KEY`；星辰公开源码里
   该文件是占位版（`api/ThirdPartyKeys.java:5-9`）——`PASTEBIN_DEV_KEY = ""`（真源由 CI
   从保密区注入，公开构建里就是空）。我方无 `ThirdPartyKeys` 类，且任务 scope 只到

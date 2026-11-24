@@ -68,7 +68,7 @@
 
 ### 2.3 Feed 交接语义（卡片点按 → 回原生播放流）
 
-- `ShortDramaActivity` 新增静态待跳转（`pendingJumpVodId` + `pendingJumpPosition`）与静态方法 `jumpToFeedItem(String vodId, int position)`（B22HostApiImpl 经反射调用——该 Activity 在 mobile 源集，B11 先例；ProGuard `-keep com.github.moyingshi.osc.tv.**` 已有）。
+- `ShortDramaActivity` 新增静态待跳转（`pendingJumpVodId` + `pendingJumpPosition`）与静态方法 `jumpToFeedItem(String vodId, int position)`（B22HostApiImpl 经反射调用——该 Activity 在 mobile 源集，B11 先例；ProGuard `-keep com.github.maoyingshi.osc.tv.**` 已有）。
 - 静态而不用实例字段：旋转导致 Activity 重建时，Flutter 屏还开着，待跳转不丢失；新实例的 `onResume` 照常消费。
 - `onResume` 新增消费逻辑（本批唯一新增的生命周期方法）：先取后清（清掉后永不重复触发）；按 vodId 在 `feed` 里找下标，找不到则用记录的 position（越界则放弃）；命中后精确复刻原生网格卡片点按：`setMode(Mode.FEED)` + `pager.setCurrentItem(index, false)`，经 `onPageChosen` 播该条。vodId 优先匹配可容忍两次独立加载之间的列表漂移；无 `DramaFeedStore`（不在本批作用域，impl 独立加载）。
 - 历史行点按：host 直接调 `VideoActivity.start(...)`（双 flavor 签名一致，B2 先例），Flutter 屏不 finish，留在详情页之下；从详情页返回时 resumed 重取刷新列表。
@@ -103,9 +103,9 @@ B21 注册表形态：静态 per-messenger 注册表 + `register`/`unregister`/`
 
 ### 2.7 文件清单
 
-新增：`flutter_module/pigeons/b22_drama_messages.dart`、`flutter_module/lib/b22_drama_page.dart`、`app/src/main/java/com/github/moyingshi/osc/tv/flutter/B22HostApiImpl.java`、`docs/b8-b22-drama.md`（本文件）。
+新增：`flutter_module/pigeons/b22_drama_messages.dart`、`flutter_module/lib/b22_drama_page.dart`、`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B22HostApiImpl.java`、`docs/b8-b22-drama.md`（本文件）。
 
-修改（只加法 + 分流处）：`flutter_module/lib/main.dart`（2 条字面路由 + B22 开关；relaunch channel/handler 一行不改）、`app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java`（2 个路由常量 + B22 注册/重绑/注销；relaunch 代码一行不改）、`app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java`（C0 引擎注册 B22，只为开关）、`app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java`（`flutter_b22_enabled`，默认关）、`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/activity/ShortDramaActivity.java`（2 个 import + 静态待跳转与 `jumpToFeedItem` + `setMode` 守卫 + `onResume` 消费；播放代码一行不改）、`.gitignore`（加 `B22Messages.java`）、`.github/workflows/b8-c0.yml`（Pigeon 步骤加 b22 生成 + 存在性检查，B18 同款）。
+修改（只加法 + 分流处）：`flutter_module/lib/main.dart`（2 条字面路由 + B22 开关；relaunch channel/handler 一行不改）、`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java`（2 个路由常量 + B22 注册/重绑/注销；relaunch 代码一行不改）、`app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java`（C0 引擎注册 B22，只为开关）、`app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java`（`flutter_b22_enabled`，默认关）、`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/activity/ShortDramaActivity.java`（2 个 import + 静态待跳转与 `jumpToFeedItem` + `setMode` 守卫 + `onResume` 消费；播放代码一行不改）、`.gitignore`（加 `B22Messages.java`）、`.github/workflows/b8-c0.yml`（Pigeon 步骤加 b22 生成 + 存在性检查，B18 同款）。
 
 未碰：C0/C1/C2/B2–B21 全部合约与实现、relaunch 机制代码、共享组件、TV（leanback）任何文件、Room/schema、`android-release.yml`、播放器全部代码。
 

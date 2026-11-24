@@ -114,7 +114,7 @@
 
 ### 提交 A（①②④⑤；standard；先做）
 
-- `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/adapter/ContinueAdapter.java`：占位图分支（空或 push_image 时用新 drawable）+ 标题兜底 helper。
+- `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/adapter/ContinueAdapter.java`：占位图分支（空或 push_image 时用新 drawable）+ 标题兜底 helper。
 - `app/src/main/res/drawable/continue_placeholder.xml`（新建）：layer-list 对角渐变（两端主题色）。
 - `app/src/mobile/res/layout/adapter_continue.xml`：备注色 → `@color/setting_card_subtitle`。
 - `app/src/mobile/res/layout/item_setting_card_row.xml`：标题加 bold；数值色（XML 里色值引用不变，色板改值后自动生效——只改标题 style）。
@@ -123,13 +123,13 @@
 - 下载集行失败原因文字：`item_download_episode.xml` 实施时核对——error 行已用 `@color/setting_card_subtitle`，status 行用 `@color/setting_card_value`，无需改动（色板改值后自动生效）。
 - `app/src/mobile/res/layout/fragment_vod.xml`：④ 的 4 处间隙（搜索 marginBottom、继续观看区 padding、组件区 paddingTop、分类栏 paddingTop）。
 - `app/src/mobile/res/layout/dialog_control.xml`：第一行 lut 后加 pictureAdjust。
-- `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/dialog/ControlDialog.java`：initEvent 接线 + onPictureAdjust()（含守卫）。
+- `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/dialog/ControlDialog.java`：initEvent 接线 + onPictureAdjust()（含守卫）。
 
 ### 提交 B（③壁纸更柔；standard；后做）
 
-- `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java`：`getGlassBlur()` 默认 5→10（只改默认值数字，范围 0–40 不动）。
-- `app/src/main/java/com/github/moyingshi/osc/tv/theme/ThemeController.java`：`setWallpaperBlur` 加半径参数（设置页=设置值，首页=3dp；关/低版本=0）。
-- `app/src/mobile/java/com/github/moyingshi/osc/tv/ui/activity/HomeActivity.java`：`changeFragment` 按位置传半径。
+- `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java`：`getGlassBlur()` 默认 5→10（只改默认值数字，范围 0–40 不动）。
+- `app/src/main/java/com/github/maoyingshi/osc/tv/theme/ThemeController.java`：`setWallpaperBlur` 加半径参数（设置页=设置值，首页=3dp；关/低版本=0）。
+- `app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/activity/HomeActivity.java`：`changeFragment` 按位置传半径。
 
 ## 拆分与验证
 

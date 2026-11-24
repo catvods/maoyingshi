@@ -89,7 +89,7 @@ Ruling: 本地原子状态为跨进程消费来源，不复用SharedPreferences�
 - 风险已明确路由，不把源码测试当设备验证、不提交未编译代码；最小下一步仅B失败测试与状态/闸门修复，完成后再核对构建与C结果。
 
 ## 最终验证（2026-11-11 01:0x +08:00）
-- 命令（一次，完整日志.verify2/crash-unify/gradle-final2.log）：`gradlew.bat --offline --console=plain :app:compileMobileArm64_v8aDebugJavaWithJavac :app:compileLeanbackArm64_v8aDebugJavaWithJavac :app:testMobileArm64_v8aDebugUnitTest --tests 'com.github.moyingshi.osc.tv.utils.Crash*Test' --tests 'com.github.moyingshi.osc.tv.utils.PreviousProcessCrashRecoveryTest' --tests 'com.github.moyingshi.osc.tv.ui.activity.CrashActivityDetailsTest' :app:testLeanbackArm64_v8aDebugUnitTest --tests 'com.github.moyingshi.osc.tv.utils.Crash*Test' --tests 'com.github.moyingshi.osc.tv.utils.PreviousProcessCrashRecoveryTest'`
+- 命令（一次，完整日志.verify2/crash-unify/gradle-final2.log）：`gradlew.bat --offline --console=plain :app:compileMobileArm64_v8aDebugJavaWithJavac :app:compileLeanbackArm64_v8aDebugJavaWithJavac :app:testMobileArm64_v8aDebugUnitTest --tests 'com.github.maoyingshi.osc.tv.utils.Crash*Test' --tests 'com.github.maoyingshi.osc.tv.utils.PreviousProcessCrashRecoveryTest' --tests 'com.github.maoyingshi.osc.tv.ui.activity.CrashActivityDetailsTest' :app:testLeanbackArm64_v8aDebugUnitTest --tests 'com.github.maoyingshi.osc.tv.utils.Crash*Test' --tests 'com.github.maoyingshi.osc.tv.utils.PreviousProcessCrashRecoveryTest'`
 - 结果：BUILD SUCCESSFUL（1m18s）；两端 Java 编译通过；mobile 38 项、leanback 38 项共享崩溃测试 + mobile 7 项 CrashActivityDetailsTest，全部 0 failures / 0 errors（CrashActivityIsolation 5、CrashHandler 6、CrashLogText 10、CrashLogWiring 7、CrashRecoveryGate 2、CrashRecoveryState 7、PreviousProcessCrashRecovery 1、CrashActivityDetails 7）。
 - 父代理复现并修复的缺陷（真实失败先行）：60 秒 grace 窗口吞掉另一次真实崩溃、墙钟回拨隐藏确认死亡 → 2 项失败测试先红后绿（8 项状态测试通过）。
 - 未执行：真机/模拟器运行验证。设备 emulator-5554/5556 均为 x86_64 API28，而仓库只产出 arm64_v8a/armeabi_v7a 产物，因此按钮、静默一次、跨进程 ack 与恢复页渲染均无设备实测证据；Android 11+ 系统退出历史同样无设备实测。
@@ -130,7 +130,7 @@ Ruling: 本地原子状态为跨进程消费来源，不复用SharedPreferences�
 - 第一轮：Spec 不通过（H1墙钟过滤吞确认死亡、H2 pending恒空丢交付）；Standards 无硬违规，提出报告归属、生命周期及行为测试等判断问题。
 - 首批修复：删除fresh直接墙钟判据，恢复同进程pending交付，initialize回退base context，read优先有效published代，报告暂以PID比较，App资源隔离拆分crashPageProcess，并增两个State行为测试及一个Wiring谓词测试。
 - 首批定向验证：双flavor Java编译通过，mobile48项、leanback41项，failures/errors/skipped均0；BUILD SUCCESSFUL 1m26s。此前一次失败是损坏状态被误当空状态（StateTest第76行），已收回为不可读时fail-open，不能把此失败描述成新增用例的RED。
-- 验证日志：`%TEMP%/webhtv-crash-beta-review-2-20261111.log`。实际过滤器为 `com.github.moyingshi.osc.tv.utils.Crash*Test`、`com.github.moyingshi.osc.tv.utils.PreviousProcessCrashRecoveryTest`，mobile另含 `com.github.moyingshi.osc.tv.ui.activity.CrashActivityDetailsTest`；任务为两端 `compile*Arm64_v8aDebugJavaWithJavac` 与 `test*Arm64_v8aDebugUnitTest`，使用 `gradlew.bat --offline --console=plain`。
+- 验证日志：`%TEMP%/webhtv-crash-beta-review-2-20261111.log`。实际过滤器为 `com.github.maoyingshi.osc.tv.utils.Crash*Test`、`com.github.maoyingshi.osc.tv.utils.PreviousProcessCrashRecoveryTest`，mobile另含 `com.github.maoyingshi.osc.tv.ui.activity.CrashActivityDetailsTest`；任务为两端 `compile*Arm64_v8aDebugJavaWithJavac` 与 `test*Arm64_v8aDebugUnitTest`，使用 `gradlew.bat --offline --console=plain`。
 - 第二轮：Spec不通过、Standards不通过。不能据首批测试通过宣布全量评审通过，不能把下列缺陷留在风险表后交付。
 
 |问题|第二轮已读代码证据与结论|处置|
@@ -156,7 +156,7 @@ Ruling: 本地原子状态为跨进程消费来源，不复用SharedPreferences�
 - 第2轮新增统一`java:<run UUID>`事件token、报告前置event元数据与恢复详情精确event/process校验；应用私有`previous-process.state.events`顺序台账逐条持久保存已观测确认死亡，ack按事件幂等确认；旧状态迁移不丢待交付事实，SIGNALED不误报也不遮蔽先前已记录死亡。
 - 保存协议：load内验证gen、Unicode解析失败统一回退；publish保护read实际选中的完整有效代，坏/旧new不能替换唯一有效bak；不扫描可能半写的tmp。Gate.submit同步拒绝统一finish并只释放一次，保留原3秒超时、迟到决定与Home销毁注销。
 - 子代理JVM测试57项通过（State23/Gate10/Wiring11/Previous2/Handler6/Isolation5）。Gate10为7行为＋3源码接线；真实写入/观测序列核对eventId，报告不把纯JVM当设备验证。
-- 协调者真实构建：`gradlew.bat --offline --console=plain`，双端`compile*Arm64_v8aDebugJavaWithJavac`和`test*Arm64_v8aDebugUnitTest`；过滤器为`com.github.moyingshi.osc.tv.utils.Crash*Test`、`com.github.moyingshi.osc.tv.utils.PreviousProcessCrashRecoveryTest`，mobile另含`com.github.moyingshi.osc.tv.ui.activity.CrashActivityDetailsTest`。
+- 协调者真实构建：`gradlew.bat --offline --console=plain`，双端`compile*Arm64_v8aDebugJavaWithJavac`和`test*Arm64_v8aDebugUnitTest`；过滤器为`com.github.maoyingshi.osc.tv.utils.Crash*Test`、`com.github.maoyingshi.osc.tv.utils.PreviousProcessCrashRecoveryTest`，mobile另含`com.github.maoyingshi.osc.tv.ui.activity.CrashActivityDetailsTest`。
 - 结果：BUILD SUCCESSFUL 2m07s，exit0；mobile74项、leanback67项，failures/errors/skipped均0。日志`.git/crash-beta-review-20261111/gradle-fix2-final.log`。构建后冻结20源码SHA256不变；限定修复Spec/Standards独立验收仍待结论，不据测试绿宣称通过。
 - 明确代价：事件台账保留已确认身份用于精确去重，不自动截断事件数量；磁盘及后台流式扫描成本随真实死亡数累积，工作内存单条有界、主线程不执行台账I/O。无summary无法可靠跨通道关联时，允许Java与平台各显示一次，绝不PID/墙钟猜身份误吞新确认死亡；设备页面、按钮、真实平台history/ack仍无实测。
 
@@ -168,7 +168,7 @@ Ruling: 本地原子状态为跨进程消费来源，不复用SharedPreferences�
 ## 最终验收与交付（2026-11-11，+08:00）
 - 残余修复简报第3/3轮完成；gen保存前检查为单点补丁，仅State与StateTest变化。其余18个代码文件SHA256与已接受修复面一致，不重复已通过的无关检查。
 - 限定双轴第2/3轮最终均通过：Spec报告`.git/crash-beta-review-20261111/fix2-spec-verdict.md`、Standards报告同目录`fix2-standards-verdict.md`。旧“Spec先通过后撤销”仅为中间记录，最终以本节及更新后两份报告为准。
-- 最终真实验证：`gradlew.bat --offline --console=plain :app:compileMobileArm64_v8aDebugJavaWithJavac :app:compileLeanbackArm64_v8aDebugJavaWithJavac :app:testMobileArm64_v8aDebugUnitTest --tests 'com.github.moyingshi.osc.tv.utils.Crash*Test' --tests 'com.github.moyingshi.osc.tv.utils.PreviousProcessCrashRecoveryTest' --tests 'com.github.moyingshi.osc.tv.ui.activity.CrashActivityDetailsTest' :app:testLeanbackArm64_v8aDebugUnitTest --tests 'com.github.moyingshi.osc.tv.utils.Crash*Test' --tests 'com.github.moyingshi.osc.tv.utils.PreviousProcessCrashRecoveryTest'`。
+- 最终真实验证：`gradlew.bat --offline --console=plain :app:compileMobileArm64_v8aDebugJavaWithJavac :app:compileLeanbackArm64_v8aDebugJavaWithJavac :app:testMobileArm64_v8aDebugUnitTest --tests 'com.github.maoyingshi.osc.tv.utils.Crash*Test' --tests 'com.github.maoyingshi.osc.tv.utils.PreviousProcessCrashRecoveryTest' --tests 'com.github.maoyingshi.osc.tv.ui.activity.CrashActivityDetailsTest' :app:testLeanbackArm64_v8aDebugUnitTest --tests 'com.github.maoyingshi.osc.tv.utils.Crash*Test' --tests 'com.github.maoyingshi.osc.tv.utils.PreviousProcessCrashRecoveryTest'`。
 - 结果：BUILD SUCCESSFUL 4m51s，exit0；mobile78项、leanback71项，failures/errors/skipped均0，双端Java编译通过。日志`.git/crash-beta-review-20261111/gradle-closure-final.log`及exit文件；State27项（新增4个gen边界真实文件用例）通过，不把测试夹具gen恢复当生产自动功能。
 - 远端新鲜度检查：再次fetch origin beta/dev1，beta仍为930d1b8097d00330e284b61877f88264b1eda27b、dev1仍为886ea11896aefb8105e61fd1f13113f011e86832，二者均已包含于当前HEAD，无新的合并冲突或未审覆盖差异。
 

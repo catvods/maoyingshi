@@ -5,7 +5,7 @@
 > 当前状态：main = 902c1e8c，工作区干净；本文档先写，代码未改；下一步：guard start → 改 HkEngine/HkStore → Node 校验 JS 片段 + 逐行重读 → guard finish 提交 + recovery tag。
 
 - 完成句：墨影视海阔小程序的 `config`/`initConfig` 按官方语义改为进程内按标题共享、`rc` 小时数兑现，本地提交完成。
-- 允许路径：`docs/miniapp-align-1-config.md`、`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkEngine.java`、`app/src/mobile/java/com/github/moyingshi/osc/tv/api/hk/HkStore.java`。
+- 允许路径：`docs/miniapp-align-1-config.md`、`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkEngine.java`、`app/src/mobile/java/com/github/maoyingshi/osc/tv/api/hk/HkStore.java`。
 - 保护：TV/leanback 不动，BaseLoader 不动，底栏仍 6 项（`app/src/mobile/res/menu/menu_nav.xml`，提交前核对）；不推、不编、不动版本记录空间。
 - 本地时间：2026-11-15 22:36+ CST；预计：文档 15 分钟 + 实现 30 分钟 + 校验提交 20 分钟，约 23:40 前完成。
 - 最便宜的决定性验证：Node 跑 BOOTSTRAP 里 config/initConfig 的 JS 片段（mock `getMyVar`/`putMyVar`）验合并/accessor/隔离；rc 有效期逻辑逐行对照官方 `require0` 判定式核对（本地无 JDK，编译等 GitHub 构建）。

@@ -7,7 +7,7 @@
 
 ## §1 原生实现（只读发现）
 
-原生实现：`app/src/mobile/java/com/github/moyingshi/osc/tv/ui/fragment/VodFragment.java`（1210 行）里的 JS 小组件区 + main 源集的 `widget/` 包 + 两个 mobile-only 布局。
+原生实现：`app/src/mobile/java/com/github/maoyingshi/osc/tv/ui/fragment/VodFragment.java`（1210 行）里的 JS 小组件区 + main 源集的 `widget/` 包 + 两个 mobile-only 布局。
 
 ### 1.1 入口与刷新时机（VodFragment 461–541 行）
 
@@ -18,7 +18,7 @@
 
 ### 1.2 数据来源与 JS 执行（全部 host 侧）
 
-- **加载器**：`app/src/main/java/com/github/moyingshi/osc/tv/widget/WidgetManager.java`（main 源集，可直接引用）。`loadHome(Listener)` 在 4 线程池上并行加载 4 个内置组件：`builtin.bangumi`（`widgets/bangumi.js`）、`builtin.douban`（`widgets/douban.js`）、`builtin.mikan`（`widgets/mikan.js`）、`builtin.tmdb`（`widgets/tmdb.js`）。
+- **加载器**：`app/src/main/java/com/github/maoyingshi/osc/tv/widget/WidgetManager.java`（main 源集，可直接引用）。`loadHome(Listener)` 在 4 线程池上并行加载 4 个内置组件：`builtin.bangumi`（`widgets/bangumi.js`）、`builtin.douban`（`widgets/douban.js`）、`builtin.mikan`（`widgets/mikan.js`）、`builtin.tmdb`（`widgets/tmdb.js`）。
 - **JS 引擎**：`WidgetHost`（main 源集）：每个脚本一个 `QuickJSContext`，加载 `js/lib/widget_host.js` 垫片 + `WidgetBridge`，执行组件脚本，读全局 `WidgetMetadata`；`invoke()` 按名调用模块函数（白名单 `SAFE_PATH`），Promise 由 `Async.run` 处理。超时：load 10s、invoke 20s。**Dart 不引入任何 JS 引擎、不执行脚本，只渲染 host 算好的快照。**
 - **投递语义**（以源码为准；发现阶段曾误记 Listener 回调带 `fromCache` 参数，实际是 `Section` 的公开字段）：`Listener.onSection(Section)` / `onSectionFailed(String widgetId)`，回调都在主线程（`App.post`）。每个组件：先贴缓存（`WidgetCache.read`，除非模块 `noCache()`），再调 JS 函数取新鲜数据（15 分钟会话节流 `SESSION_THROTTLE_MS`：成功刷新过就不再发请求，只重贴缓存）；新鲜结果为空且无缓存 → `onSectionFailed`；抛错且已贴缓存 → 无失败回调，该行停留在缓存。单个组件失败/超时只隐藏该行，不影响其他行。
 - **Section**：公开静态类，字段 `metadata` / `module` / `items` / `fromCache`；`title()` = `metadata.getTitle() + " · " + module.getTitle()`；组件 id 取 `metadata.getId()`。
@@ -71,12 +71,12 @@
 |---|---|
 | `flutter_module/pigeons/b13_home_b_messages.dart` | 新：B13HostApi + 3 个扁平数据类 |
 | `flutter_module/lib/b13_home_block_b.dart` | 新：B13WidgetsWidget + 占位拷贝 |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/B13HostApiImpl.java` | 新 |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/B13HostApiImpl.java` | 新 |
 | `flutter_module/lib/b11_home_page.dart` | 改：+import、接管行换 widget、删死方法 `_buildBlockPlaceholder`（−19 行） |
 | `flutter_module/lib/main.dart` | 改：+pigeon import、+`_b13Api` 字段、+`_b13Enabled`、+initState 一行、+`_loadB13Flag` / `_setB13Flag`、+SwitchListTile |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C1ScreenActivity.java` | 改：注册 B13HostApi（+3 行） |
-| `app/src/main/java/com/github/moyingshi/osc/tv/flutter/C0ShellActivity.java` | 改：注册 B13HostApi（+3 行） |
-| `app/src/main/java/com/github/moyingshi/osc/tv/setting/Setting.java` | 改：+`isFlutterB13Enabled` / `putFlutterB13Enabled` |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C1ScreenActivity.java` | 改：注册 B13HostApi（+3 行） |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/C0ShellActivity.java` | 改：注册 B13HostApi（+3 行） |
+| `app/src/main/java/com/github/maoyingshi/osc/tv/setting/Setting.java` | 改：+`isFlutterB13Enabled` / `putFlutterB13Enabled` |
 | `.gitignore` | 改：+`B13Messages.java` |
 | `.github/workflows/b8-c0.yml` | 改：Pigeon 步骤 +b13 生成与存在性检查（B12 同款） |
 | `docs/b8-b13-home-b.md` | 新：本文档 |

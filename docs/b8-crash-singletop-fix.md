@@ -232,7 +232,7 @@ manifest 里没有——TV 上这些 impl 从不被绑定，TV 分支实际不�
 
 ## 横扫：全部 `*HostApiImpl.java` 里的 `finish()` 分类
 
-grep 覆盖 `app/src/main/java/com/github/moyingshi/osc/tv/flutter/*HostApiImpl.java`
+grep 覆盖 `app/src/main/java/com/github/maoyingshi/osc/tv/flutter/*HostApiImpl.java`
 共 18 处。除上表 9 处（第 10 处在 `AppBrandingActivity`，不在该目录）
 外，其余 9 处逐个核对，均非 C1 路由导航，一律未动：
 

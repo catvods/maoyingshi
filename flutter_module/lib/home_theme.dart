@@ -35,6 +35,12 @@ class HomeThemeEntry {
 
   /// Whether the theme itself is dark (picker card text contrast).
   final bool dark;
+
+  /// Bottom-bar styling while this theme is active (the source
+  /// apps restyle the navigation bar with the theme). Null on the
+  /// default entry: the bar keeps the snapshot's own look.
+  final Color? barTint;
+  final Color? barAccent;
 }
 
 const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[

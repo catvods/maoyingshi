@@ -116,7 +116,7 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
           stackRotation: source.v<double>(<Object>['stackRotation']),
           syncImmersivePalette:
               source.v<bool>(<Object>['syncImmersivePalette']) ?? false,
-          children: source.children(<Object>['children']),
+          children: source.childList(<Object>['children']),
         );
       },
       'PeekImmersiveBackdrop': (BuildContext context, DataSource source) {
@@ -242,7 +242,7 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
           pinnedHeader: source.child(<Object>['pinnedHeader']),
           sectionHeader: source.child(<Object>['sectionHeader']),
           empty: source.child(<Object>['empty']),
-          children: source.children(<Object>['children']),
+          children: source.childList(<Object>['children']),
         );
       },
     });

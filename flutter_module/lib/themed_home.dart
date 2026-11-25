@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:material_ui/material_ui.dart';
+import 'package:rfw/formats.dart';
 import 'package:rfw/rfw.dart';
 
 import 'home_theme.dart';
@@ -464,7 +465,7 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     return RemoteWidget(
       runtime: _runtime,
       data: _data,
-      widget: FullyQualifiedWidgetName(_themeName, 'root'),
+      widget: const FullyQualifiedWidgetName(_themeName, 'root'),
       onEvent: _onEvent,
     );
   }

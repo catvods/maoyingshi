@@ -3028,6 +3028,7 @@
     <string name="following_reminder_title">《%1$s》即将播出</string>
     <string name="setting_following_reminder">播出提醒</string>
     <string name="setting_home_theme">首页主题</string>
+    <string name="setting_home_theme_sub">首页布局、筛选与底栏样式</string>
     <string name="setting_following_reminder_sub">播出前提醒，提前 15/30/60 分钟</string>
     <string name="setting_following_reminder_off">关闭</string>
     <string name="setting_following_reminder_value">提前 %1$d 分钟</string>

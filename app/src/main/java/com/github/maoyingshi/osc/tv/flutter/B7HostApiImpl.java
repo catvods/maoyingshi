@@ -225,6 +225,9 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
 
     private B7Messages.B7SettingsGroup generalGroup() {
         List<B7Messages.B7SettingsRow> rows = new ArrayList<>();
+        RowText homeTheme = safeRow(this::homeThemeName);
+        rows.add(row("homeTheme", R.string.setting_home_theme, R.string.setting_home_theme_sub,
+                homeTheme.text, homeTheme.error, false, ""));
         RowText appearance = safeRow(this::getThemeModeText);
         rows.add(row("appearance", R.string.setting_appearance, R.string.setting_appearance_sub,
                 appearance.text, appearance.error, false, ""));
@@ -654,6 +657,50 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
     }
 
     // ------------------------------------------------------------------ other rows
+
+    @Override
+    public void openHomeTheme() {
+        C1ScreenActivity.start(activity, C1ScreenActivity.ROUTE_HOME_THEME);
+    }
+
+    /// The home-theme row's value text: the persisted selection's
+    /// display name (the Dart catalog's names, mirrored here; same
+    /// helper as B5's, which no longer carries the row).
+    private String homeThemeName() {
+        String id = activity.getPreferences(android.content.Context.MODE_PRIVATE)
+                .getString("home_theme_id", "");
+        switch (id == null ? "" : id) {
+            case "aurora_prism": return "极光棱镜";
+            case "bubble": return "柔彩气泡";
+            case "cloud_archive": return "云幕典藏";
+            case "crimson_cinema": return "赤焰影院";
+            case "editorial": return "银幕杂志";
+            case "horizontal_gallery": return "横向影廊";
+            case "immersive_palette": return "沉浸光影";
+            case "ink_minimal": return "墨白极简";
+            case "midnight_rank": return "午夜榜单";
+            case "pixel_arcade": return "像素街机";
+            case "snow_glass": return "雪境玻璃";
+            case "sunlit_gallery": return "暖阳影廊";
+            case "terminal": return "绿幕终端";
+            case "vhs": return "复古录像厅";
+            case "design-night": return "午夜影院";
+            case "design-ticket": return "午夜票根";
+            case "refractive-glass": return "折射玻璃";
+            case "design-aurora": return "极光巨幕";
+            case "design-polar": return "极地视窗";
+            case "design-rose": return "桃雾浮光";
+            case "rose-glass": return "桃雾浮光 · 浅粉";
+            case "design-album": return "海盐相册";
+            case "liquid-glass": return "液态玻璃";
+            case "design-radar": return "深空雷达";
+            case "design-paper": return "玫瑰书房";
+            case "design-vinyl": return "落日唱片";
+            case "design-matrix": return "赛博矩阵";
+            case "design-noir": return "黑金典藏";
+            default: return "默认主题";
+        }
+    }
 
     @Override
     public void openAppearance(B7Messages.VoidResult result) {

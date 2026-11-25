@@ -81,6 +81,10 @@ abstract class B7HostApi {
   @async
   void openAppearance();
 
+  /// Home-theme row (first in the general group): opens the Flutter
+  /// home-theme library — a root route the host asserts. Fire-and-forget.
+  void openHomeTheme();
+
   /// Local-source row: the native LocalSourceDialog (mobile-only, opened
   /// via reflection). Async: completes when the dialog is dismissed
   /// (no change callback; same dismissal watcher as openAppearance).

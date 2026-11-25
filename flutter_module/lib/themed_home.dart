@@ -296,8 +296,13 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
       'heroHeight': 220.0,
       'wideListRatio': 2.4,
       'textListRatio': 5.5,
-      'stickyHeaderHeight': 54.0,
-      'immersiveStickyHeaderHeight': 54.0,
+      // The pinned header must reserve the filter panel's height
+      // too: with only the classes row (54) the panel paints over
+      // the first poster row instead of pushing the grid down.
+      'stickyHeaderHeight':
+          54.0 + (_showFilters ? _filterGroups.length * 39.0 + 10.0 : 0.0),
+      'immersiveStickyHeaderHeight':
+          54.0 + (_showFilters ? _filterGroups.length * 39.0 + 10.0 : 0.0),
       'immersive': <String, Object?>{
         'active': immersiveItem != null,
         'imageUrl': immersiveItem?.picUrl ?? '',

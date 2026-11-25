@@ -76,7 +76,6 @@ public class B5HostApiImpl implements B5Messages.B5HostApi {
                     ? activity.getString(R.string.setting_following_reminder_off)
                     : activity.getString(R.string.setting_following_reminder_value, lead);
         }));
-        rows.add(row("homeTheme", R.string.setting_home_theme, this::homeThemeName));
         rows.add(row("autoBackup", R.string.setting_auto_backup, () ->
                 getSwitch(AutoBackupPolicy.isEffective(Setting.isAutoBackup(), Setting.hasFileAccess()))));
         rows.add(row("playbackOverlay", R.string.setting_playback_overlay, () ->

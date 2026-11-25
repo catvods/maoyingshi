@@ -214,6 +214,8 @@ class _SettingsHomeViewState extends State<SettingsHomeView>
         afterDialog(api.openLiveManage());
       case 'wall':
         afterDialog(api.openWallManage());
+      case 'homeTheme':
+        api.openHomeTheme();
       case 'appearance':
         afterDialog(api.openAppearance());
       case 'subtitle':
@@ -539,6 +541,8 @@ mixin _B7MemberState<T extends StatefulWidget> on State<T>
       return (Icons.live_tv_outlined, Colors.red);
     case 'wall':
       return (Icons.wallpaper_outlined, Colors.deepPurple);
+    case 'homeTheme':
+      return (Icons.style_outlined, Colors.pink);
     case 'appearance':
       return (Icons.palette_outlined, Colors.purple);
     case 'widget':

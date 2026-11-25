@@ -543,19 +543,28 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
   B11HomeScreen? _screen;
   bool _hidden = false;
   String _route = '/';
+  String _themeId = '';
 
   @override
   void initState() {
     super.initState();
     _route = widget.routeListenable.value;
     widget.routeListenable.addListener(_onRouteChanged);
+    _themeId = homeThemeId.value;
+    homeThemeId.addListener(_onThemeChanged);
     _load();
   }
 
   @override
   void dispose() {
     widget.routeListenable.removeListener(_onRouteChanged);
+    homeThemeId.removeListener(_onThemeChanged);
     super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (!mounted) return;
+    setState(() => _themeId = homeThemeId.value);
   }
 
   void _onRouteChanged() {
@@ -618,54 +627,49 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
   Widget build(BuildContext context) {
     final B11HomeScreen? screen = _screen;
     final bool show = _barRoute && screen != null;
+    final HomeThemeEntry entry = homeThemeEntry(_themeId);
+    // Theme navigation shape (Lee metadata): floating themes keep
+    // the capsule; the rest run the bar edge-to-edge over the
+    // gesture inset.
+    final bool floating = entry.barFloating ?? true;
+    final double inset = MediaQuery.paddingOf(context).bottom;
     return NotificationListener<ScrollNotification>(
       onNotification: _onScroll,
       child: Stack(
         children: [
           widget.child,
           if (show)
-            ValueListenableBuilder<String>(
-              valueListenable: homeThemeId,
-              builder: (context, themeId, _) {
-                final HomeThemeEntry entry = homeThemeEntry(themeId);
-                // Theme navigation shape (Lee metadata): floating
-                // themes keep the capsule; the rest run the bar
-                // edge-to-edge over the gesture inset.
-                final bool floating = entry.barFloating ?? true;
-                final double inset = MediaQuery.paddingOf(context).bottom;
-                return Positioned(
-                  left: floating ? glassBarInsetX : 0,
-                  right: floating ? glassBarInsetX : 0,
-                  bottom: floating ? glassBarFloat + inset : 0,
-                  child: IgnorePointer(
-                    ignoring: _hidden,
-                    child: AnimatedSlide(
-                      offset: _hidden ? const Offset(0, 1.8) : Offset.zero,
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOut,
-                      // Material ancestor: at shell level there is
-                      // no Scaffold above the bar, and without one
-                      // its labels fall back to the framework's
-                      // yellow underline text style.
-                      child: Material(
-                        type: MaterialType.transparency,
-                        child: GlassBottomBar(
-                          screen: screen,
-                          onTap: _onTap,
-                          onLongPress: _onLongPress,
-                          tintOverride: entry.barTint,
-                          accentOverride: entry.barAccent,
-                          darkOverride:
-                              entry.barTint == null ? null : entry.dark,
-                          opacityOverride: entry.barOpacity,
-                          edgeToEdge: !floating,
-                          bottomInset: floating ? 0 : inset,
-                        ),
-                      ),
+            Positioned(
+              left: floating ? glassBarInsetX : 0,
+              right: floating ? glassBarInsetX : 0,
+              bottom: floating ? glassBarFloat + inset : 0,
+              child: IgnorePointer(
+                ignoring: _hidden,
+                child: AnimatedSlide(
+                  offset: _hidden ? const Offset(0, 1.8) : Offset.zero,
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  // Material ancestor: at shell level there is
+                  // no Scaffold above the bar, and without one
+                  // its labels fall back to the framework's
+                  // yellow underline text style.
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: GlassBottomBar(
+                      screen: screen,
+                      onTap: _onTap,
+                      onLongPress: _onLongPress,
+                      tintOverride: entry.barTint,
+                      accentOverride: entry.barAccent,
+                      darkOverride:
+                          entry.barTint == null ? null : entry.dark,
+                      opacityOverride: entry.barOpacity,
+                      edgeToEdge: !floating,
+                      bottomInset: floating ? 0 : inset,
                     ),
                   ),
-                );
-              },
+                ),
+              ),
             ),
         ],
       ),

@@ -685,8 +685,13 @@ class _B11HomePageState extends State<B11HomePage>
         // overlay itself is zero-size when all three are hidden.
         Positioned(
           right: _fabMargin,
+          // +10: the shell-resident glass bar floats higher than the
+          // native bottom navigation the pager anchor was measured
+          // against; the FABs (filter/top/link) need the extra lift
+          // to clear it.
           bottom: _pagerBottom +
               _fabMargin +
+              10 +
               MediaQuery.paddingOf(context).bottom,
           child: _buildFabOverlay(screen),
         ),

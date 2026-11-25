@@ -252,7 +252,13 @@ class GlassBottomBarState extends State<GlassBottomBar> {
                     child: IgnorePointer(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: accent.withAlpha(38),
+                          // Silver-gray selection pill (the accent
+                          // blue read as a watermark smudge on the
+                          // glass; the selected icon/label keep the
+                          // accent color).
+                          color: screen.darkMode
+                              ? const Color(0xFF9AA0A6).withAlpha(80)
+                              : const Color(0xFFADB3BC).withAlpha(110),
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
@@ -578,10 +584,17 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
                   offset: _hidden ? const Offset(0, 1.8) : Offset.zero,
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOut,
-                  child: GlassBottomBar(
-                    screen: screen,
-                    onTap: _onTap,
-                    onLongPress: _onLongPress,
+                  // Material ancestor: at shell level there is no
+                  // Scaffold above the bar, and without one its
+                  // labels fall back to the framework's yellow
+                  // underline text style.
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: GlassBottomBar(
+                      screen: screen,
+                      onTap: _onTap,
+                      onLongPress: _onLongPress,
+                    ),
                   ),
                 ),
               ),

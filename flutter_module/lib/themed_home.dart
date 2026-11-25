@@ -260,6 +260,8 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
       'gridColumns': 3,
       'largeGridColumns': 2,
       'bannerColumns': 2,
+      'glassGridColumns': 3,
+      'heroHeight': 220.0,
       'wideListRatio': 2.4,
       'textListRatio': 5.5,
       'stickyHeaderHeight': 54.0,

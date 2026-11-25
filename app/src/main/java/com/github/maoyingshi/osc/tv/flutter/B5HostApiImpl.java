@@ -270,6 +270,20 @@ public class B5HostApiImpl implements B5Messages.B5HostApi {
             case "sunlit_gallery": return "暖阳影廊";
             case "terminal": return "绿幕终端";
             case "vhs": return "复古录像厅";
+            case "design-night": return "午夜影院";
+            case "design-ticket": return "午夜票根";
+            case "refractive-glass": return "折射玻璃";
+            case "design-aurora": return "极光巨幕";
+            case "design-polar": return "极地视窗";
+            case "design-rose": return "桃雾浮光";
+            case "rose-glass": return "桃雾浮光 · 浅粉";
+            case "design-album": return "海盐相册";
+            case "liquid-glass": return "液态玻璃";
+            case "design-radar": return "深空雷达";
+            case "design-paper": return "玫瑰书房";
+            case "design-vinyl": return "落日唱片";
+            case "design-matrix": return "赛博矩阵";
+            case "design-noir": return "黑金典藏";
             default: return "默认主题";
         }
     }

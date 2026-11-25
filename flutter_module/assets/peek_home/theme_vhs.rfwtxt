@@ -1,0 +1,691 @@
+// 复古录像厅：窄幅胶片轮播。
+// 教学重点：viewportFraction 让一屏出现多张轮播卡；暖色渐变、方角、复古等宽标签。
+import core.widgets;
+import peek.home;
+
+// PeekCarousel.viewportFraction=0.46：一屏能同时露出两张以上胶片卡，这是“窄轮播”。
+// Tape 是录像带海报；TapeRow、TapeCompact、TapeWideCard 分别演示三种单列结构。
+// 暖色、方角和 monospace 字体只是主题声明，不需要修改壳子 Dart 代码。
+
+widget Slide = GestureDetector(
+  onTap: event "openRecommend" { index: args.item.index },
+  child: Container(
+    margin: [ 6.0 ],
+    decoration: {
+      type: "box",
+      color: 0xFF252019,
+      borderRadius: [ { x: 3.0 } ],
+      border: [ { color: 0xFFE0A44B, width: 2.0 } ],
+      boxShadow: [ { color: 0x667C3F1D, blurRadius: 16.0 } ],
+    },
+    child: ClipRRect(
+      borderRadius: [ { x: 2.0 } ],
+      child: Stack(
+        fit: "expand",
+        children: [
+          T4Image(url: args.item.pic),
+          Container(
+            decoration: {
+              type: "box",
+              gradient: {
+                type: "linear",
+                begin: { x: 0.0, y: -1.0 },
+                end: { x: 0.0, y: 1.0 },
+                colors: [ 0x00000000, 0xCC1D140E ],
+              },
+            },
+          ),
+          Align(
+            alignment: { x: -1.0, y: 1.0 },
+            child: Padding(
+              padding: [ 12.0 ],
+              child: Text(
+                text: args.item.name,
+                maxLines: 1,
+                overflow: "ellipsis",
+                style: {
+                  color: 0xFFFFD98A,
+                  fontSize: 14.0,
+                  fontWeight: "w800",
+                  fontFamily: "monospace",
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ),
+);
+
+widget Tab = GestureDetector(
+  onTap: event "selectType" { typeId: args.item.typeId },
+  child: Container(
+    margin: [ 0.0, 16.0, 8.0, 5.0 ],
+    padding: [ 13.0, 7.0 ],
+    color: switch args.item.selected { true: 0xFFE0A44B, false: 0xFF2B241B },
+    child: Text(
+      text: args.item.typeName,
+      style: {
+        color: switch args.item.selected { true: 0xFF20140B, false: 0xFFD9C39A },
+        fontSize: 12.0,
+        fontWeight: "w800",
+        fontFamily: "monospace",
+      },
+    ),
+  ),
+);
+
+widget TinyToolButton = GestureDetector(
+  onTap: args.action,
+  child: Container(
+    width: 24.0,
+    height: 28.0,
+    alignment: { x: 0.0, y: 0.0 },
+    child: Icon(icon: args.icon, fontFamily: "MaterialIcons", size: 17.0, color: 0xFFE0A44B),
+  ),
+);
+
+widget Tool = GestureDetector(
+  onTap: args.action,
+  child: Container(
+    width: 36.0,
+    height: 36.0,
+    alignment: { x: 0.0, y: 0.0 },
+    color: 0xFF2B241B,
+    child: Icon(icon: args.icon, fontFamily: "MaterialIcons", size: 19.0, color: 0xFFE0A44B),
+  ),
+);
+
+widget FilterOption = GestureDetector(
+  onTap: event "selectFilter" { key: args.item.filterKey, value: args.item.value },
+  child: Container(
+    margin: [ 0.0, 8.0, 7.0, 8.0 ],
+    padding: [ 10.0, 2.0 ],
+    decoration: {
+      type: "box",
+      color: switch args.item.selected { true: 0xFFE0A44B, false: 0xFF2B241B },
+      border: [ { color: 0xFF72552C, width: 1.0 } ],
+    },
+    child: Text(
+      text: args.item.name,
+      style: {
+        color: switch args.item.selected { true: 0xFF20140B, false: 0xFFD9C39A },
+        fontSize: 10.0,
+        fontWeight: "w800",
+        fontFamily: "monospace",
+      },
+    ),
+  ),
+);
+
+widget FilterRow = Row(
+  children: [
+    Expanded(
+      child: ListView(
+        scrollDirection: "horizontal",
+        children: [ ...for option in args.group.options: FilterOption(item: option) ],
+      ),
+    ),
+    switch args.group.canExpand {
+      true: Tool(icon: data.home.icons.expand, action: event "showFilterPicker" { key: args.group.key }),
+      false: SizedBoxShrink(),
+    },
+  ],
+);
+
+widget Tape = GestureDetector(
+  onTap: event "openItem" { index: args.item.index },
+  child: Container(
+    padding: [ 7.0 ],
+    decoration: {
+      type: "box",
+      color: 0xFF2A241C,
+      border: [ { color: 0xFF72552C, width: 1.0 } ],
+      borderRadius: [ { x: 3.0 } ],
+    },
+    child: Column(
+      crossAxisAlignment: "start",
+      children: [
+        Expanded(child: T4Image(url: args.item.pic)),
+        Padding(
+          padding: [ 4.0, 8.0, 4.0, 2.0 ],
+          child: Text(
+            text: args.item.name,
+            maxLines: 1,
+            overflow: "ellipsis",
+            style: {
+              color: 0xFFFFD98A,
+              fontSize: 12.0,
+              fontWeight: "w800",
+              fontFamily: "monospace",
+            },
+          ),
+        ),
+        Padding(
+          padding: [ 4.0, 2.0, 4.0, 4.0 ],
+          child: Text(
+            text: [ "REC  ", args.item.remarks ],
+            maxLines: 1,
+            overflow: "ellipsis",
+            style: {
+              color: 0xFFC58552,
+              fontSize: 9.0,
+              fontFamily: "monospace",
+            },
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
+// 图文列表 list：左侧中等封面，右侧两级信息，适合普通浏览。
+widget TapeRow = GestureDetector(
+  onTap: event "openItem" { index: args.item.index },
+  child: Container(
+    padding: [ 10.0 ],
+    decoration: {
+      type: "box",
+      color: 0xFF2A241C,
+      border: [ { color: 0xFF72552C, width: 1.0 } ],
+    },
+    child: Row(
+      children: [
+        Container(
+          width: 110.0,
+          child: ClipRRect(borderRadius: [ { x: 2.0 } ], child: T4Image(url: args.item.pic)),
+        ),
+        Expanded(
+          child: Padding(
+            padding: [ 14.0, 6.0 ],
+            child: Column(
+              mainAxisSize: "min",
+              crossAxisAlignment: "start",
+              children: [
+                Text(
+                  text: [ "[PLAY]  ", args.item.name ],
+                  maxLines: 1,
+                  overflow: "ellipsis",
+                  style: {
+                    color: 0xFFFFD98A,
+                    fontSize: 14.0,
+                    fontWeight: "w800",
+                    fontFamily: "monospace",
+                  },
+                ),
+                Padding(
+                  padding: [ 0.0, 6.0, 0.0, 0.0 ],
+                  child: Text(
+                    text: [ "TRACK  ", args.item.remarks ],
+                    maxLines: 1,
+                    overflow: "ellipsis",
+                    style: {
+                      color: 0xFFC58552,
+                      fontSize: 10.0,
+                      fontFamily: "monospace",
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
+// 紧凑列表 list2：缩小缩略图和行高，增加频道编号与播放箭头，信息密度明显更高。
+widget TapeCompact = GestureDetector(
+  onTap: event "openItem" { index: args.item.index },
+  child: Container(
+    padding: [ 8.0 ],
+    decoration: {
+      type: "box",
+      color: 0xFF211C16,
+      border: [ { color: 0xFF4F3B24, width: 1.0 } ],
+    },
+    child: Row(
+      children: [
+        Container(width: 70.0, child: T4Image(url: args.item.pic)),
+        Container(
+          width: 48.0,
+          alignment: { x: 0.0, y: 0.0 },
+          child: Text(
+            text: [ "CH-", args.item.rankLabel ],
+            style: {
+              color: 0xFFE0A44B,
+              fontSize: 10.0,
+              fontWeight: "w800",
+              fontFamily: "monospace",
+            },
+          ),
+        ),
+        Expanded(
+          child: Text(
+            text: args.item.name,
+            maxLines: 1,
+            overflow: "ellipsis",
+            style: {
+              color: 0xFFFFD98A,
+              fontSize: 12.0,
+              fontWeight: "w700",
+              fontFamily: "monospace",
+            },
+          ),
+        ),
+        Icon(icon: data.home.icons.open, fontFamily: "MaterialIcons", size: 17.0, color: 0xFFC58552),
+      ],
+    ),
+  ),
+);
+
+// 宽幅卡片 card：图片完全铺底，文字压在渐变遮罩上，和前两种列表不共用结构。
+widget TapeWideCard = GestureDetector(
+  onTap: event "openItem" { index: args.item.index },
+  child: ClipRRect(
+    borderRadius: [ { x: 4.0 } ],
+    child: Stack(
+      fit: "expand",
+      children: [
+        T4Image(url: args.item.pic),
+        Container(
+          decoration: {
+            type: "box",
+            gradient: {
+              type: "linear",
+              begin: { x: -1.0, y: 0.0 },
+              end: { x: 1.0, y: 0.0 },
+              colors: [ 0xF51A120C, 0xAA1A120C, 0x101A120C ],
+            },
+            border: [ { color: 0xFFE0A44B, width: 1.0 } ],
+          },
+        ),
+        Align(
+          alignment: { x: -1.0, y: 1.0 },
+          child: Padding(
+            padding: [ 18.0, 12.0 ],
+            child: Column(
+              mainAxisSize: "min",
+              crossAxisAlignment: "start",
+              children: [
+                Text(
+                  text: "WIDE SCREEN / VHS",
+                  style: {
+                    color: 0xFFE0A44B,
+                    fontSize: 9.0,
+                    fontWeight: "w800",
+                    fontFamily: "monospace",
+                    letterSpacing: 1.4,
+                  },
+                ),
+                Text(
+                  text: args.item.name,
+                  maxLines: 1,
+                  overflow: "ellipsis",
+                  style: {
+                    color: 0xFFFFE7B5,
+                    fontSize: 18.0,
+                    fontWeight: "w900",
+                    fontFamily: "monospace",
+                  },
+                ),
+                Text(
+                  text: args.item.remarks,
+                  maxLines: 1,
+                  overflow: "ellipsis",
+                  style: {
+                    color: 0xFFCFA66E,
+                    fontSize: 10.0,
+                    fontFamily: "monospace",
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
+widget TapeText = GestureDetector(
+  onTap: event "openItem" { index: args.item.index },
+  child: Container(
+    padding: [ 16.0, 8.0 ],
+    color: 0xFF241E17,
+    child: Row(
+      children: [
+        Text(
+          text: [ "CH-", args.item.rankLabel ],
+          style: {
+            color: 0xFFE0A44B,
+            fontSize: 12.0,
+            fontFamily: "monospace",
+          },
+        ),
+        Expanded(
+          child: Padding(
+            padding: [ 16.0, 0.0 ],
+            child: Text(
+              text: args.item.name,
+              maxLines: 1,
+              overflow: "ellipsis",
+              style: {
+                color: 0xFFFFD98A,
+                fontSize: 13.0,
+                fontFamily: "monospace",
+              },
+            ),
+          ),
+        ),
+        Text(
+          text: args.item.remarks,
+          maxLines: 1,
+          overflow: "ellipsis",
+          style: {
+            color: 0xFFC58552,
+            fontSize: 9.0,
+            fontFamily: "monospace",
+          },
+        ),
+      ],
+    ),
+  ),
+);
+
+widget Item = switch data.home.displayStyle {
+  "grid": Tape(item: args.item),
+  "largeGrid": Tape(item: args.item),
+  "banner": Tape(item: args.item),
+  "list": TapeRow(item: args.item),
+  "list2": TapeCompact(item: args.item),
+  "textList": TapeText(item: args.item),
+  "card": TapeWideCard(item: args.item),
+  default: Tape(item: args.item),
+};
+
+widget SectionTitleSource = GestureDetector(
+  onTap: event "showSourcePicker" {},
+  child: Column(
+    mainAxisSize: "min",
+    crossAxisAlignment: "start",
+    children: [
+      Text(
+        text: data.home.source.name,
+        maxLines: 1,
+        overflow: "ellipsis",
+        style: {
+          color: 0xFFFFD98A,
+          fontSize: 19.0,
+          fontWeight: "w900",
+          fontFamily: "monospace",
+        },
+      ),
+      Padding(
+        padding: [ 0.0, 3.0, 0.0, 0.0 ],
+        child: Text(
+          text: [ data.home.totalLabel, " 部内容 · 点击站源名切换站源" ],
+          maxLines: 1,
+          overflow: "ellipsis",
+          style: {
+            color: 0xFFC58552,
+            fontSize: 10.0,
+            letterSpacing: 0.4,
+          },
+        ),
+      ),
+    ],
+  ),
+);
+
+widget SectionActionsCompact = Row(
+  mainAxisAlignment: "end",
+  children: [
+    switch data.home.hasFilters {
+      true: Padding(
+        padding: [ 0.0, 0.0, 3.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.filter,
+          action: event "toggleFilters" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.api,
+        action: event "showApiConfigPicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.search,
+        action: event "openSearch" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.push,
+        action: event "openPush" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.history,
+        action: event "openHistory" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.favorite,
+        action: event "openFavorite" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.layout,
+        action: event "showDisplayStylePicker" {},
+      ),
+    ),
+    TinyToolButton(
+      icon: data.home.icons.refresh,
+      action: event "refresh" {},
+    ),
+  ],
+);
+
+widget SectionActionsWide = Row(
+  mainAxisAlignment: "end",
+  children: [
+    switch data.home.hasManyClasses {
+      true: Padding(
+        padding: [ 0.0, 0.0, 4.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.expand,
+          action: event "showCategoryPicker" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    switch data.home.hasFilters {
+      true: Padding(
+        padding: [ 0.0, 0.0, 4.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.filter,
+          action: event "toggleFilters" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.layout,
+        action: event "showDisplayStylePicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.source,
+        action: event "showSourcePicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.api,
+        action: event "showApiConfigPicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.search,
+        action: event "openSearch" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.push,
+        action: event "openPush" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.history,
+        action: event "openHistory" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.favorite,
+        action: event "openFavorite" {},
+      ),
+    ),
+    TinyToolButton(
+      icon: data.home.icons.refresh,
+      action: event "refresh" {},
+    ),
+  ],
+);
+
+widget SectionBar = Container(
+  color: 0x00000000,
+  padding: switch data.home.gridColumns {
+    3: [ 16.0, 8.0, 16.0, 10.0 ],
+    default: [ 20.0, 5.0, 20.0, 8.0 ],
+  },
+  child: Row(
+    children: [
+      Expanded(
+        child: SectionTitleSource(),
+      ),
+      Container(
+        width: switch data.home.isLandscape {
+          true: 312.0,
+          false: 214.0,
+        },
+        height: 28.0,
+        child: switch data.home.isLandscape {
+          true: SectionActionsWide(),
+          false: SectionActionsCompact(),
+        },
+      ),
+    ],
+  ),
+);
+
+widget Header = Container(
+  color: 0xFF17130F,
+  child: Column(
+    children: [
+      Container(
+        height: 54.0,
+        padding: [ 14.0, 0.0 ],
+        child: Row(
+          children: [
+            Expanded(
+              child: ListView(
+                scrollDirection: "horizontal",
+                children: [ ...for item in data.home.classes: Tab(item: item) ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      switch data.home.showFilters {
+        true: Container(
+          height: data.home.filterPanelHeight,
+          margin: [ 14.0, 4.0, 14.0, 6.0 ],
+          padding: [ 10.0, 4.0 ],
+          decoration: {
+            type: "box",
+            color: 0xFF241E17,
+            border: [ { color: 0xFF72552C, width: 1.0 } ],
+            boxShadow: [ { color: 0x447C3F1D, blurRadius: 12.0 } ],
+          },
+          child: ListView(
+            children: [ ...for group in data.home.filters: Container(height: 39.0, child: FilterRow(group: group)) ],
+          ),
+        ),
+        false: SizedBoxShrink(),
+      },
+    ],
+  ),
+);
+
+widget root = Container(
+  color: 0xFF17130F,
+  child: PeekStickyGrid(
+    heroHeight: switch data.home.hasRecommend { true: 150.0, false: 0.0 },
+    pinnedHeight: data.home.stickyHeaderHeight,
+    sectionHeight: 64.0,
+    crossAxisCount: switch data.home.displayStyle {
+      "grid": data.home.gridColumns,
+      "largeGrid": data.home.largeGridColumns,
+      "banner": data.home.bannerColumns,
+      "list": 1,
+      "list2": 1,
+      "textList": 1,
+      "card": 1,
+      default: data.home.gridColumns,
+    },
+    childAspectRatio: switch data.home.displayStyle {
+      "grid": 0.60,
+      "largeGrid": 0.60,
+      "banner": 1.0,
+      "list": data.home.wideListRatio,
+      "list2": data.home.textListRatio,
+      "textList": data.home.textListRatio,
+      "card": data.home.wideListRatio,
+      default: 0.60,
+    },
+    hero: switch data.home.hasRecommend {
+      true: PeekCarousel(
+        autoPlay: true,
+        interval: 3500,
+        viewportFraction: 0.46,
+        activeColor: 0xFFE0A44B,
+        inactiveColor: 0x55725A38,
+        children: [ ...for item in data.home.home.recommend: Slide(item: item) ],
+      ),
+      false: SizedBoxShrink(),
+    },
+    pinnedHeader: Header(),
+    sectionHeader: SectionBar(),
+    empty: Center(child: Text(text: "NO TAPE", style: { color: 0xFFE0A44B, fontFamily: "monospace" })),
+    children: [ ...for item in data.home.items: Item(item: item) ],
+  ),
+);

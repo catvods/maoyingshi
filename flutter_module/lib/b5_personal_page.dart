@@ -113,6 +113,8 @@ class _PersonalSettingsViewState extends State<PersonalSettingsView>
         api.showResetAppDialog();
       case 'appBranding':
         api.openAppBranding();
+      case 'homeTheme':
+        api.openHomeTheme();
       case 'touchOptimization':
         act(() => api.toggleTouchOptimization());
       case 'liquidGlass':
@@ -200,6 +202,7 @@ IconData _iconFor(String key) {
     case 'resetApp':
       return Icons.delete_outline;
     case 'appBranding':
+    case 'homeTheme':
     case 'liquidGlass':
       return Icons.palette_outlined;
     case 'touchOptimization':
@@ -240,6 +243,7 @@ Color _colorFor(String key) {
     case 'searchResultSort':
       return Colors.deepPurple;
     case 'appBranding':
+    case 'homeTheme':
     case 'liquidGlass':
       return Colors.purple;
     default:
@@ -254,6 +258,7 @@ bool _chevronFor(String key) {
     case 'groupRule':
     case 'resetApp':
     case 'appBranding':
+    case 'homeTheme':
     case 'glassBlur':
     case 'glassDistortion':
     case 'glassTranslucency':

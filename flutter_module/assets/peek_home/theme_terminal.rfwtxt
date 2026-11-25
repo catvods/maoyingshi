@@ -1,0 +1,218 @@
+// 绿幕终端：无轮播、默认纯文字。
+// 教学重点：等宽字体、排名数据、无图列表；切到 grid/largeGrid 时才出现监控缩略图。
+import core.widgets;
+import peek.home;
+
+// 默认 list/list2/textList/card 都使用 TerminalRow，因此完全不绘制图片。
+// 切到 grid/largeGrid/banner 才使用 Monitor 缩略图，演示同一主题的有图/无图模式。
+// args.item.index/name/remarks 都来自安全化后的真实 T4VodItem 数据。
+
+widget Command = GestureDetector(onTap: event "selectType" { typeId: args.item.typeId }, child: Padding(padding: [ 12.0, 8.0 ], child: Text(text: [ switch args.item.selected { true: "> ", false: "  " }, args.item.typeName ], style: { color: switch args.item.selected { true: 0xFF57FF7A, false: 0xFF498A58 }, fontSize: 12.0, fontWeight: "w700", fontFamily: "monospace" })));
+
+widget TinyToolButton = GestureDetector(onTap: args.action, child: Container(width: 24.0, height: 28.0, alignment: { x: 0.0, y: 0.0 }, child: Icon(icon: args.icon, fontFamily: "MaterialIcons", size: 17.0, color: 0xFF57FF7A)));
+
+widget Tool = GestureDetector(onTap: args.action, child: Container(width: 36.0, alignment: { x: 0.0, y: 0.0 }, child: Icon(icon: args.icon, fontFamily: "MaterialIcons", size: 18.0, color: 0xFF57FF7A)));
+
+widget FilterOption = GestureDetector(onTap: event "selectFilter" { key: args.item.filterKey, value: args.item.value }, child: Container(margin: [ 0.0, 8.0, 7.0, 8.0 ], padding: [ 10.0, 2.0 ], decoration: { type: "box", color: switch args.item.selected { true: 0xFF57FF7A, false: 0xFF071109 }, border: [ { color: 0xFF174A21, width: 1.0 } ] }, child: Text(text: args.item.name, style: { color: switch args.item.selected { true: 0xFF020703, false: 0xFF57FF7A }, fontSize: 10.0, fontWeight: "w700", fontFamily: "monospace" })));
+widget FilterRow = Row(children: [ Expanded(child: ListView(scrollDirection: "horizontal", children: [ ...for option in args.group.options: FilterOption(item: option) ])), switch args.group.canExpand { true: Tool(icon: data.home.icons.expand, action: event "showFilterPicker" { key: args.group.key }), false: SizedBoxShrink() } ]);
+
+widget TerminalRow = GestureDetector(onTap: event "openItem" { index: args.item.index }, onLongPress: event "longPressItem" { index: args.item.index }, child: Container(padding: [ 14.0, 8.0 ], decoration: { type: "box", color: 0xFF071109, border: [ { color: 0xFF174A21, width: 1.0 } ] }, child: Row(children: [ Container(width: 52.0, child: Text(text: [ "#", args.item.rankLabel ], style: { color: 0xFF1E8734, fontSize: 13.0, fontWeight: "w800", fontFamily: "monospace" })), Expanded(child: Text(text: args.item.name, maxLines: 1, overflow: "ellipsis", style: { color: 0xFF7DFF93, fontSize: 13.0, fontWeight: "w700", fontFamily: "monospace" })), Text(text: args.item.remarks, maxLines: 1, overflow: "ellipsis", style: { color: 0xFF3FA653, fontSize: 10.0, fontFamily: "monospace" }) ])));
+widget Monitor = GestureDetector(onTap: event "openItem" { index: args.item.index }, child: Container(padding: [ 5.0 ], decoration: { type: "box", color: 0xFF050B06, border: [ { color: 0xFF2DC94B, width: 1.0 } ], boxShadow: [ { color: 0x442DFF55, blurRadius: 10.0 } ] }, child: Column(crossAxisAlignment: "start", children: [ Expanded(child: Opacity(opacity: 0.72, child: T4Image(url: args.item.pic))), Padding(padding: [ 5.0, 7.0, 5.0, 2.0 ], child: Text(text: args.item.name, maxLines: 1, overflow: "ellipsis", style: { color: 0xFF7DFF93, fontSize: 11.0, fontFamily: "monospace" })), Padding(padding: [ 5.0, 2.0, 5.0, 5.0 ], child: Text(text: [ "STATUS: ", args.item.remarks ], maxLines: 1, overflow: "ellipsis", style: { color: 0xFF2F8B41, fontSize: 8.0, fontFamily: "monospace" })) ])));
+
+widget Item = switch data.home.displayStyle { "grid": Monitor(item: args.item), "largeGrid": Monitor(item: args.item), "banner": Monitor(item: args.item), "list": TerminalRow(item: args.item), "list2": TerminalRow(item: args.item), "textList": TerminalRow(item: args.item), "card": Monitor(item: args.item), default: TerminalRow(item: args.item) };
+
+widget SectionTitleSource = GestureDetector(
+  onTap: event "showSourcePicker" {},
+  child: Column(
+    mainAxisSize: "min",
+    crossAxisAlignment: "start",
+    children: [
+      Text(
+        text: data.home.source.name,
+        maxLines: 1,
+        overflow: "ellipsis",
+        style: { color: 0xFF7DFF93, fontSize: 19.0, fontWeight: "w900", fontFamily: "monospace" },
+      ),
+      Padding(
+        padding: [ 0.0, 3.0, 0.0, 0.0 ],
+        child: Text(
+          text: [ data.home.totalLabel, " ITEMS · CLICK TO SWITCH" ],
+          maxLines: 1,
+          overflow: "ellipsis",
+          style: { color: 0xFF3FA653, fontSize: 10.0, letterSpacing: 0.4, fontFamily: "monospace" },
+        ),
+      ),
+    ],
+  ),
+);
+
+widget SectionActionsCompact = Row(
+  mainAxisAlignment: "end",
+  children: [
+    switch data.home.hasFilters {
+      true: Padding(
+        padding: [ 0.0, 0.0, 3.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.filter,
+          action: event "toggleFilters" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.api,
+        action: event "showApiConfigPicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.search,
+        action: event "openSearch" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.push,
+        action: event "openPush" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.history,
+        action: event "openHistory" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.favorite,
+        action: event "openFavorite" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.layout,
+        action: event "showDisplayStylePicker" {},
+      ),
+    ),
+    TinyToolButton(
+      icon: data.home.icons.refresh,
+      action: event "refresh" {},
+    ),
+  ],
+);
+
+widget SectionActionsWide = Row(
+  mainAxisAlignment: "end",
+  children: [
+    switch data.home.hasManyClasses {
+      true: Padding(
+        padding: [ 0.0, 0.0, 4.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.expand,
+          action: event "showCategoryPicker" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    switch data.home.hasFilters {
+      true: Padding(
+        padding: [ 0.0, 0.0, 4.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.filter,
+          action: event "toggleFilters" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.layout,
+        action: event "showDisplayStylePicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.source,
+        action: event "showSourcePicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.api,
+        action: event "showApiConfigPicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.search,
+        action: event "openSearch" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.push,
+        action: event "openPush" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.history,
+        action: event "openHistory" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.favorite,
+        action: event "openFavorite" {},
+      ),
+    ),
+    TinyToolButton(
+      icon: data.home.icons.refresh,
+      action: event "refresh" {},
+    ),
+  ],
+);
+
+widget SectionBar = Container(
+  color: 0x00000000,
+  padding: switch data.home.gridColumns {
+    3: [ 16.0, 8.0, 16.0, 10.0 ],
+    default: [ 20.0, 5.0, 20.0, 8.0 ],
+  },
+  child: Row(
+    children: [
+      Expanded(
+        child: SectionTitleSource(),
+      ),
+      Container(
+        width: switch data.home.isLandscape {
+          true: 312.0,
+          false: 214.0,
+        },
+        height: 28.0,
+        child: switch data.home.isLandscape {
+          true: SectionActionsWide(),
+          false: SectionActionsCompact(),
+        },
+      ),
+    ],
+  ),
+);
+
+widget Header = Container(color: 0xFF030704, child: Column(children: [ Container(height: 54.0, padding: [ 10.0, 0.0 ], child: Row(children: [ Expanded(child: ListView(scrollDirection: "horizontal", children: [ ...for item in data.home.classes: Command(item: item) ])) ])), switch data.home.showFilters { true: Container(height: data.home.filterPanelHeight, margin: [ 10.0, 4.0, 10.0, 6.0 ], padding: [ 10.0, 4.0 ], decoration: { type: "box", color: 0xFF071109, border: [ { color: 0xFF174A21, width: 1.0 } ], boxShadow: [ { color: 0x332DFF55, blurRadius: 10.0 } ] }, child: ListView(children: [ ...for group in data.home.filters: Container(height: 39.0, child: FilterRow(group: group)) ])), false: SizedBoxShrink() } ]));
+
+widget root = Container(color: 0xFF030704, child: PeekStickyGrid(heroHeight: 0.0, pinnedHeight: data.home.stickyHeaderHeight, sectionHeight: 55.0, crossAxisCount: switch data.home.displayStyle { "grid": data.home.gridColumns, "largeGrid": data.home.largeGridColumns, "banner": data.home.bannerColumns, "list": 1, "list2": 1, "textList": 1, "card": 1, default: 1 }, childAspectRatio: switch data.home.displayStyle { "grid": 0.62, "largeGrid": 0.62, "banner": 1.05, "list": data.home.textListRatio, "list2": data.home.textListRatio, "textList": data.home.textListRatio, "card": data.home.wideListRatio, default: data.home.textListRatio }, hero: SizedBoxShrink(), pinnedHeader: Header(), sectionHeader: SectionBar(), empty: Center(child: Text(text: "[ EMPTY RESULT ]", style: { color: 0xFF57FF7A, fontFamily: "monospace" })), children: [ ...for item in data.home.items: Item(item: item) ]));

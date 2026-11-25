@@ -1,0 +1,544 @@
+// 横向影廊：完全无轮播，默认就是宽幅剧照墙。
+// 教学重点：横图比例、图片上的渐变文字层；布局按钮切换宽图墙、紧凑海报和单列信息卡。
+import core.widgets;
+import peek.home;
+
+// 本主题无轮播，Wide 直接把分类内容画成横向剧照墙。
+// largeGrid 改用竖海报，list/textList 改用单列 InfoRow，体现布局按钮的结构变化。
+// 渐变遮罩用于保证剧照上的标题在亮图和暗图上都清晰。
+
+widget Tab = GestureDetector(
+  onTap: event "selectType" { typeId: args.item.typeId },
+  child: Padding(
+    padding: [ 14.0, 9.0 ],
+    child: Text(
+      text: args.item.typeName,
+      style: {
+        color: switch args.item.selected { true: 0xFFEECA7A, false: 0xFF8893A1 },
+        fontSize: 13.0,
+        fontWeight: "w700",
+      },
+    ),
+  ),
+);
+
+widget TinyToolButton = GestureDetector(
+  onTap: args.action,
+  child: Container(
+    width: 24.0,
+    height: 28.0,
+    alignment: { x: 0.0, y: 0.0 },
+    child: Icon(icon: args.icon, fontFamily: "MaterialIcons", size: 17.0, color: 0xFFEECA7A),
+  ),
+);
+
+widget Tool = GestureDetector(
+  onTap: args.action,
+  child: Container(
+    width: 38.0,
+    alignment: { x: 0.0, y: 0.0 },
+    child: Icon(icon: args.icon, fontFamily: "MaterialIcons", size: 20.0, color: 0xFFEECA7A),
+  ),
+);
+
+widget FilterOption = GestureDetector(
+  onTap: event "selectFilter" { key: args.item.filterKey, value: args.item.value },
+  child: Container(
+    margin: [ 0.0, 8.0, 8.0, 8.0 ],
+    padding: [ 10.0, 2.0 ],
+    decoration: {
+      type: "box",
+      color: switch args.item.selected { true: 0xFFEECA7A, false: 0xFF0E1822 },
+      borderRadius: [ { x: 4.0 } ],
+      border: [ { color: 0xFF26394B, width: 1.0 } ],
+    },
+    child: Text(
+      text: args.item.name,
+      style: {
+        color: switch args.item.selected { true: 0xFF081019, false: 0xFFB6C2CC },
+        fontSize: 10.0,
+        fontWeight: "w800",
+      },
+    ),
+  ),
+);
+
+widget FilterRow = Row(
+  children: [
+    Expanded(
+      child: ListView(
+        scrollDirection: "horizontal",
+        children: [ ...for option in args.group.options: FilterOption(item: option) ],
+      ),
+    ),
+    switch args.group.canExpand {
+      true: Tool(icon: data.home.icons.expand, action: event "showFilterPicker" { key: args.group.key }),
+      false: SizedBoxShrink(),
+    },
+  ],
+);
+
+widget Wide = GestureDetector(
+  onTap: event "openItem" { index: args.item.index },
+  child: ClipRRect(
+    borderRadius: [ { x: 12.0 } ],
+    child: Stack(
+      fit: "expand",
+      children: [
+        T4Image(url: args.item.pic),
+        Container(
+          decoration: {
+            type: "box",
+            gradient: {
+              type: "linear",
+              begin: { x: 0.0, y: -1.0 },
+              end: { x: 0.0, y: 1.0 },
+              colors: [ 0x00000000, 0x22000000, 0xEE081019 ],
+            },
+          },
+        ),
+        Align(
+          alignment: { x: -1.0, y: 1.0 },
+          child: Padding(
+            padding: [ 14.0 ],
+            child: Column(
+              mainAxisSize: "min",
+              crossAxisAlignment: "start",
+              children: [
+                Text(
+                  text: args.item.name,
+                  maxLines: 1,
+                  overflow: "ellipsis",
+                  style: {
+                    color: 0xFFFFFFFF,
+                    fontSize: 15.0,
+                    fontWeight: "w800",
+                  },
+                ),
+                Text(
+                  text: args.item.remarks,
+                  style: {
+                    color: 0xFFEECA7A,
+                    fontSize: 10.0,
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
+widget CompactPoster = GestureDetector(
+  onTap: event "openItem" { index: args.item.index },
+  child: Container(
+    color: 0xFF101A25,
+    child: Column(
+      crossAxisAlignment: "start",
+      children: [
+        Expanded(child: T4Image(url: args.item.pic)),
+        Padding(
+          padding: [ 10.0, 8.0 ],
+          child: Text(
+            text: args.item.name,
+            maxLines: 1,
+            overflow: "ellipsis",
+            style: {
+              color: 0xFFE9EEF3,
+              fontSize: 13.0,
+              fontWeight: "w700",
+            },
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
+widget InfoRow = GestureDetector(
+  onTap: event "openItem" { index: args.item.index },
+  child: Container(
+    padding: [ 10.0 ],
+    decoration: {
+      type: "box",
+      color: 0xFF0E1822,
+      borderRadius: [ { x: 10.0 } ],
+      border: [ { color: 0xFF26394B, width: 1.0 } ],
+    },
+    child: Row(
+      children: [
+        Container(
+          width: 130.0,
+          child: ClipRRect(borderRadius: [ { x: 8.0 } ], child: T4Image(url: args.item.pic)),
+        ),
+        Expanded(
+          child: Padding(
+            padding: [ 14.0, 8.0 ],
+            child: Column(
+              mainAxisSize: "min",
+              crossAxisAlignment: "start",
+              children: [
+                Text(
+                  text: args.item.name,
+                  maxLines: 1,
+                  overflow: "ellipsis",
+                  style: {
+                    color: 0xFFFFFFFF,
+                    fontSize: 17.0,
+                    fontWeight: "w800",
+                  },
+                ),
+                Padding(
+                  padding: [ 0.0, 5.0, 0.0, 0.0 ],
+                  child: Text(
+                    text: args.item.remarks,
+                    maxLines: 1,
+                    overflow: "ellipsis",
+                    style: {
+                      color: 0xFFEECA7A,
+                      fontSize: 11.0,
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
+widget GalleryText = GestureDetector(
+  onTap: event "openItem" { index: args.item.index },
+  child: Container(
+    padding: [ 18.0, 8.0 ],
+    color: 0xFF0E1822,
+    child: Row(
+      children: [
+        Container(
+          width: 52.0,
+          child: Text(
+            text: args.item.rankLabel,
+            style: {
+              color: 0xFFEECA7A,
+              fontSize: 20.0,
+              fontWeight: "w900",
+            },
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: [ 12.0, 0.0 ],
+            child: Text(
+              text: args.item.name,
+              maxLines: 1,
+              overflow: "ellipsis",
+              style: {
+                color: 0xFFFFFFFF,
+                fontSize: 15.0,
+                fontWeight: "w800",
+              },
+            ),
+          ),
+        ),
+        Text(
+          text: args.item.remarks,
+          maxLines: 1,
+          overflow: "ellipsis",
+          style: {
+            color: 0xFF8893A1,
+            fontSize: 10.0,
+          },
+        ),
+      ],
+    ),
+  ),
+);
+
+widget Item = switch data.home.displayStyle {
+  "grid": Wide(item: args.item),
+  "largeGrid": CompactPoster(item: args.item),
+  "banner": Wide(item: args.item),
+  "list": InfoRow(item: args.item),
+  "list2": InfoRow(item: args.item),
+  "textList": GalleryText(item: args.item),
+  "card": InfoRow(item: args.item),
+  default: Wide(item: args.item),
+};
+
+widget SectionTitleSource = GestureDetector(
+  onTap: event "showSourcePicker" {},
+  child: Column(
+    mainAxisSize: "min",
+    crossAxisAlignment: "start",
+    children: [
+      Text(
+        text: data.home.source.name,
+        maxLines: 1,
+        overflow: "ellipsis",
+        style: {
+          color: 0xFFFFFFFF,
+          fontSize: 19.0,
+          fontWeight: "w900",
+        },
+      ),
+      Padding(
+        padding: [ 0.0, 3.0, 0.0, 0.0 ],
+        child: Text(
+          text: [ data.home.totalLabel, " 部内容 · 点击站源名切换站源" ],
+          maxLines: 1,
+          overflow: "ellipsis",
+          style: {
+            color: 0xFF8893A1,
+            fontSize: 10.0,
+            letterSpacing: 0.4,
+          },
+        ),
+      ),
+    ],
+  ),
+);
+
+widget SectionActionsCompact = Row(
+  mainAxisAlignment: "end",
+  children: [
+    switch data.home.hasFilters {
+      true: Padding(
+        padding: [ 0.0, 0.0, 3.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.filter,
+          action: event "toggleFilters" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.api,
+        action: event "showApiConfigPicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.search,
+        action: event "openSearch" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.push,
+        action: event "openPush" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.history,
+        action: event "openHistory" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.favorite,
+        action: event "openFavorite" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.layout,
+        action: event "showDisplayStylePicker" {},
+      ),
+    ),
+    TinyToolButton(
+      icon: data.home.icons.refresh,
+      action: event "refresh" {},
+    ),
+  ],
+);
+
+widget SectionActionsWide = Row(
+  mainAxisAlignment: "end",
+  children: [
+    switch data.home.hasManyClasses {
+      true: Padding(
+        padding: [ 0.0, 0.0, 4.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.expand,
+          action: event "showCategoryPicker" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    switch data.home.hasFilters {
+      true: Padding(
+        padding: [ 0.0, 0.0, 4.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.filter,
+          action: event "toggleFilters" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.layout,
+        action: event "showDisplayStylePicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.source,
+        action: event "showSourcePicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.api,
+        action: event "showApiConfigPicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.search,
+        action: event "openSearch" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.push,
+        action: event "openPush" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.history,
+        action: event "openHistory" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.favorite,
+        action: event "openFavorite" {},
+      ),
+    ),
+    TinyToolButton(
+      icon: data.home.icons.refresh,
+      action: event "refresh" {},
+    ),
+  ],
+);
+
+widget SectionBar = Container(
+  color: 0x00000000,
+  padding: switch data.home.gridColumns {
+    3: [ 16.0, 8.0, 16.0, 10.0 ],
+    default: [ 20.0, 5.0, 20.0, 8.0 ],
+  },
+  child: Row(
+    children: [
+      Expanded(
+        child: SectionTitleSource(),
+      ),
+      Container(
+        width: switch data.home.isLandscape {
+          true: 312.0,
+          false: 214.0,
+        },
+        height: 28.0,
+        child: switch data.home.isLandscape {
+          true: SectionActionsWide(),
+          false: SectionActionsCompact(),
+        },
+      ),
+    ],
+  ),
+);
+
+widget Header = Container(
+  color: 0xFF081019,
+  child: Column(
+    children: [
+      Container(
+        height: 54.0,
+        padding: [ 14.0, 0.0 ],
+        child: Row(
+          children: [
+            Expanded(
+              child: ListView(
+                scrollDirection: "horizontal",
+                children: [ ...for item in data.home.classes: Tab(item: item) ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      switch data.home.showFilters {
+        true: Container(
+          height: data.home.filterPanelHeight,
+          margin: [ 14.0, 4.0, 14.0, 6.0 ],
+          padding: [ 10.0, 4.0 ],
+          decoration: {
+            type: "box",
+            color: 0xFF0E1822,
+            borderRadius: [ { x: 8.0 } ],
+            border: [ { color: 0xFF26394B, width: 1.0 } ],
+            boxShadow: [ { color: 0x332D9FC0, blurRadius: 12.0 } ],
+          },
+          child: ListView(
+            children: [ ...for group in data.home.filters: Container(height: 39.0, child: FilterRow(group: group)) ],
+          ),
+        ),
+        false: SizedBoxShrink(),
+      },
+    ],
+  ),
+);
+
+widget root = Container(
+  color: 0xFF081019,
+  child: PeekStickyGrid(
+    heroHeight: 0.0,
+    pinnedHeight: data.home.stickyHeaderHeight,
+    sectionHeight: 55.0,
+    crossAxisCount: switch data.home.displayStyle {
+      "grid": data.home.bannerColumns,
+      "largeGrid": data.home.largeGridColumns,
+      "banner": data.home.bannerColumns,
+      "list": 1,
+      "list2": 1,
+      "textList": 1,
+      "card": 1,
+      default: data.home.bannerColumns,
+    },
+    childAspectRatio: switch data.home.displayStyle {
+      "grid": 1.34,
+      "largeGrid": 0.62,
+      "banner": 1.34,
+      "list": data.home.wideListRatio,
+      "list2": data.home.wideListRatio,
+      "textList": data.home.textListRatio,
+      "card": data.home.wideListRatio,
+      default: 1.34,
+    },
+    hero: SizedBoxShrink(),
+    pinnedHeader: Header(),
+    sectionHeader: SectionBar(),
+    empty: Center(child: Text(text: "影廊暂无内容", style: { color: 0xFF8893A1 })),
+    children: [ ...for item in data.home.items: Item(item: item) ],
+  ),
+);

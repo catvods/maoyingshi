@@ -6,6 +6,8 @@ import 'ui_glass.dart';
 
 import 'b10_collect_page.dart';
 import 'b11_home_page.dart';
+import 'home_theme.dart';
+import 'home_theme_page.dart';
 import 'b14_following_page.dart';
 import 'b15_local_page.dart';
 import 'b16_report_page.dart';
@@ -123,6 +125,9 @@ void main() async {
   // frame, so no screen ever paints with the fallback palette and
   // then snaps. loadUiConfig never throws.
   await loadUiConfig();
+  // The persisted home theme selection, so the home opens themed
+  // on the first frame when one is picked.
+  await loadHomeThemeId();
   String initialRoute = '/';
   try {
     initialRoute = await C1HostApi().getInitialRoute();
@@ -172,6 +177,9 @@ final Map<String, WidgetBuilder> _c0Routes = {
   // untouched. hk:// sites and WebHome themes fall back to the
   // native home in the host diversion, never in Dart.
   '/home': (context) => const B11HomePage(),
+  // The home theme library (ported PeekPro themes); opened from
+  // the personal settings page.
+  '/home-theme': (context) => const HomeThemePage(),
   // B8 B3: the settings family. One literal route per member (the
   // routes table matches exact strings); '/settings' without a
   // member defaults to the first member, TMDB. B4/B5/B6/B7 add

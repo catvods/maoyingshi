@@ -170,6 +170,8 @@ public class C1ScreenActivity extends AppCompatActivity {
     public static final String ROUTE_HOME = "/home";
     /** Following page route (no parameters). */
     public static final String ROUTE_FOLLOWING = "/following";
+    /** Home theme library route (no parameters). */
+    public static final String ROUTE_HOME_THEME = "/home-theme";
     /** Local-file browser route; append "?selectDir=&readMode=" (both URL-encoded booleans). */
     public static final String ROUTE_LOCAL = "/local";
     /** App-branding page route (no parameters). */
@@ -735,6 +737,11 @@ public class C1ScreenActivity extends AppCompatActivity {
         // above, so the handler always reads through this Activity.
         new MethodChannel(messenger, UI_CONFIG_CHANNEL).setMethodCallHandler((call, result) -> {
             if ("getUiConfig".equals(call.method)) result.success(buildUiConfig());
+            else if ("getHomeThemeId".equals(call.method)) result.success(getPreferences(MODE_PRIVATE).getString("home_theme_id", ""));
+            else if ("setHomeThemeId".equals(call.method)) {
+                getPreferences(MODE_PRIVATE).edit().putString("home_theme_id", call.arguments == null ? "" : String.valueOf(call.arguments)).apply();
+                result.success(null);
+            }
             else result.notImplemented();
         });
         // B8 C2: the history screen shares this engine, so register

@@ -76,6 +76,7 @@ public class B5HostApiImpl implements B5Messages.B5HostApi {
                     ? activity.getString(R.string.setting_following_reminder_off)
                     : activity.getString(R.string.setting_following_reminder_value, lead);
         }));
+        rows.add(row("homeTheme", R.string.setting_home_theme, this::homeThemeName));
         rows.add(row("autoBackup", R.string.setting_auto_backup, () ->
                 getSwitch(AutoBackupPolicy.isEffective(Setting.isAutoBackup(), Setting.hasFileAccess()))));
         rows.add(row("playbackOverlay", R.string.setting_playback_overlay, () ->
@@ -242,6 +243,35 @@ public class B5HostApiImpl implements B5Messages.B5HostApi {
         // cancels a show's work when the reminder is off).
         FollowingReminderScheduler.scheduleAll();
         ConfigEvent.common();
+    }
+
+    @Override
+    public void openHomeTheme() {
+        C1ScreenActivity.start(activity, C1ScreenActivity.ROUTE_HOME_THEME);
+    }
+
+    /// The home theme row's value text: the persisted selection's
+    /// display name (the Dart catalog's names, mirrored here).
+    private String homeThemeName() {
+        String id = activity.getPreferences(android.content.Context.MODE_PRIVATE)
+                .getString("home_theme_id", "");
+        switch (id == null ? "" : id) {
+            case "aurora_prism": return "极光棱镜";
+            case "bubble": return "柔彩气泡";
+            case "cloud_archive": return "云幕典藏";
+            case "crimson_cinema": return "赤焰影院";
+            case "editorial": return "银幕杂志";
+            case "horizontal_gallery": return "横向影廊";
+            case "immersive_palette": return "沉浸光影";
+            case "ink_minimal": return "墨白极简";
+            case "midnight_rank": return "午夜榜单";
+            case "pixel_arcade": return "像素街机";
+            case "snow_glass": return "雪境玻璃";
+            case "sunlit_gallery": return "暖阳影廊";
+            case "terminal": return "绿幕终端";
+            case "vhs": return "复古录像厅";
+            default: return "默认主题";
+        }
     }
 
     @Override

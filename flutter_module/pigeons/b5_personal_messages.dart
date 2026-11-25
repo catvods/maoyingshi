@@ -55,6 +55,11 @@ abstract class B5HostApi {
   /// page is its Flutter home.
   void cycleFollowingReminder();
 
+  /// Opens the home theme library (route /home-theme): the ported
+  /// PeekPro home themes. The selection itself is Dart-side state
+  /// persisted through the ui_config channel.
+  void openHomeTheme();
+
   /// Resets the four glass values to their defaults. Dart re-fetches
   /// afterwards.
   void resetGlass();

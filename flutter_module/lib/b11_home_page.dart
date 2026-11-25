@@ -14,6 +14,8 @@ import 'pigeon/c1_messages.g.dart';
 
 import 'b12_home_block_a.dart';
 import 'b13_home_block_b.dart';
+import 'home_theme.dart';
+import 'themed_home.dart';
 import 'widgets/pic_image.dart';
 import 'widgets/vod_card.dart';
 
@@ -170,11 +172,19 @@ class _B11HomePageState extends State<B11HomePage>
     _settleAnimation.addListener(() {
       _swipeOffset.value = _settleAnimation.value;
     });
+    homeThemeId.addListener(_onHomeThemeChanged);
     _load();
+  }
+
+  /// A home theme was picked in the theme library: swap the body
+  /// between the built-in home and the RFW themed home.
+  void _onHomeThemeChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    homeThemeId.removeListener(_onHomeThemeChanged);
     _typeFilterPollTimer?.cancel();
     _settleController.dispose();
     _swipeOffset.dispose();
@@ -672,18 +682,36 @@ class _B11HomePageState extends State<B11HomePage>
   /// anymore: it lives at the app shell (shell_glass_bar.dart), so
   /// it stays resident across top-level page switches.
   Widget _buildHomeStack(B11HomeScreen screen) {
+    // A ported PeekPro home theme replaces the whole built-in body
+    // (its layouts carry their own headers and backgrounds); hk and
+    // WebHome shells keep the built-in home, like the host diversion.
+    final bool themed = homeThemeId.value.isNotEmpty &&
+        !screen.isHkHome &&
+        !screen.isWebHome;
     return Stack(
       children: [
-        Positioned.fill(
-          child: _WallpaperBackground(screen: screen),
+        if (!themed)
+          Positioned.fill(
+            child: _WallpaperBackground(screen: screen),
+          ),
+        SafeArea(
+          child: themed
+              ? ThemedHomeView(
+                  key: ValueKey<String>('themed-${homeThemeId.value}'),
+                  screen: screen,
+                  epoch: _homeLoadEpoch,
+                  onReloadRequest: _load,
+                )
+              : _buildHome(screen),
         ),
-        SafeArea(child: _buildHome(screen)),
         // B8 b8-home-fabs: the three floating action buttons, anchored
         // like native (fragment_vod.xml: 16dp margin from the pager's
         // end|bottom anchor; the pager ends 56dp above the window
         // bottom — see _pagerBottom). Only one is ever visible; the
         // overlay itself is zero-size when all three are hidden.
-        Positioned(
+        // Themed homes carry their own tool buttons, so no FABs.
+        if (!themed)
+          Positioned(
           right: _fabMargin,
           // +10: the shell-resident glass bar floats higher than the
           // native bottom navigation the pager anchor was measured

@@ -1,0 +1,542 @@
+// 午夜榜单：无轮播，以排名和文字为主。
+// 教学重点：默认无图榜单；grid 显示带图排行榜，banner 显示横图，list/textList 回到纯文字。
+import core.widgets;
+import peek.home;
+
+// RankText 是默认无图排行榜；RankPoster 是有图海报榜；RankWide 是横图榜单。
+// switch data.home.displayStyle 是主题作者最重要的学习入口，可为七种样式分别定义组件。
+// item.index 仅用于视觉排名；openItem 仍按原始列表索引执行原生点击逻辑。
+
+widget Tab = GestureDetector(
+  onTap: event "selectType" { typeId: args.item.typeId },
+  child: Container(
+    margin: [ 0.0, 16.0, 8.0, 5.0 ],
+    padding: [ 13.0, 7.0 ],
+    decoration: {
+      type: "box",
+      color: switch args.item.selected { true: 0xFF6E4CFF, false: 0xFF15142A },
+      borderRadius: [ { x: 8.0 } ],
+    },
+    child: Text(
+      text: args.item.typeName,
+      style: {
+        color: switch args.item.selected { true: 0xFFFFFFFF, false: 0xFF8A88B0 },
+        fontSize: 12.0,
+        fontWeight: "w700",
+      },
+    ),
+  ),
+);
+
+widget TinyToolButton = GestureDetector(
+  onTap: args.action,
+  child: Container(
+    width: 24.0,
+    height: 28.0,
+    alignment: { x: 0.0, y: 0.0 },
+    child: Icon(icon: args.icon, fontFamily: "MaterialIcons", size: 17.0, color: 0xFFA895FF),
+  ),
+);
+
+widget Tool = GestureDetector(
+  onTap: args.action,
+  child: Container(
+    width: 38.0,
+    alignment: { x: 0.0, y: 0.0 },
+    child: Icon(icon: args.icon, fontFamily: "MaterialIcons", size: 19.0, color: 0xFFA895FF),
+  ),
+);
+
+widget FilterOption = GestureDetector(
+  onTap: event "selectFilter" { key: args.item.filterKey, value: args.item.value },
+  child: Container(
+    margin: [ 0.0, 8.0, 8.0, 8.0 ],
+    padding: [ 10.0, 2.0 ],
+    decoration: {
+      type: "box",
+      color: switch args.item.selected { true: 0xFF6E4CFF, false: 0xFF15142A },
+      borderRadius: [ { x: 8.0 } ],
+      border: [ { color: 0xFF29264A, width: 1.0 } ],
+    },
+    child: Text(
+      text: args.item.name,
+      style: {
+        color: switch args.item.selected { true: 0xFFFFFFFF, false: 0xFF9B97C4 },
+        fontSize: 10.0,
+        fontWeight: "w700",
+      },
+    ),
+  ),
+);
+
+widget FilterRow = Row(
+  children: [
+    Expanded(
+      child: ListView(
+        scrollDirection: "horizontal",
+        children: [ ...for option in args.group.options: FilterOption(item: option) ],
+      ),
+    ),
+    switch args.group.canExpand {
+      true: Tool(icon: data.home.icons.expand, action: event "showFilterPicker" { key: args.group.key }),
+      false: SizedBoxShrink(),
+    },
+  ],
+);
+
+widget RankText = GestureDetector(
+  onTap: event "openItem" { index: args.item.index },
+  child: Container(
+    padding: [ 16.0, 6.0 ],
+    decoration: {
+      type: "box",
+      gradient: { type: "linear", colors: [ 0xFF131225, 0xFF0C0B18 ] },
+      borderRadius: [ { x: 9.0 } ],
+      border: [ { color: 0xFF29264A, width: 1.0 } ],
+    },
+    child: Row(
+      children: [
+        Container(
+          width: 60.0,
+          alignment: { x: -1.0, y: 0.0 },
+          child: Text(
+            text: args.item.rankLabel,
+            style: {
+              color: switch args.item.index { 0: 0xFFFFC857, 1: 0xFFC9D1DA, 2: 0xFFCE8B61, default: 0xFF615D8B },
+              fontSize: 24.0,
+              fontWeight: "w900",
+            },
+          ),
+        ),
+        Expanded(
+          child: Column(
+            mainAxisSize: "min",
+            crossAxisAlignment: "start",
+            children: [
+              Text(
+                text: args.item.name,
+                maxLines: 1,
+                overflow: "ellipsis",
+                style: {
+                  color: 0xFFF3F1FF,
+                  fontSize: 15.0,
+                  fontWeight: "w800",
+                },
+              ),
+              Text(
+                text: args.item.remarks,
+                maxLines: 1,
+                overflow: "ellipsis",
+                style: {
+                  color: 0xFF7F7AA6,
+                  fontSize: 10.0,
+                },
+              ),
+            ],
+          ),
+        ),
+        Icon(icon: data.home.icons.open, fontFamily: "MaterialIcons", size: 18.0, color: 0xFF6E4CFF),
+      ],
+    ),
+  ),
+);
+
+widget RankPoster = GestureDetector(
+  onTap: event "openItem" { index: args.item.index },
+  child: Stack(
+    fit: "expand",
+    children: [
+      ClipRRect(borderRadius: [ { x: 10.0 } ], child: T4Image(url: args.item.pic)),
+      Align(
+        alignment: { x: -1.0, y: -1.0 },
+        child: Container(
+          margin: [ 7.0 ],
+          width: 38.0,
+          height: 38.0,
+          alignment: { x: 0.0, y: 0.0 },
+          decoration: {
+            type: "box",
+            color: 0xDD6E4CFF,
+            borderRadius: [ { x: 19.0 } ],
+            boxShadow: [ { color: 0x996E4CFF, blurRadius: 12.0 } ],
+          },
+          child: Text(
+            text: args.item.indexLabel,
+            style: {
+              color: 0xFFFFFFFF,
+              fontSize: 16.0,
+              fontWeight: "w900",
+            },
+          ),
+        ),
+      ),
+      Align(
+        alignment: { x: -1.0, y: 1.0 },
+        child: Container(
+          padding: [ 12.0 ],
+          decoration: {
+            type: "box",
+            gradient: {
+              type: "linear",
+              begin: { x: 0.0, y: -1.0 },
+              end: { x: 0.0, y: 1.0 },
+              colors: [ 0x00000000, 0xDD090812 ],
+            },
+          },
+          child: Text(
+            text: args.item.name,
+            maxLines: 1,
+            overflow: "ellipsis",
+            style: {
+              color: 0xFFFFFFFF,
+              fontSize: 13.0,
+              fontWeight: "w800",
+            },
+          ),
+        ),
+      ),
+    ],
+  ),
+);
+
+widget RankWide = GestureDetector(
+  onTap: event "openItem" { index: args.item.index },
+  child: ClipRRect(
+    borderRadius: [ { x: 10.0 } ],
+    child: Stack(
+      fit: "expand",
+      children: [
+        T4Image(url: args.item.pic),
+        Container(
+          decoration: {
+            type: "box",
+            gradient: {
+              type: "linear",
+              begin: { x: -1.0, y: 0.0 },
+              end: { x: 1.0, y: 0.0 },
+              colors: [ 0xEE0A0915, 0x550A0915, 0x00000000 ],
+            },
+          },
+        ),
+        Align(
+          alignment: { x: -1.0, y: 0.0 },
+          child: Padding(
+            padding: [ 14.0 ],
+            child: Row(
+              children: [
+                Text(
+                  text: args.item.rankLabel,
+                  style: {
+                    color: 0xFFA895FF,
+                    fontSize: 26.0,
+                    fontWeight: "w900",
+                  },
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: [ 12.0, 0.0 ],
+                    child: Text(
+                      text: args.item.name,
+                      maxLines: 1,
+                      overflow: "ellipsis",
+                      style: {
+                        color: 0xFFFFFFFF,
+                        fontSize: 16.0,
+                        fontWeight: "w800",
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
+widget Item = switch data.home.displayStyle {
+  "grid": RankPoster(item: args.item),
+  "largeGrid": RankPoster(item: args.item),
+  "banner": RankWide(item: args.item),
+  "list": RankText(item: args.item),
+  "list2": RankText(item: args.item),
+  "textList": RankText(item: args.item),
+  "card": RankWide(item: args.item),
+  default: RankText(item: args.item),
+};
+
+widget SectionTitleSource = GestureDetector(
+  onTap: event "showSourcePicker" {},
+  child: Column(
+    mainAxisSize: "min",
+    crossAxisAlignment: "start",
+    children: [
+      Text(
+        text: data.home.source.name,
+        maxLines: 1,
+        overflow: "ellipsis",
+        style: {
+          color: 0xFFF3F1FF,
+          fontSize: 19.0,
+          fontWeight: "w900",
+        },
+      ),
+      Padding(
+        padding: [ 0.0, 3.0, 0.0, 0.0 ],
+        child: Text(
+          text: [ data.home.totalLabel, " 部内容 · 点击站源名切换站源" ],
+          maxLines: 1,
+          overflow: "ellipsis",
+          style: {
+            color: 0xFF7F7AA6,
+            fontSize: 10.0,
+            letterSpacing: 0.4,
+          },
+        ),
+      ),
+    ],
+  ),
+);
+
+widget SectionActionsCompact = Row(
+  mainAxisAlignment: "end",
+  children: [
+    switch data.home.hasFilters {
+      true: Padding(
+        padding: [ 0.0, 0.0, 3.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.filter,
+          action: event "toggleFilters" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.api,
+        action: event "showApiConfigPicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.search,
+        action: event "openSearch" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.push,
+        action: event "openPush" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.history,
+        action: event "openHistory" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.favorite,
+        action: event "openFavorite" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.layout,
+        action: event "showDisplayStylePicker" {},
+      ),
+    ),
+    TinyToolButton(
+      icon: data.home.icons.refresh,
+      action: event "refresh" {},
+    ),
+  ],
+);
+
+widget SectionActionsWide = Row(
+  mainAxisAlignment: "end",
+  children: [
+    switch data.home.hasManyClasses {
+      true: Padding(
+        padding: [ 0.0, 0.0, 4.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.expand,
+          action: event "showCategoryPicker" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    switch data.home.hasFilters {
+      true: Padding(
+        padding: [ 0.0, 0.0, 4.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.filter,
+          action: event "toggleFilters" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.layout,
+        action: event "showDisplayStylePicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.source,
+        action: event "showSourcePicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.api,
+        action: event "showApiConfigPicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.search,
+        action: event "openSearch" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.push,
+        action: event "openPush" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.history,
+        action: event "openHistory" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.favorite,
+        action: event "openFavorite" {},
+      ),
+    ),
+    TinyToolButton(
+      icon: data.home.icons.refresh,
+      action: event "refresh" {},
+    ),
+  ],
+);
+
+widget SectionBar = Container(
+  color: 0x00000000,
+  padding: switch data.home.gridColumns {
+    3: [ 16.0, 8.0, 16.0, 10.0 ],
+    default: [ 20.0, 5.0, 20.0, 8.0 ],
+  },
+  child: Row(
+    children: [
+      Expanded(
+        child: SectionTitleSource(),
+      ),
+      Container(
+        width: switch data.home.isLandscape {
+          true: 312.0,
+          false: 214.0,
+        },
+        height: 28.0,
+        child: switch data.home.isLandscape {
+          true: SectionActionsWide(),
+          false: SectionActionsCompact(),
+        },
+      ),
+    ],
+  ),
+);
+
+widget Header = Container(
+  color: 0xFF080712,
+  child: Column(
+    children: [
+      Container(
+        height: 54.0,
+        padding: [ 14.0, 0.0 ],
+        child: Row(
+          children: [
+            Expanded(
+              child: ListView(
+                scrollDirection: "horizontal",
+                children: [ ...for item in data.home.classes: Tab(item: item) ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      switch data.home.showFilters {
+        true: Container(
+          height: data.home.filterPanelHeight,
+          margin: [ 14.0, 4.0, 14.0, 6.0 ],
+          padding: [ 10.0, 4.0 ],
+          decoration: {
+            type: "box",
+            gradient: { type: "linear", colors: [ 0xFF131225, 0xFF0C0B18 ] },
+            borderRadius: [ { x: 9.0 } ],
+            border: [ { color: 0xFF29264A, width: 1.0 } ],
+            boxShadow: [ { color: 0x446E4CFF, blurRadius: 12.0 } ],
+          },
+          child: ListView(
+            children: [ ...for group in data.home.filters: Container(height: 39.0, child: FilterRow(group: group)) ],
+          ),
+        ),
+        false: SizedBoxShrink(),
+      },
+    ],
+  ),
+);
+
+widget root = Container(
+  color: 0xFF080712,
+  child: PeekStickyGrid(
+    heroHeight: 0.0,
+    pinnedHeight: data.home.stickyHeaderHeight,
+    sectionHeight: 64.0,
+    crossAxisCount: switch data.home.displayStyle {
+      "grid": data.home.gridColumns,
+      "largeGrid": data.home.largeGridColumns,
+      "banner": data.home.bannerColumns,
+      "list": 1,
+      "list2": 1,
+      "textList": 1,
+      "card": 1,
+      default: 1,
+    },
+    childAspectRatio: switch data.home.displayStyle {
+      "grid": 0.62,
+      "largeGrid": 0.62,
+      "banner": 1.32,
+      "list": data.home.textListRatio,
+      "list2": data.home.textListRatio,
+      "textList": data.home.textListRatio,
+      "card": 1.32,
+      default: data.home.textListRatio,
+    },
+    hero: SizedBoxShrink(),
+    pinnedHeader: Header(),
+    sectionHeader: SectionBar(),
+    empty: Center(child: Text(text: "榜单暂无数据", style: { color: 0xFF7F7AA6 })),
+    children: [ ...for item in data.home.items: Item(item: item) ],
+  ),
+);

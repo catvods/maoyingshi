@@ -1,0 +1,232 @@
+// 极光棱镜：纤长轮播与光谱卡片。
+// 教学重点：sweep/linear/radial 三种渐变、Rotation/Scale、Opacity、Stack 叠层和七种布局分支。
+// recommend 用于轮播，items 用于内容；所有点击事件只回传 index，详情仍由原生壳子处理。
+import core.widgets;
+import peek.home;
+
+widget Hero = GestureDetector(
+  onTap: event "openRecommend" { index: args.item.index },
+  child: Container(
+    margin: [ 8.0, 5.0 ],
+    decoration: { type: "box", color: 0xFF09101D, borderRadius: [ { x: 20.0 } ], boxShadow: [ { color: 0x6635E7FF, blurRadius: 28.0 }, { color: 0x555F40FF, blurRadius: 42.0, offset: { x: 0.0, y: 12.0 } } ] },
+    child: ClipRRect(
+      borderRadius: [ { x: 20.0 } ],
+      child: Stack(fit: "expand", children: [
+        T4Image(url: args.item.pic),
+        Container(decoration: { type: "box", gradient: { type: "linear", begin: { x: -1.0, y: 0.0 }, end: { x: 1.0, y: 0.0 }, colors: [ 0xEE07101C, 0x88143B50, 0x002E58A0 ] } }),
+        Align(alignment: { x: -1.0, y: 0.0 }, child: Container(width: 430.0, padding: [ 28.0 ], child: Column(mainAxisSize: "min", crossAxisAlignment: "start", children: [
+          Text(text: "AURORA / FEATURE", style: { color: 0xFF74F8FF, fontSize: 10.0, fontWeight: "w900", letterSpacing: 2.2 }),
+          Padding(padding: [ 0.0, 8.0, 0.0, 0.0 ], child: Text(text: args.item.name, maxLines: 1, overflow: "ellipsis", style: { color: 0xFFFFFFFF, fontSize: 26.0, fontWeight: "w900" })),
+          Text(text: args.item.remarks, style: { color: 0xFFC3D9E7, fontSize: 11.0 }),
+        ]))),
+        Align(alignment: { x: 0.88, y: -0.72 }, child: Rotation(turns: 0.04, child: Container(padding: [ 10.0, 6.0 ], decoration: { type: "box", gradient: { type: "sweep", colors: [ 0xFF35E7FF, 0xFF8E5CFF, 0xFFFF65C8, 0xFF35E7FF ] }, borderRadius: [ { x: 6.0 } ] }, child: Text(text: "PRISM", style: { color: 0xFF07101C, fontSize: 10.0, fontWeight: "w900" }))))
+      ]),
+    ),
+  ),
+);
+
+widget Tab = GestureDetector(onTap: event "selectType" { typeId: args.item.typeId }, child: Container(margin: [ 0.0, 16.0, 8.0, 5.0 ], padding: [ 14.0, 7.0 ], decoration: { type: "box", gradient: switch args.item.selected { true: { type: "linear", colors: [ 0xFF37E8FF, 0xFF8663FF ] }, false: { type: "linear", colors: [ 0xFF111A2A, 0xFF0C1320 ] } }, borderRadius: [ { x: 16.0 } ], border: [ { color: switch args.item.selected { true: 0xFF91FAFF, false: 0xFF25354A }, width: 1.0 } ] }, child: Text(text: args.item.typeName, style: { color: switch args.item.selected { true: 0xFF07101C, false: 0xFF9EB1C6 }, fontSize: 12.0, fontWeight: "w800" })));
+widget TinyToolButton = GestureDetector(onTap: args.action, child: Container(width: 24.0, height: 28.0, alignment: { x: 0.0, y: 0.0 }, child: Icon(icon: args.icon, fontFamily: "MaterialIcons", size: 17.0, color: 0xFF69F1FF)));
+widget Tool = GestureDetector(onTap: args.action, child: Scale(scale: 0.94, child: Container(width: 40.0, height: 40.0, alignment: { x: 0.0, y: 0.0 }, decoration: { type: "box", gradient: { type: "radial", colors: [ 0xFF203653, 0xFF0C1422 ] }, borderRadius: [ { x: 20.0 } ], border: [ { color: 0xFF34506D, width: 1.0 } ] }, child: Icon(icon: args.icon, fontFamily: "MaterialIcons", size: 19.0, color: 0xFF69F1FF))));
+widget FilterOption = GestureDetector(onTap: event "selectFilter" { key: args.item.filterKey, value: args.item.value }, child: Container(margin: [ 0.0, 8.0, 7.0, 8.0 ], padding: [ 10.0, 2.0 ], decoration: { type: "box", gradient: switch args.item.selected { true: { type: "linear", colors: [ 0xFF37E8FF, 0xFF8663FF ] }, false: { type: "linear", colors: [ 0xFF111A2A, 0xFF0C1320 ] } }, borderRadius: [ { x: 13.0 } ], border: [ { color: 0xFF34506D, width: 1.0 } ] }, child: Text(text: args.item.name, style: { color: switch args.item.selected { true: 0xFF07101C, false: 0xFF9EB1C6 }, fontSize: 10.0, fontWeight: "w800" })));
+widget FilterRow = Row(children: [ Expanded(child: ListView(scrollDirection: "horizontal", children: [ ...for option in args.group.options: FilterOption(item: option) ])), switch args.group.canExpand { true: Tool(icon: data.home.icons.expand, action: event "showFilterPicker" { key: args.group.key }), false: SizedBoxShrink() } ]);
+
+widget PrismPoster = GestureDetector(onTap: event "openItem" { index: args.item.index }, child: Container(decoration: { type: "box", color: 0xFF0B1320, borderRadius: [ { x: 16.0 } ], border: [ { color: 0xFF28435A, width: 1.0 } ], boxShadow: [ { color: 0x4435E7FF, blurRadius: 16.0 } ] }, child: ClipRRect(borderRadius: [ { x: 16.0 } ], child: Column(crossAxisAlignment: "start", children: [ Expanded(child: Stack(fit: "expand", children: [ T4Image(url: args.item.pic), Align(alignment: { x: 1.0, y: -1.0 }, child: Container(margin: [ 7.0 ], width: 30.0, height: 30.0, decoration: { type: "box", gradient: { type: "sweep", colors: [ 0xFF35E7FF, 0xFF8E5CFF, 0xFFFF65C8, 0xFF35E7FF ] }, borderRadius: [ { x: 15.0 } ] })) ])), Padding(padding: [ 11.0, 9.0, 11.0, 2.0 ], child: Text(text: args.item.name, maxLines: 1, overflow: "ellipsis", style: { color: 0xFFF4FAFF, fontSize: 13.0, fontWeight: "w800" })), Padding(padding: [ 11.0, 2.0, 11.0, 10.0 ], child: Text(text: args.item.remarks, style: { color: 0xFF63DCE8, fontSize: 9.0 })) ]))));
+widget PrismWide = GestureDetector(onTap: event "openItem" { index: args.item.index }, child: ClipRRect(borderRadius: [ { x: 14.0 } ], child: Stack(fit: "expand", children: [ T4Image(url: args.item.pic), Container(decoration: { type: "box", gradient: { type: "linear", begin: { x: -1.0, y: 0.0 }, end: { x: 1.0, y: 0.0 }, colors: [ 0xEE09101D, 0x550E4261, 0x00000000 ] } }), Align(alignment: { x: -1.0, y: 1.0 }, child: Padding(padding: [ 18.0 ], child: Text(text: args.item.name, style: { color: 0xFFFFFFFF, fontSize: 17.0, fontWeight: "w900" }))) ])));
+widget PrismRow = GestureDetector(onTap: event "openItem" { index: args.item.index }, child: Container(padding: [ 10.0 ], decoration: { type: "box", color: 0xFF0B1320, borderRadius: [ { x: 12.0 } ], border: [ { color: 0xFF28435A, width: 1.0 } ] }, child: Row(children: [ Container(width: 140.0, child: ClipRRect(borderRadius: [ { x: 9.0 } ], child: T4Image(url: args.item.pic))), Expanded(child: Padding(padding: [ 18.0 ], child: Text(text: args.item.name, style: { color: 0xFFF4FAFF, fontSize: 16.0, fontWeight: "w800" }))), Text(text: args.item.remarks, style: { color: 0xFF63DCE8, fontSize: 10.0 }) ])));
+widget PrismText = GestureDetector(onTap: event "openItem" { index: args.item.index }, child: Container(padding: [ 18.0, 8.0 ], decoration: { type: "box", gradient: { type: "linear", colors: [ 0xFF101B2B, 0xFF080E18 ] }, borderRadius: [ { x: 10.0 } ] }, child: Row(children: [ Container(width: 44.0, child: Text(text: args.item.rankLabel, style: { color: 0xFF69F1FF, fontSize: 20.0, fontWeight: "w900" })), Expanded(child: Padding(padding: [ 12.0, 0.0 ], child: Text(text: args.item.name, maxLines: 1, overflow: "ellipsis", style: { color: 0xFFF4FAFF, fontSize: 14.0, fontWeight: "w800" }))), Text(text: args.item.remarks, maxLines: 1, overflow: "ellipsis", style: { color: 0xFF67839B, fontSize: 9.0 }) ])));
+widget Item = switch data.home.displayStyle { "grid": PrismPoster(item: args.item), "largeGrid": PrismPoster(item: args.item), "banner": PrismWide(item: args.item), "list": PrismRow(item: args.item), "list2": PrismRow(item: args.item), "textList": PrismText(item: args.item), "card": PrismWide(item: args.item), default: PrismPoster(item: args.item) };
+widget SectionTitleSource = GestureDetector(
+  onTap: event "showSourcePicker" {},
+  child: Column(
+    mainAxisSize: "min",
+    crossAxisAlignment: "start",
+    children: [
+      Text(
+        text: data.home.source.name,
+        maxLines: 1,
+        overflow: "ellipsis",
+        style: { color: 0xFFF4FAFF, fontSize: 19.0, fontWeight: "w900" },
+      ),
+      Padding(
+        padding: [ 0.0, 3.0, 0.0, 0.0 ],
+        child: Text(
+          text: [ data.home.totalLabel, " 部内容 · 点击站源名切换站源" ],
+          maxLines: 1,
+          overflow: "ellipsis",
+          style: { color: 0xFF67839B, fontSize: 10.0, letterSpacing: 0.4 },
+        ),
+      ),
+    ],
+  ),
+);
+
+widget SectionActionsCompact = Row(
+  mainAxisAlignment: "end",
+  children: [
+    switch data.home.hasFilters {
+      true: Padding(
+        padding: [ 0.0, 0.0, 3.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.filter,
+          action: event "toggleFilters" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.api,
+        action: event "showApiConfigPicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.search,
+        action: event "openSearch" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.push,
+        action: event "openPush" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.history,
+        action: event "openHistory" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.favorite,
+        action: event "openFavorite" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 3.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.layout,
+        action: event "showDisplayStylePicker" {},
+      ),
+    ),
+    TinyToolButton(
+      icon: data.home.icons.refresh,
+      action: event "refresh" {},
+    ),
+  ],
+);
+
+widget SectionActionsWide = Row(
+  mainAxisAlignment: "end",
+  children: [
+    switch data.home.hasManyClasses {
+      true: Padding(
+        padding: [ 0.0, 0.0, 4.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.expand,
+          action: event "showCategoryPicker" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    switch data.home.hasFilters {
+      true: Padding(
+        padding: [ 0.0, 0.0, 4.0, 0.0 ],
+        child: TinyToolButton(
+          icon: data.home.icons.filter,
+          action: event "toggleFilters" {},
+        ),
+      ),
+      false: SizedBoxShrink(),
+    },
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.layout,
+        action: event "showDisplayStylePicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.source,
+        action: event "showSourcePicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.api,
+        action: event "showApiConfigPicker" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.search,
+        action: event "openSearch" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.push,
+        action: event "openPush" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.history,
+        action: event "openHistory" {},
+      ),
+    ),
+    Padding(
+      padding: [ 0.0, 0.0, 4.0, 0.0 ],
+      child: TinyToolButton(
+        icon: data.home.icons.favorite,
+        action: event "openFavorite" {},
+      ),
+    ),
+    TinyToolButton(
+      icon: data.home.icons.refresh,
+      action: event "refresh" {},
+    ),
+  ],
+);
+
+widget SectionBar = Container(
+  color: 0x00000000,
+  padding: switch data.home.gridColumns {
+    3: [ 16.0, 8.0, 16.0, 10.0 ],
+    default: [ 20.0, 5.0, 20.0, 8.0 ],
+  },
+  child: Row(
+    children: [
+      Expanded(
+        child: SectionTitleSource(),
+      ),
+      Container(
+        width: switch data.home.isLandscape {
+          true: 312.0,
+          false: 214.0,
+        },
+        height: 28.0,
+        child: switch data.home.isLandscape {
+          true: SectionActionsWide(),
+          false: SectionActionsCompact(),
+        },
+      ),
+    ],
+  ),
+);
+
+widget Header = Container(color: 0xFF07101C, child: Column(children: [ Container(height: 54.0, padding: [ 14.0, 0.0 ], child: Row(children: [ Expanded(child: ListView(scrollDirection: "horizontal", children: [ ...for item in data.home.classes: Tab(item: item) ])) ])), switch data.home.showFilters { true: Container(height: data.home.filterPanelHeight, margin: [ 14.0, 4.0, 14.0, 6.0 ], padding: [ 10.0, 4.0 ], decoration: { type: "box", gradient: { type: "linear", colors: [ 0xFF101B2B, 0xFF080E18 ] }, borderRadius: [ { x: 14.0 } ], border: [ { color: 0xFF34506D, width: 1.0 } ], boxShadow: [ { color: 0x4437E8FF, blurRadius: 14.0 } ] }, child: ListView(children: [ ...for group in data.home.filters: Container(height: 39.0, child: FilterRow(group: group)) ])), false: SizedBoxShrink() } ]));
+widget root = Container(color: 0xFF07101C, child: PeekStickyGrid(heroHeight: switch data.home.hasRecommend { true: 215.0, false: 0.0 }, pinnedHeight: data.home.stickyHeaderHeight, sectionHeight: 64.0, crossAxisCount: switch data.home.displayStyle { "grid": data.home.gridColumns, "largeGrid": data.home.largeGridColumns, "banner": data.home.bannerColumns, "list": 1, "list2": 1, "textList": 1, "card": 1, default: data.home.gridColumns }, childAspectRatio: switch data.home.displayStyle { "grid": 0.61, "largeGrid": 0.61, "banner": 1.28, "list": data.home.wideListRatio, "list2": data.home.wideListRatio, "textList": data.home.textListRatio, "card": 1.28, default: 0.61 }, hero: switch data.home.hasRecommend { true: PeekCarousel(autoPlay: true, interval: 4300, viewportFraction: 0.90, activeColor: 0xFF69F1FF, inactiveColor: 0x557B6DCC, children: [ ...for item in data.home.home.recommend: Hero(item: item) ]), false: SizedBoxShrink() }, pinnedHeader: Header(), sectionHeader: SectionBar(), empty: Center(child: Text(text: "极光信号暂时中断", style: { color: 0xFF69F1FF })), children: [ ...for item in data.home.items: Item(item: item) ]));

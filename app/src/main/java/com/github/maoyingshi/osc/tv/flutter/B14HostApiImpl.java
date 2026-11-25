@@ -17,6 +17,7 @@ import com.github.maoyingshi.osc.tv.bean.History;
 import com.github.maoyingshi.osc.tv.bean.TmdbItem;
 import com.github.maoyingshi.osc.tv.following.AlistSubscriptionImporter;
 import com.github.maoyingshi.osc.tv.following.Following;
+import com.github.maoyingshi.osc.tv.following.FollowingAgenda;
 import com.github.maoyingshi.osc.tv.following.FollowingIdentity;
 import com.github.maoyingshi.osc.tv.following.FollowingMetadataSnapshot;
 import com.github.maoyingshi.osc.tv.following.FollowingNotifier;
@@ -600,6 +601,14 @@ public class B14HostApiImpl implements B14Messages.B14HostApi {
                     .setTitle(activity.getString(R.string.nav_following))
                     .setRetryLabel(activity.getString(R.string.error_retry))
                     .setErrorText("")
+                    .setAgendaTodayLabel(activity.getString(R.string.following_agenda_today))
+                    .setAgendaTomorrowLabel(activity.getString(R.string.following_agenda_tomorrow))
+                    .setAgendaWeekLabel(activity.getString(R.string.following_agenda_week))
+                    .setAgendaAllLabel(activity.getString(R.string.following_agenda_all))
+                    .setAgendaEmptyLabel(activity.getString(R.string.following_agenda_empty))
+                    .setAgendaUnscheduledLabel(activity.getString(R.string.following_agenda_header_unscheduled))
+                    .setAgendaTodayShortLabel(activity.getString(R.string.following_agenda_today_short))
+                    .setAgendaCountFormat(activity.getString(R.string.following_agenda_day_count))
                     .build();
         }
         List<B14Messages.B14FollowingItem> items = new ArrayList<>();
@@ -632,6 +641,14 @@ public class B14HostApiImpl implements B14Messages.B14HostApi {
                 .setTitle(activity.getString(R.string.nav_following))
                 .setRetryLabel(activity.getString(R.string.error_retry))
                 .setErrorText("")
+                .setAgendaTodayLabel(activity.getString(R.string.following_agenda_today))
+                .setAgendaTomorrowLabel(activity.getString(R.string.following_agenda_tomorrow))
+                .setAgendaWeekLabel(activity.getString(R.string.following_agenda_week))
+                .setAgendaAllLabel(activity.getString(R.string.following_agenda_all))
+                .setAgendaEmptyLabel(activity.getString(R.string.following_agenda_empty))
+                .setAgendaUnscheduledLabel(activity.getString(R.string.following_agenda_header_unscheduled))
+                .setAgendaTodayShortLabel(activity.getString(R.string.following_agenda_today_short))
+                .setAgendaCountFormat(activity.getString(R.string.following_agenda_day_count))
                 .build();
     }
 
@@ -660,6 +677,14 @@ public class B14HostApiImpl implements B14Messages.B14HostApi {
                 .setTitle(activity.getString(R.string.nav_following))
                 .setRetryLabel(activity.getString(R.string.error_retry))
                 .setErrorText(activity.getString(R.string.error_play_timeout))
+                .setAgendaTodayLabel(activity.getString(R.string.following_agenda_today))
+                .setAgendaTomorrowLabel(activity.getString(R.string.following_agenda_tomorrow))
+                .setAgendaWeekLabel(activity.getString(R.string.following_agenda_week))
+                .setAgendaAllLabel(activity.getString(R.string.following_agenda_all))
+                .setAgendaEmptyLabel(activity.getString(R.string.following_agenda_empty))
+                .setAgendaUnscheduledLabel(activity.getString(R.string.following_agenda_header_unscheduled))
+                .setAgendaTodayShortLabel(activity.getString(R.string.following_agenda_today_short))
+                .setAgendaCountFormat(activity.getString(R.string.following_agenda_day_count))
                 .build();
     }
 
@@ -741,6 +766,8 @@ public class B14HostApiImpl implements B14Messages.B14HostApi {
                 .setNextSeasonLabel(item.latestReleasedSeason > item.trackedSeason
                         ? activity.getString(R.string.following_next_season, item.latestReleasedSeason + 1) : "")
                 .setReadVisible(item.hasUpdate)
+                .setNextAirAtMs(item.nextAirAt)
+                .setAirLine(text(FollowingAgenda.airLineText(activity, item)))
                 .build();
     }
 

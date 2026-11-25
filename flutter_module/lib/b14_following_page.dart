@@ -62,6 +62,16 @@ class _B14FollowingPageState extends State<B14FollowingPage>
   /// Identity key to scroll to after the next load (followNextSeason).
   String? _pendingFocusKey;
 
+  /// Agenda （追更日历） view state, mirroring the native
+  /// FollowingActivity calendar: a bucket tab (0 all, 1 today,
+  /// 2 tomorrow, 3 week) and an optional single day picked from the
+  /// 14-day strip (a picked day overrides the tab; tapping it again
+  /// returns to all). Purely local: filtering, grouping and strip
+  /// counts derive from the snapshot's nextAirAtMs values, mirroring
+  /// FollowingAgenda.
+  int _agendaTab = 0;
+  DateTime? _agendaDay;
+
   @override
   void initState() {
     super.initState();
@@ -158,6 +168,309 @@ class _B14FollowingPageState extends State<B14FollowingPage>
       // Reload below shows host truth either way.
     }
     await _load();
+  }
+
+  // ------------------------------------------------------------------
+  // Agenda （追更日历）, mirroring the native FollowingActivity
+  // calendar (FollowingAgenda + AgendaDateAdapter): bucket tabs,
+  // a 14-day strip with per-day counts, and a timeline list grouped
+  // under date headers. All computed locally from the snapshot.
+  // ------------------------------------------------------------------
+
+  static DateTime _dayStart(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  /// The item's air day (local midnight), or null when unscheduled —
+  /// native FollowingAgenda.airDayStart.
+  static DateTime? _airDay(B14FollowingItem item) {
+    if (item.nextAirAtMs <= 0) return null;
+    return _dayStart(DateTime.fromMillisecondsSinceEpoch(item.nextAirAtMs));
+  }
+
+  /// Agenda bucket: 0 unscheduled, 1 today (incl. overdue),
+  /// 2 tomorrow, 3 later this week, 4 future — native
+  /// FollowingAgenda.bucketFor.
+  static int _bucket(B14FollowingItem item, DateTime today) {
+    final DateTime? day = _airDay(item);
+    if (day == null) return 0;
+    if (!day.isAfter(today)) return 1;
+    if (day == DateTime(today.year, today.month, today.day + 1)) return 2;
+    if (day.isBefore(DateTime(today.year, today.month, today.day + 7))) {
+      return 3;
+    }
+    return 4;
+  }
+
+  /// Items passing the agenda tab / picked day, in timeline order
+  /// (native AGENDA_ORDER): air day ascending, unscheduled last;
+  /// ties keep the snapshot's order (index decoration — Dart's sort
+  /// is not stable).
+  List<B14FollowingItem> _agendaVisible(
+    B14FollowingScreen screen,
+    DateTime today,
+  ) {
+    final List<B14FollowingItem> items =
+        screen.items.where((B14FollowingItem item) {
+      final DateTime? picked = _agendaDay;
+      if (picked != null) return _airDay(item) == picked;
+      return switch (_agendaTab) {
+        1 => _bucket(item, today) == 1,
+        2 => _bucket(item, today) == 2,
+        3 => _bucket(item, today) >= 1 && _bucket(item, today) <= 3,
+        _ => true,
+      };
+    }).toList();
+    final List<int> order = List<int>.generate(items.length, (int i) => i);
+    order.sort((int a, int b) {
+      final int ka =
+          _airDay(items[a])?.millisecondsSinceEpoch ?? 0x7fffffffffffffff;
+      final int kb =
+          _airDay(items[b])?.millisecondsSinceEpoch ?? 0x7fffffffffffffff;
+      if (ka != kb) return ka.compareTo(kb);
+      return a.compareTo(b);
+    });
+    return [for (final int i in order) items[i]];
+  }
+
+  String _headerLabel(
+    B14FollowingScreen screen,
+    DateTime? day,
+    DateTime today,
+  ) {
+    if (day == null) return screen.agendaUnscheduledLabel;
+    final String date = '${day.month}月${day.day}日';
+    if (day == today) return '${screen.agendaTodayLabel} · $date';
+    if (day == DateTime(today.year, today.month, today.day + 1)) {
+      return '${screen.agendaTomorrowLabel} · $date';
+    }
+    const List<String> weekdayChars = ['一', '二', '三', '四', '五', '六', '日'];
+    return '$date 星期${weekdayChars[day.weekday - 1]}';
+  }
+
+  /// The grouped timeline: one _AgendaHeader per air day, followed
+  /// by that day's cards; the unscheduled group comes last (native
+  /// withHeaders).
+  List<Object> _groupedEntries(
+    B14FollowingScreen screen,
+    List<B14FollowingItem> visible,
+    DateTime today,
+  ) {
+    final List<(DateTime?, List<B14FollowingItem>)> groups =
+        <(DateTime?, List<B14FollowingItem>)>[];
+    for (final B14FollowingItem item in visible) {
+      final DateTime? day = _airDay(item);
+      if (groups.isEmpty || groups.last.$1 != day) {
+        groups.add((day, <B14FollowingItem>[item]));
+      } else {
+        groups.last.$2.add(item);
+      }
+    }
+    return [
+      for (final (DateTime? day, List<B14FollowingItem> groupItems)
+          in groups) ...[
+        _AgendaHeader(_headerLabel(screen, day, today), groupItems.length),
+        ...groupItems,
+      ],
+    ];
+  }
+
+  Widget _buildAgendaTabs(B14FollowingScreen screen) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final List<(int, String)> tabs = [
+      (1, screen.agendaTodayLabel),
+      (2, screen.agendaTomorrowLabel),
+      (3, screen.agendaWeekLabel),
+      (0, screen.agendaAllLabel),
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      child: Row(
+        children: [
+          for (final (int tab, String label) in tabs)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: () => setState(() {
+                    _agendaTab = tab;
+                    _agendaDay = null;
+                  }),
+                  child: Container(
+                    height: 36,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: _agendaDay == null && _agendaTab == tab
+                          ? scheme.primaryContainer
+                          : scheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Text(label, style: const TextStyle(fontSize: 13)),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAgendaStrip(B14FollowingScreen screen, DateTime today) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    // Per-day counts from the whole (5-filter) snapshot, unaffected
+    // by the agenda tab / picked day (native buildStripDays).
+    final Map<int, int> counts = <int, int>{};
+    for (final B14FollowingItem item in screen.items) {
+      final DateTime? day = _airDay(item);
+      if (day != null) {
+        final int key = day.millisecondsSinceEpoch;
+        counts[key] = (counts[key] ?? 0) + 1;
+      }
+    }
+    const List<String> weekdayChars = ['一', '二', '三', '四', '五', '六', '日'];
+    return SizedBox(
+      height: 66,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+        itemCount: 14,
+        itemBuilder: (BuildContext context, int index) {
+          final DateTime date =
+              DateTime(today.year, today.month, today.day + index);
+          final int count = counts[date.millisecondsSinceEpoch] ?? 0;
+          final bool selected = _agendaDay != null && _agendaDay == date;
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 3),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => setState(() {
+                if (selected) {
+                  _agendaDay = null;
+                  _agendaTab = 0;
+                } else {
+                  _agendaDay = date;
+                }
+              }),
+              child: Container(
+                width: 50,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: selected
+                      ? scheme.primaryContainer
+                      : scheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      index == 0
+                          ? screen.agendaTodayShortLabel
+                          : '周${weekdayChars[date.weekday - 1]}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '${date.day}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      count > 0
+                          ? screen.agendaCountFormat
+                              .replaceAll(r'%1$d', '$count')
+                          : '',
+                      style: TextStyle(fontSize: 10, color: scheme.primary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildAgendaList(B14FollowingScreen screen) {
+    final DateTime today = _dayStart(DateTime.now());
+    final List<B14FollowingItem> visible = _agendaVisible(screen, today);
+    if (visible.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          const SizedBox(height: 120),
+          Center(
+            child: Text(
+              screen.agendaEmptyLabel,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    final List<Object> entries = _groupedEntries(screen, visible, today);
+    return ListView.builder(
+      controller: _scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(top: 8),
+      itemCount: entries.length,
+      itemBuilder: (BuildContext context, int index) {
+        final Object entry = entries[index];
+        if (entry is _AgendaHeader) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+            child: Row(
+              children: [
+                Text(
+                  entry.label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  screen.agendaCountFormat
+                      .replaceAll(r'%1$d', '${entry.count}'),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        final B14FollowingItem item = entry as B14FollowingItem;
+        return _FollowingCard(
+          key: _rowKeys.putIfAbsent(
+            item.identityKey,
+            () => GlobalKey(),
+          ),
+          item: item,
+          continueLabel: screen.continueLabel,
+          checkLabel: screen.checkLabel,
+          readLabel: screen.readLabel,
+          changeSourceLabel: screen.changeSourceLabel,
+          deleteLabel: screen.deleteLabel,
+          onTap: () => _onRowTap(item),
+          onContinue: () => _onContinue(item),
+          onCheck: () => _onCheck(item),
+          onRead: () => _onRead(item),
+          onToggleNotify: () => _onToggleNotify(item),
+          onNextSeason: () => _onNextSeason(item),
+          onChangeSource: () => _onChangeSource(item),
+          onDelete: () => _onDelete(item),
+          isBusy: (String action) => _isBusy(item, action),
+        );
+      },
+    );
   }
 
   bool _isBusy(B14FollowingItem item, String action) =>
@@ -441,49 +754,19 @@ class _B14FollowingPageState extends State<B14FollowingPage>
                       ],
                     ),
                   ),
+                  if (screen.items.isNotEmpty) ...[
+                    _buildAgendaTabs(screen),
+                    _buildAgendaStrip(
+                      screen,
+                      _dayStart(DateTime.now()),
+                    ),
+                  ],
                   Expanded(
                     child: RefreshIndicator(
                       onRefresh: _load,
                       child: screen.items.isEmpty
                           ? _EmptyList(screen: screen)
-                          : ListView.builder(
-                              controller: _scrollController,
-                              physics:
-                                  const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.only(top: 8),
-                              itemCount: screen.items.length,
-                              itemBuilder:
-                                  (BuildContext context, int index) {
-                                final B14FollowingItem item =
-                                    screen.items[index];
-                                return _FollowingCard(
-                                  key: _rowKeys.putIfAbsent(
-                                    item.identityKey,
-                                    () => GlobalKey(),
-                                  ),
-                                  item: item,
-                                  continueLabel: screen.continueLabel,
-                                  checkLabel: screen.checkLabel,
-                                  readLabel: screen.readLabel,
-                                  changeSourceLabel:
-                                      screen.changeSourceLabel,
-                                  deleteLabel: screen.deleteLabel,
-                                  onTap: () => _onRowTap(item),
-                                  onContinue: () => _onContinue(item),
-                                  onCheck: () => _onCheck(item),
-                                  onRead: () => _onRead(item),
-                                  onToggleNotify: () =>
-                                      _onToggleNotify(item),
-                                  onNextSeason: () =>
-                                      _onNextSeason(item),
-                                  onChangeSource: () =>
-                                      _onChangeSource(item),
-                                  onDelete: () => _onDelete(item),
-                                  isBusy: (String action) =>
-                                      _isBusy(item, action),
-                                );
-                              },
-                            ),
+                          : _buildAgendaList(screen),
                     ),
                   ),
                 ],
@@ -615,6 +898,15 @@ class _EmptyList extends StatelessWidget {
 /// One following card: 86x120 image + text column + one horizontal row
 /// of action buttons. Spacing mirrors item_following.xml: 16dp card
 /// padding, 14dp bottom margin.
+/// One date-group header in the agenda timeline (label + show
+/// count), mirroring the native FollowingAdapter.Header.
+class _AgendaHeader {
+  const _AgendaHeader(this.label, this.count);
+
+  final String label;
+  final int count;
+}
+
 class _FollowingCard extends StatelessWidget {
   const _FollowingCard({
     super.key,
@@ -741,6 +1033,17 @@ class _FollowingCard extends StatelessWidget {
                         Text(item.sourceLine, style: secondary),
                         const SizedBox(height: 2),
                         Text(item.progressLine, style: secondary),
+                        if (item.airLine.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            item.airLine,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ],
                         if (item.errorVisible) ...[
                           const SizedBox(height: 2),
                           Text(

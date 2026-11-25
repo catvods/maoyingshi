@@ -147,6 +147,14 @@ class B14FollowingScreen {
     required this.title,
     required this.retryLabel,
     required this.errorText,
+    required this.agendaTodayLabel,
+    required this.agendaTomorrowLabel,
+    required this.agendaWeekLabel,
+    required this.agendaAllLabel,
+    required this.agendaEmptyLabel,
+    required this.agendaUnscheduledLabel,
+    required this.agendaTodayShortLabel,
+    required this.agendaCountFormat,
   });
 
   /// Filtered rows, LIST_ORDER sorted (hasUpdate first, then
@@ -206,6 +214,24 @@ class B14FollowingScreen {
   /// Empty means no error; Dart shows its error/retry state when
   /// non-empty (B8 errorScreen precedent).
   String errorText;
+
+  /// Agenda （追更日历） labels, mirroring the native
+  /// FollowingActivity calendar: the four tab labels
+  /// (following_agenda_today / _tomorrow / _week / _all), the
+  /// agenda-filtered empty text (following_agenda_empty), the
+  /// unscheduled group header (following_agenda_header_unscheduled),
+  /// the date strip's today glyph (following_agenda_today_short) and
+  /// the per-day count format (following_agenda_day_count, %1$d is
+  /// the count). Dates are formatted in Dart from
+  /// B14FollowingItem.nextAirAtMs, mirroring FollowingAgenda.
+  String agendaTodayLabel;
+  String agendaTomorrowLabel;
+  String agendaWeekLabel;
+  String agendaAllLabel;
+  String agendaEmptyLabel;
+  String agendaUnscheduledLabel;
+  String agendaTodayShortLabel;
+  String agendaCountFormat;
 }
 
 /// One following row. Every line is host-computed with the native
@@ -239,6 +265,8 @@ class B14FollowingItem {
     required this.nextSeasonVisible,
     required this.nextSeasonLabel,
     required this.readVisible,
+    required this.nextAirAtMs,
+    required this.airLine,
   });
 
   String identityKey;
@@ -292,6 +320,18 @@ class B14FollowingItem {
 
   /// Read button, visible only when hasUpdate (native rule).
   bool readVisible;
+
+  /// Next episode's air moment (Following.nextAirAt, ms since the
+  /// epoch; 0 = unscheduled). Dart derives the agenda bucket, the
+  /// date-strip counts and the timeline grouping from it, mirroring
+  /// FollowingAgenda — only the local date part matters (the moment
+  /// is the TMDB air date at 20:00 local).
+  int nextAirAtMs;
+
+  /// Air timeline line (FollowingAgenda.airLineText), e.g.
+  /// "今天 20:00 · 第 2 季第 5 集"; empty hides the line (ended and
+  /// unscheduled shows have none).
+  String airLine;
 }
 
 /// Result of a following action. message is host text for a Dart

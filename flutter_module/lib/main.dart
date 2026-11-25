@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'shell_glass_bar.dart';
 import 'ui_glass.dart';
 
 import 'b10_collect_page.dart';
@@ -42,6 +44,12 @@ final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 /// Navigator depth.
 String? _currentTopRoute;
 
+/// The same route as a listenable, for shell-level overlays that
+/// must react to top-level page switches (the resident glass bottom
+/// bar in shell_glass_bar.dart). Updated wherever [_currentTopRoute]
+/// is assigned.
+final ValueNotifier<String> shellRoute = ValueNotifier<String>('/');
+
 /// Switches the root navigator to [route], dropping the whole stack. A
 /// no-op when Dart is already showing [route], or when the navigator is
 /// not built yet (unreachable in practice: the host only sends on engine
@@ -82,6 +90,7 @@ void _showRoute(String route) {
     return;
   }
   _currentTopRoute = route;
+  shellRoute.value = route;
 }
 
 /// Resolves [settings] through [_c0GenerateRoute] and returns the
@@ -122,6 +131,7 @@ void main() async {
     // Keep '/' as the safe default.
   }
   _currentTopRoute = initialRoute;
+  shellRoute.value = initialRoute;
   runApp(C0ShellApp(initialRoute: initialRoute));
 }
 
@@ -320,6 +330,15 @@ class C0ShellApp extends StatelessWidget {
       builder: (BuildContext context, UiConfig cfg, Widget? _) {
         return MaterialApp(
           title: '陌奥影视',
+          // The glass bottom bar lives at the shell, above the root
+          // Navigator, so it stays resident across top-level page
+          // switches instead of being rebuilt (and flashing away)
+          // with the home page.
+          builder: (BuildContext context, Widget? child) =>
+              ShellGlassBarHost(
+            routeListenable: shellRoute,
+            child: child ?? const SizedBox.shrink(),
+          ),
           // B8 relaunch: the root navigator key lets the host-driven
           // showRoute handler reset the route stack on engine reuse.
           navigatorKey: _rootNavigatorKey,

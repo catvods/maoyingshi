@@ -375,6 +375,9 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
 ];
 
 HomeThemeEntry homeThemeEntry(String id) {
+  for (final HomeThemeEntry entry in userThemes.value) {
+    if (entry.id == id) return entry;
+  }
   for (final HomeThemeEntry entry in homeThemeCatalog) {
     if (entry.id == id) return entry;
   }
@@ -407,4 +410,141 @@ Future<void> setHomeThemeId(String id) async {
   } catch (_) {
     // The notifier already applied the change for this session.
   }
+}
+
+// ---------------------------------------------------------------------------
+// Imported user themes
+//
+// Theme files the user picks (.lzt / .rfwtxt — the same RFW text the
+// built-ins use) are stored by the host under its files dir and
+// listed here. Ids start with 'user-'; the bridge loads their source
+// through the channel instead of rootBundle.
+// ---------------------------------------------------------------------------
+
+final ValueNotifier<List<HomeThemeEntry>> userThemes =
+    ValueNotifier<List<HomeThemeEntry>>(<HomeThemeEntry>[]);
+
+bool isUserThemeId(String id) => id.startsWith('user-');
+
+Color? _metaHex(String hex) {
+  String h = hex.replaceAll('#', '');
+  if (h.length == 6) h = 'FF$h';
+  if (h.length != 8) return null;
+  final int? v = int.tryParse(h, radix: 16);
+  return v == null ? null : Color(v);
+}
+
+String? _metaString(String meta, String key) {
+  final RegExpMatch? m =
+      RegExp('"$key"\\s*:\\s*"(#[0-9a-fA-F]{6,8})"').firstMatch(meta);
+  return m?.group(1);
+}
+
+HomeThemeEntry _userEntryFromHost(Map<dynamic, dynamic> map) {
+  final String id = '${map['id'] ?? ''}';
+  final String name = '${map['name'] ?? ''}';
+  final String meta = '${map['meta'] ?? ''}';
+  // The leecat meta header (when present) carries the palette and
+  // the navigation styling, same as the built-in Lee themes.
+  List<Color> colors = const <Color>[Color(0xFF455A64), Color(0xFF90A4AE)];
+  bool dark = true;
+  final RegExpMatch? bg = RegExp(
+          r'"backgroundColors"\s*:\s*\[\s*"(#[0-9a-fA-F]{6,8})"\s*,\s*"(#[0-9a-fA-F]{6,8})"')
+      .firstMatch(meta);
+  if (bg != null) {
+    final Color? a = _metaHex(bg.group(1)!);
+    final Color? b = _metaHex(bg.group(2)!);
+    if (a != null && b != null) {
+      colors = <Color>[a, b];
+      dark = a.computeLuminance() < 0.35;
+    }
+  }
+  final Color? accent = _metaHex(_metaString(meta, 'accent') ?? '');
+  final RegExpMatch? nav = RegExp(r'"navigationOpacity"\s*:\s*([0-9.]+)')
+      .firstMatch(meta);
+  return HomeThemeEntry(
+    id: id,
+    name: name.isEmpty ? '未命名主题' : name,
+    tag: '我的主题',
+    description: '从主题文件导入，点选即应用。',
+    colors: colors,
+    dark: dark,
+    barTint: colors.first,
+    barAccent: accent,
+    barOpacity: nav == null ? null : double.tryParse(nav.group(1)!),
+    barFloating: meta.contains('"floatingNavigation": false') ||
+            meta.contains('"floatingNavigation":false')
+        ? false
+        : null,
+  );
+}
+
+/// (Re)loads the imported-theme list from the host. Never throws.
+Future<void> loadUserThemes() async {
+  try {
+    final List<dynamic>? raw =
+        await _homeThemeChannel.invokeMethod<List<dynamic>>('listUserThemes');
+    final List<HomeThemeEntry> entries = <HomeThemeEntry>[];
+    for (final dynamic item in raw ?? const <dynamic>[]) {
+      if (item is Map<dynamic, dynamic>) entries.add(_userEntryFromHost(item));
+    }
+    userThemes.value = entries;
+  } catch (_) {
+    // Keep the current list when the host cannot answer.
+  }
+}
+
+Future<HomeThemeEntry?> _afterImport(Map<dynamic, dynamic>? map) async {
+  if (map == null) return null;
+  await loadUserThemes();
+  final String id = '${map['id'] ?? ''}';
+  for (final HomeThemeEntry entry in userThemes.value) {
+    if (entry.id == id) return entry;
+  }
+  return _userEntryFromHost(map);
+}
+
+/// Opens the host file picker and imports the chosen theme file.
+/// Returns the imported entry, or null when the user cancelled.
+/// A [PlatformException] with a readable message signals a bad file.
+Future<HomeThemeEntry?> importUserTheme() async {
+  return _afterImport(await _homeThemeChannel
+      .invokeMethod<Map<dynamic, dynamic>>('importUserTheme'));
+}
+
+/// Imports theme source pasted by the user (the Lee library's
+/// second import route). Same validation as the file route.
+Future<HomeThemeEntry?> importUserThemeText(String text) async {
+  return _afterImport(await _homeThemeChannel
+      .invokeMethod<Map<dynamic, dynamic>>('importUserThemeText', text));
+}
+
+/// Deletes an imported theme; a deleted active theme falls back
+/// to the built-in default.
+Future<void> deleteUserTheme(String id) async {
+  await _homeThemeChannel.invokeMethod<void>('deleteUserTheme', id);
+  if (homeThemeId.value == id) await setHomeThemeId('');
+  await loadUserThemes();
+}
+
+/// The theme's RFW source: the bundled asset for built-ins, the
+/// host-stored file for imported themes.
+Future<String> loadThemeText(String id) async {
+  if (isUserThemeId(id)) {
+    final String? text =
+        await _homeThemeChannel.invokeMethod<String>('getUserThemeText', id);
+    if (text == null || text.isEmpty) {
+      throw StateError('user theme file missing: $id');
+    }
+    return text;
+  }
+  return rootBundle.loadString('assets/peek_home/theme_$id.rfwtxt');
+}
+
+/// Saves theme source to a user-chosen document through the host.
+/// Returns false when the user cancelled the save dialog.
+Future<bool> exportThemeText(String fileName, String text) async {
+  final bool? ok = await _homeThemeChannel.invokeMethod<bool>(
+      'exportThemeText', <String, String>{'name': fileName, 'text': text});
+  return ok ?? false;
 }

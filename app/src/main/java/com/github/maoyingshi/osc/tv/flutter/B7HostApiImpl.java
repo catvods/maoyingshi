@@ -669,6 +669,8 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
     private String homeThemeName() {
         String id = activity.getPreferences(android.content.Context.MODE_PRIVATE)
                 .getString("home_theme_id", "");
+        String userName = C1ScreenActivity.userThemeDisplayName(activity, id);
+        if (userName != null) return userName;
         switch (id == null ? "" : id) {
             case "aurora_prism": return "极光棱镜";
             case "bubble": return "柔彩气泡";

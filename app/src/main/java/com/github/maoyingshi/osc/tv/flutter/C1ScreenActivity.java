@@ -2,7 +2,9 @@ package com.github.maoyingshi.osc.tv.flutter;
 
 import android.app.Activity;
 import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -42,6 +44,7 @@ import com.github.maoyingshi.osc.tv.utils.UrlUtil;
 import com.github.maoyingshi.osc.tv.utils.Util;
 
 import org.greenrobot.eventbus.EventBus;
+import org.json.JSONObject;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
@@ -53,6 +56,14 @@ import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.StandardMethodCodec;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -706,6 +717,146 @@ public class C1ScreenActivity extends AppCompatActivity {
         if (event.type() == ServerEvent.Type.SEARCH) FlutterNav.openSearch(this, event.text());
     }
 
+    // ------------------------------------------------------------------
+    // User home themes (import / export)
+    //
+    // Imported theme files (.lzt / .rfwtxt RFW text) live in
+    // files/home_themes/<id>.rfwtxt with ids "user-<md5-10>". Dart
+    // lists, reads and deletes them through the ui_config channel;
+    // export writes the source to a user-picked document.
+    // ------------------------------------------------------------------
+
+    private static final int REQUEST_EXPORT_THEME = 26026;
+    private static final int MAX_THEME_BYTES = 512 * 1024;
+    private MethodChannel.Result pendingThemeExport;
+    private String pendingThemeExportText;
+
+    private File userThemeDir() {
+        File dir = new File(getFilesDir(), "home_themes");
+        if (!dir.exists()) dir.mkdirs();
+        return dir;
+    }
+
+    private static String readThemeFile(File file) {
+        try (InputStream in = new FileInputStream(file)) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int len;
+            while ((len = in.read(buf)) != -1) {
+                out.write(buf, 0, len);
+                if (out.size() > MAX_THEME_BYTES + 65536) break;
+            }
+            return out.toString("UTF-8");
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /// Display name of a theme source: the leecat meta name when
+    /// present, else the leading comment line, else [fallback].
+    private static String themeDisplayName(String text, String fallback) {
+        if (text != null) {
+            try {
+                int nl = text.indexOf('\n');
+                String first = (nl >= 0 ? text.substring(0, nl) : text).trim();
+                if (first.contains("leecat-theme:") && first.contains("{")) {
+                    String name = new JSONObject(first.substring(first.indexOf('{'))).optString("name", "");
+                    if (!name.isEmpty()) return name;
+                }
+                if (first.startsWith("//")) {
+                    String name = first.substring(2).trim();
+                    if (name.length() > 40) name = name.substring(0, 40);
+                    if (!name.isEmpty()) return name;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return fallback;
+    }
+
+    /// The leecat meta JSON object text ("" when the theme has none).
+    private static String themeMetaJson(String text) {
+        if (text != null) {
+            try {
+                int nl = text.indexOf('\n');
+                String first = (nl >= 0 ? text.substring(0, nl) : text).trim();
+                if (first.contains("leecat-theme:") && first.contains("{")) {
+                    return first.substring(first.indexOf('{'));
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return "";
+    }
+
+    /// Name for the settings rows (B7) when the selection is an
+    /// imported theme; null when the file is gone.
+    public static String userThemeDisplayName(Context context, String id) {
+        if (id == null || !id.startsWith("user-")) return null;
+        File file = new File(new File(context.getFilesDir(), "home_themes"), id + ".rfwtxt");
+        if (!file.exists()) return null;
+        return themeDisplayName(readThemeFile(file), "我的主题");
+    }
+
+    private Map<String, Object> storeUserTheme(String text) throws Exception {
+        if (text == null || text.length() > MAX_THEME_BYTES || !text.contains("widget root")) {
+            throw new IllegalArgumentException("所选内容不是有效的首页主题（需为 .lzt / .rfwtxt 主题源码）");
+        }
+        byte[] digest = MessageDigest.getInstance("MD5").digest(text.getBytes(StandardCharsets.UTF_8));
+        StringBuilder sb = new StringBuilder();
+        for (byte b : digest) sb.append(String.format("%02x", b));
+        String id = "user-" + sb.substring(0, 10);
+        File target = new File(userThemeDir(), id + ".rfwtxt");
+        if (!target.exists()) {
+            try (OutputStream out = new FileOutputStream(target)) {
+                out.write(text.getBytes(StandardCharsets.UTF_8));
+            }
+        }
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", id);
+        map.put("name", themeDisplayName(text, "我的主题"));
+        map.put("meta", themeMetaJson(text));
+        return map;
+    }
+
+    private List<Map<String, Object>> listUserThemeMaps() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        File[] files = userThemeDir().listFiles((d, n) -> n.endsWith(".rfwtxt"));
+        if (files == null) return out;
+        java.util.Arrays.sort(files, (a, b) -> a.getName().compareTo(b.getName()));
+        for (File file : files) {
+            String text = readThemeFile(file);
+            if (text == null) continue;
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", file.getName().substring(0, file.getName().length() - ".rfwtxt".length()));
+            map.put("name", themeDisplayName(text, "我的主题"));
+            map.put("meta", themeMetaJson(text));
+            out.add(map);
+        }
+        return out;
+    }
+
+    private String readPickedThemeText(String path) {
+        try {
+            InputStream in = path.startsWith("content://")
+                    ? getContentResolver().openInputStream(Uri.parse(path))
+                    : new FileInputStream(new File(path));
+            if (in == null) return null;
+            try (InputStream input = in) {
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                byte[] buf = new byte[8192];
+                int len;
+                while ((len = input.read(buf)) != -1) {
+                    out.write(buf, 0, len);
+                    if (out.size() > MAX_THEME_BYTES + 65536) break;
+                }
+                return out.toString("UTF-8");
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     /**
      * B8 host rebind (see docs/b8-host-rebind-fix.md): registers every
      * Pigeon HostApi impl on the given messenger, bound to this Activity
@@ -741,6 +892,59 @@ public class C1ScreenActivity extends AppCompatActivity {
             else if ("setHomeThemeId".equals(call.method)) {
                 getPreferences(MODE_PRIVATE).edit().putString("home_theme_id", call.arguments == null ? "" : String.valueOf(call.arguments)).apply();
                 result.success(null);
+            }
+            else if ("listUserThemes".equals(call.method)) result.success(listUserThemeMaps());
+            else if ("getUserThemeText".equals(call.method)) {
+                String id = (call.arguments == null ? "" : String.valueOf(call.arguments)).replaceAll("[^a-zA-Z0-9-]", "");
+                File file = new File(userThemeDir(), id + ".rfwtxt");
+                result.success(file.exists() ? readThemeFile(file) : null);
+            }
+            else if ("importUserTheme".equals(call.method)) {
+                LabFilePicker.pick(this, false, "*/*", path -> {
+                    if (path == null || path.isEmpty()) {
+                        result.success(null);
+                        return;
+                    }
+                    try {
+                        result.success(storeUserTheme(readPickedThemeText(path)));
+                    } catch (Exception e) {
+                        result.error("invalid_theme", e.getMessage(), null);
+                    }
+                });
+            }
+            else if ("importUserThemeText".equals(call.method)) {
+                try {
+                    result.success(storeUserTheme(call.arguments == null ? "" : String.valueOf(call.arguments)));
+                } catch (Exception e) {
+                    result.error("invalid_theme", e.getMessage(), null);
+                }
+            }
+            else if ("deleteUserTheme".equals(call.method)) {
+                String id = (call.arguments == null ? "" : String.valueOf(call.arguments)).replaceAll("[^a-zA-Z0-9-]", "");
+                new File(userThemeDir(), id + ".rfwtxt").delete();
+                result.success(null);
+            }
+            else if ("exportThemeText".equals(call.method)) {
+                if (pendingThemeExport != null) {
+                    result.error("busy", "另一个导出正在进行", null);
+                } else if (call.arguments instanceof Map) {
+                    Map<?, ?> args = (Map<?, ?>) call.arguments;
+                    pendingThemeExport = result;
+                    pendingThemeExportText = String.valueOf(args.get("text"));
+                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("text/plain");
+                    intent.putExtra(Intent.EXTRA_TITLE, String.valueOf(args.get("name")));
+                    try {
+                        startActivityForResult(intent, REQUEST_EXPORT_THEME);
+                    } catch (Exception e) {
+                        pendingThemeExport = null;
+                        pendingThemeExportText = null;
+                        result.error("export_failed", "无法打开保存对话框", null);
+                    }
+                } else {
+                    result.error("bad_args", "导出参数不正确", null);
+                }
             }
             else result.notImplemented();
         });
@@ -1167,6 +1371,24 @@ public class C1ScreenActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (flutterFragment != null) {
             flutterFragment.onActivityResult(requestCode, resultCode, data);
+        }
+        // Home-theme export: write the pending theme source to the
+        // document the user picked in the CREATE_DOCUMENT dialog.
+        if (requestCode == REQUEST_EXPORT_THEME && pendingThemeExport != null) {
+            MethodChannel.Result exportResult = pendingThemeExport;
+            String exportText = pendingThemeExportText;
+            pendingThemeExport = null;
+            pendingThemeExportText = null;
+            if (resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
+                try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
+                    out.write(exportText.getBytes(StandardCharsets.UTF_8));
+                    exportResult.success(true);
+                } catch (Exception e) {
+                    exportResult.error("export_failed", "写入文件失败", null);
+                }
+            } else {
+                exportResult.success(false);
+            }
         }
         // B8 B21: the lab file picker (LabFilePicker SAF codes from
         // 3000) and the lab import / local-config picks (B21

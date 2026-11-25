@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:material_ui/material_ui.dart';
 import 'package:rfw/formats.dart';
 import 'package:rfw/rfw.dart';
@@ -127,8 +126,7 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
 
   Future<void> _loadThemeLibrary() async {
     try {
-      final String text = await rootBundle
-          .loadString('assets/peek_home/theme_${homeThemeId.value}.rfwtxt');
+      final String text = await loadThemeText(homeThemeId.value);
       _runtime.update(_themeName, parseLibraryFile(text));
       if (mounted) setState(() => _themeReady = true);
     } catch (_) {

@@ -128,6 +128,9 @@ void main() async {
   // The persisted home theme selection, so the home opens themed
   // on the first frame when one is picked.
   await loadHomeThemeId();
+  // The imported user themes, so a persisted user selection
+  // resolves in the catalog from the first frame.
+  await loadUserThemes();
   String initialRoute = '/';
   try {
     initialRoute = await C1HostApi().getInitialRoute();

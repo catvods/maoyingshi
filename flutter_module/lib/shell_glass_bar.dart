@@ -339,8 +339,15 @@ class GlassBottomBarState extends State<GlassBottomBar> {
     // docs/b8-home-glass-v2.md). At the defaults (t = 0.5) the
     // brightness/contrast terms are neutral and saturation is 1.5.
     final double t = screen.glassTranslucency / 100;
+    // Clearer glass (user: the bar read milky/hazy): the tint layer
+    // is thinner than the native formula's, so more of the backdrop
+    // shows through and the bar reads bright and transparent rather
+    // than chalky.
     final double tintAlpha =
-        (widget.opacityOverride ?? (0.4 * (2 - 2 * t))).clamp(0.05, 0.9);
+        (widget.opacityOverride ?? (0.27 * (2 - 2 * t))).clamp(0.05, 0.9);
+    // The backdrop blur is trimmed for the same reason: full-strength
+    // blur over bright posters washes the bar into a fog.
+    final double effBlur = blur * 0.72;
     final double brightness = (0.5 - t).clamp(0.0, 0.5) * 0.12;
     final double contrast = 1 - (0.5 - t).clamp(0.0, 0.5) * 0.25;
     final double saturation = 1.5 - (t - 0.5).clamp(0.0, 0.5);
@@ -350,7 +357,7 @@ class GlassBottomBarState extends State<GlassBottomBar> {
     // The lift is kept very low: at higher strengths the soft-light
     // copy smears the backdrop's colors into a muddy haze and the
     // glass reads dirty instead of clear.
-    final double liftAlpha = ((saturation - 1) * 0.3).clamp(0.0, 0.10);
+    final double liftAlpha = ((saturation - 1) * 0.3).clamp(0.0, 0.06);
     // Lens approximation: a uniform magnification about the bar
     // center. Native refracts up to distortionDp at the rim; the
     // uniform scale keeps the sliding misalignment cue — content
@@ -384,7 +391,7 @@ class GlassBottomBarState extends State<GlassBottomBar> {
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             ImageFilter filter =
-                ImageFilter.blur(sigmaX: blur, sigmaY: blur);
+                ImageFilter.blur(sigmaX: effBlur, sigmaY: effBlur);
             if (useLens && constraints.maxWidth.isFinite) {
               final double cx = constraints.maxWidth / 2;
               const double cy = glassBarHeight / 2;
@@ -414,7 +421,7 @@ class GlassBottomBarState extends State<GlassBottomBar> {
                         // than tinted plastic over the backdrop.
                         color: (dark
                                 ? surface
-                                : Color.lerp(surface, Colors.white, 0.45)!)
+                                : Color.lerp(surface, Colors.white, 0.60)!)
                             .withAlpha((tintAlpha * 255).round()),
                       ),
                     ),
@@ -424,8 +431,8 @@ class GlassBottomBarState extends State<GlassBottomBar> {
                           opacity: liftAlpha,
                           child: BackdropFilter(
                             filter: ImageFilter.blur(
-                              sigmaX: blur,
-                              sigmaY: blur,
+                              sigmaX: effBlur,
+                              sigmaY: effBlur,
                             ),
                             blendMode: BlendMode.softLight,
                             child: Container(color: Colors.transparent),

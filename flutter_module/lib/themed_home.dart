@@ -198,12 +198,10 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     unawaited(_loadPage(_nextPage));
   }
 
-  Map<String, Object?> _iconData(IconData icon) {
-    return <String, Object?>{
-      'icon': icon.codePoint,
-      'fontFamily': 'MaterialIcons',
-    };
-  }
+  /// The themes pass the icon value straight into Icon(icon: ...)
+  /// with fontFamily: "MaterialIcons" as a sibling argument, so the
+  /// data value must be the bare code point, not an IconData map.
+  int _iconData(IconData icon) => icon.codePoint;
 
   void _pushData() {
     if (!mounted) return;

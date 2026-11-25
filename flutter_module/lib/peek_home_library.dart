@@ -223,6 +223,85 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
           },
         );
       },
+      'PosterCaption': (BuildContext context, DataSource source) {
+        final String name = source.v<String>(<Object>['name']) ?? '';
+        final String remarks = source.v<String>(<Object>['remarks']) ?? '';
+        return Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: <Color>[Color(0x00000000), Color(0xB3000000)],
+            ),
+          ),
+          padding: const EdgeInsets.fromLTRB(8, 18, 8, 7),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFFFFFFFF),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              if (remarks.isNotEmpty)
+                Text(
+                  remarks,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xB3FFFFFF),
+                    fontSize: 10.5,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+      'HomeCaption': (BuildContext context, DataSource source) {
+        final String name = source.v<String>(<Object>['name']) ?? '';
+        final String remarks = source.v<String>(<Object>['remarks']) ?? '';
+        final Color color =
+            ArgumentDecoders.color(source, <Object>['color']) ??
+                const Color(0xFFFFFFFF);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                decoration: TextDecoration.none,
+              ),
+            ),
+            if (remarks.isNotEmpty)
+              Text(
+                remarks,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: color.withValues(alpha: 0.7),
+                  fontSize: 10.5,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+          ],
+        );
+      },
       'PeekStickyGrid': (BuildContext context, DataSource source) {
         return _PeekStickyGrid(
           heroHeight: source.v<double>(<Object>['heroHeight']) ?? 0,

@@ -48,6 +48,13 @@ abstract class B5HostApi {
   void cycleSiteColumn();
   void cycleSearchResultSort();
 
+  /// Following reminder lead: cycles 关闭 → 15 → 30 → 60 分钟
+  /// (FollowingSettings.reminderLeadMinutes) and re-plans every
+  /// tracked show's reminder. The upstream row lives in the native
+  /// SettingFragment, which the fork does not have; the personal
+  /// page is its Flutter home.
+  void cycleFollowingReminder();
+
   /// Resets the four glass values to their defaults. Dart re-fetches
   /// afterwards.
   void resetGlass();

@@ -83,6 +83,8 @@ class _PersonalSettingsViewState extends State<PersonalSettingsView>
         afterDialog(api.openSearchThread());
       case 'following':
         act(() => api.toggleFollowing());
+      case 'followingReminder':
+        act(() => api.cycleFollowingReminder());
       case 'autoBackup':
         afterDialog(api.openAutoBackup());
       case 'playbackOverlay':
@@ -169,6 +171,8 @@ IconData _iconFor(String key) {
     case 'glassDistortion':
     case 'glassTranslucency':
       return Icons.format_list_numbered;
+    case 'followingReminder':
+      return Icons.notifications_outlined;
     case 'following':
     case 'episodeHistory':
     case 'globalHistory':
@@ -209,6 +213,7 @@ Color _colorFor(String key) {
   switch (key) {
     case 'searchThread':
     case 'following':
+    case 'followingReminder':
     case 'episodeHistory':
     case 'globalHistory':
     case 'playSpeed':

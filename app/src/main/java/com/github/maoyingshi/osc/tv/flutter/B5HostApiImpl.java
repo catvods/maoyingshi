@@ -8,6 +8,7 @@ import com.github.maoyingshi.osc.tv.event.ConfigEvent;
 import com.github.maoyingshi.osc.tv.event.RefreshEvent;
 import com.github.maoyingshi.osc.tv.setting.AppBranding;
 import com.github.maoyingshi.osc.tv.setting.AutoBackupPolicy;
+import com.github.maoyingshi.osc.tv.following.FollowingReminderScheduler;
 import com.github.maoyingshi.osc.tv.following.FollowingScheduler;
 import com.github.maoyingshi.osc.tv.following.FollowingSettings;
 import com.github.maoyingshi.osc.tv.setting.GroupRuleConfig;
@@ -69,6 +70,12 @@ public class B5HostApiImpl implements B5Messages.B5HostApi {
             return value > 0 ? String.valueOf(value) : activity.getString(R.string.setting_off);
         }));
         rows.add(row("following", R.string.setting_following, () -> getSwitch(FollowingSettings.isEnabled())));
+        rows.add(row("followingReminder", R.string.setting_following_reminder, () -> {
+            int lead = FollowingSettings.getReminderLeadMinutes();
+            return lead == FollowingSettings.REMINDER_OFF
+                    ? activity.getString(R.string.setting_following_reminder_off)
+                    : activity.getString(R.string.setting_following_reminder_value, lead);
+        }));
         rows.add(row("autoBackup", R.string.setting_auto_backup, () ->
                 getSwitch(AutoBackupPolicy.isEffective(Setting.isAutoBackup(), Setting.hasFileAccess()))));
         rows.add(row("playbackOverlay", R.string.setting_playback_overlay, () ->
@@ -222,6 +229,20 @@ public class B5HostApiImpl implements B5Messages.B5HostApi {
     // ------------------------------------------------------------------
     // Cycles
     // ------------------------------------------------------------------
+
+    @Override
+    public void cycleFollowingReminder() {
+        int lead = FollowingSettings.getReminderLeadMinutes();
+        int next = lead == FollowingSettings.REMINDER_OFF ? 15
+                : lead == 15 ? 30
+                : lead == 30 ? 60
+                : FollowingSettings.REMINDER_OFF;
+        FollowingSettings.setReminderLeadMinutes(next);
+        // Re-plan every tracked show at the new lead (schedule()
+        // cancels a show's work when the reminder is off).
+        FollowingReminderScheduler.scheduleAll();
+        ConfigEvent.common();
+    }
 
     @Override
     public void cycleGlobalHistory() {

@@ -3021,8 +3021,15 @@
     <string name="following_added">已追更</string>
     <string name="following_channel_name">追更更新</string>
     <string name="following_channel_description">已追剧集的新集更新提醒</string>
+    <string name="following_reminder_channel_name">追更播出提醒</string>
+    <string name="following_reminder_channel_description">追更剧集播出前的提醒</string>
     <string name="following_notification_title">《%1$s》有新集</string>
     <string name="following_notification_text">官方已更新至第 %1$d 集，当前源可播至第 %2$d 集</string>
+    <string name="following_reminder_title">《%1$s》即将播出</string>
+    <string name="setting_following_reminder">播出提醒</string>
+    <string name="setting_following_reminder_sub">播出前提醒，提前 15/30/60 分钟</string>
+    <string name="setting_following_reminder_off">关闭</string>
+    <string name="setting_following_reminder_value">提前 %1$d 分钟</string>
     <string name="following_check_all">检查更新</string>
     <string name="following_check">检查</string>
     <string name="following_checking">正在检查…</string>
@@ -3072,6 +3079,24 @@
     <string name="following_filter_failed">检查失败</string>
     <string name="setting_following">追更更新</string>
     <string name="following_next_season">追新季 S%1$d</string>
+    <string name="following_agenda_today">今天</string>
+    <string name="following_agenda_tomorrow">明天</string>
+    <string name="following_agenda_week">本周</string>
+    <string name="following_agenda_all">全部</string>
+    <string name="following_agenda_today_short">今</string>
+    <string name="following_agenda_weekday">周%1$s</string>
+    <string name="following_agenda_day_count">%1$d 部</string>
+    <string name="following_agenda_air_today">今天 %1$s · 第 %2$d 季第 %3$d 集</string>
+    <string name="following_agenda_air_tomorrow">明天 %1$s · 第 %2$d 季第 %3$d 集</string>
+    <string name="following_agenda_air_date">%1$s %2$s · 第 %3$d 季第 %4$d 集</string>
+    <string name="following_agenda_air_unknown">播出时间待定</string>
+    <string name="following_agenda_ended">已完结</string>
+    <string name="following_agenda_header_today">今天 · %1$s</string>
+    <string name="following_agenda_header_tomorrow">明天 · %1$s</string>
+    <string name="following_agenda_header_date">%1$s 星期%2$s</string>
+    <string name="following_agenda_header_unscheduled">待定</string>
+    <string name="following_agenda_header_count">%1$d 部</string>
+    <string name="following_agenda_empty">这天没有播出的剧。</string>
     <string-array name="following_weekdays">
         <item>日</item>
         <item>一</item>

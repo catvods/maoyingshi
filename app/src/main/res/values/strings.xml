@@ -3030,8 +3030,15 @@
     <string name="following_added">Following</string>
     <string name="following_channel_name">Following updates</string>
     <string name="following_channel_description">New episode updates for followed shows</string>
+    <string name="following_reminder_channel_name">Following airing reminders</string>
+    <string name="following_reminder_channel_description">Reminders before a followed show airs</string>
     <string name="following_notification_title">%1$s has a new episode</string>
     <string name="following_notification_text">Official release: episode %1$d; current source: episode %2$d</string>
+    <string name="following_reminder_title">%1$s is about to air</string>
+    <string name="setting_following_reminder">Airing reminder</string>
+    <string name="setting_following_reminder_sub">Remind before airing, 15/30/60 min early</string>
+    <string name="setting_following_reminder_off">Off</string>
+    <string name="setting_following_reminder_value">%1$d min early</string>
     <string name="following_check_all">Check updates</string>
     <string name="following_check">Check</string>
     <string name="following_checking">Checking…</string>
@@ -3081,6 +3088,24 @@
     <string name="following_filter_failed">Check failed</string>
     <string name="setting_following">Following updates</string>
     <string name="following_next_season">Follow new season S%1$d</string>
+    <string name="following_agenda_today">Today</string>
+    <string name="following_agenda_tomorrow">Tomorrow</string>
+    <string name="following_agenda_week">This week</string>
+    <string name="following_agenda_all">All</string>
+    <string name="following_agenda_today_short">Today</string>
+    <string name="following_agenda_weekday">%1$s</string>
+    <string name="following_agenda_day_count">%1$d shows</string>
+    <string name="following_agenda_air_today">Today %1$s · S%2$d E%3$d</string>
+    <string name="following_agenda_air_tomorrow">Tomorrow %1$s · S%2$d E%3$d</string>
+    <string name="following_agenda_air_date">%1$s %2$s · S%3$d E%4$d</string>
+    <string name="following_agenda_air_unknown">Air date unknown</string>
+    <string name="following_agenda_ended">Ended</string>
+    <string name="following_agenda_header_today">Today · %1$s</string>
+    <string name="following_agenda_header_tomorrow">Tomorrow · %1$s</string>
+    <string name="following_agenda_header_date">%1$s · %2$s</string>
+    <string name="following_agenda_header_unscheduled">Unscheduled</string>
+    <string name="following_agenda_header_count">%1$d shows</string>
+    <string name="following_agenda_empty">Nothing airs on this day.</string>
     <string-array name="following_weekdays">
         <item>Sunday</item>
         <item>Monday</item>

@@ -39,6 +39,7 @@ import com.github.maoyingshi.osc.tv.bean.Filter;
 import com.github.maoyingshi.osc.tv.bean.Result;
 import com.github.maoyingshi.osc.tv.bean.Site;
 import com.github.maoyingshi.osc.tv.bean.Style;
+import com.github.maoyingshi.osc.tv.bean.Value;
 import com.github.maoyingshi.osc.tv.bean.Vod;
 import com.github.maoyingshi.osc.tv.following.FollowingPlaybackBridge;
 import com.github.maoyingshi.osc.tv.following.FollowingSettings;
@@ -594,6 +595,55 @@ public class B11HostApiImpl implements B11Messages.B11HostApi {
         observerRef.set(observer);
         viewModel.getResult().observeForever(observer);
         viewModel.categoryContent(key, typeId, String.valueOf(pageInt), true, extend);
+    }
+
+    // ------------------------------------------------------------------
+    // Inline filters (themed-home filter panel): the same Class
+    // filters + per-tab override map the TypeFilterDialog uses.
+    // ------------------------------------------------------------------
+
+    @Override
+    public B11Messages.B11TabFilters getTabFilters(String typeId, String typeJson) {
+        List<B11Messages.B11FilterGroup> groups = new ArrayList<>();
+        Class clazz = null;
+        try {
+            clazz = Class.objectFrom(typeJson);
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        if (clazz != null) {
+            Map<String, String> overrides = filterOverrides.get(typeId);
+            for (Filter filter : clazz.getFilters()) {
+                String selected = overrides != null && overrides.containsKey(filter.getKey())
+                        ? overrides.get(filter.getKey()) : filter.getInit();
+                List<B11Messages.B11FilterOption> options = new ArrayList<>();
+                for (Value value : filter.getValue()) {
+                    String v = value.getV() == null ? "" : value.getV();
+                    options.add(new B11Messages.B11FilterOption.Builder()
+                            .setName(value.getN() == null ? "" : value.getN())
+                            .setValue(v)
+                            .setSelected(v.equals(selected))
+                            .build());
+                }
+                groups.add(new B11Messages.B11FilterGroup.Builder()
+                        .setKey(filter.getKey() == null ? "" : filter.getKey())
+                        .setName(filter.getName())
+                        .setOptions(options)
+                        .build());
+            }
+        }
+        return new B11Messages.B11TabFilters.Builder().setGroups(groups).build();
+    }
+
+    @Override
+    public void setTabFilter(String typeId, String key, String value) {
+        if (typeId == null || key == null || value == null) return;
+        Map<String, String> overrides = filterOverrides.get(typeId);
+        if (overrides == null) {
+            overrides = new HashMap<>();
+            filterOverrides.put(typeId, overrides);
+        }
+        overrides.put(key, value);
     }
 
     /** Home site key ("" when no home site is configured). */

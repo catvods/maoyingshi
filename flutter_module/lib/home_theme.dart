@@ -20,6 +20,8 @@ class HomeThemeEntry {
     required this.dark,
     this.barTint,
     this.barAccent,
+    this.barOpacity,
+    this.barFloating,
   });
 
   /// '' for the built-in home; otherwise the theme file stem.
@@ -41,6 +43,13 @@ class HomeThemeEntry {
   /// default entry: the bar keeps the snapshot's own look.
   final Color? barTint;
   final Color? barAccent;
+
+  /// Lee themes carry navigation styling in their metadata: the
+  /// bar surface opacity (navigationOpacity) and whether the bar
+  /// floats as a capsule or runs edge-to-edge (floatingNavigation).
+  /// Null = keep the bar's own geometry/opacity.
+  final double? barOpacity;
+  final bool? barFloating;
 }
 
 const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
@@ -204,6 +213,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: true,
     barTint: Color(0xFF141917),
     barAccent: Color(0xFFC3D7B5),
+    barOpacity: 0.28,
+    barFloating: true,
   ),
   HomeThemeEntry(
     id: 'design-ticket',
@@ -214,6 +225,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: true,
     barTint: Color(0xFF281B25),
     barAccent: Color(0xFFFFB78D),
+    barOpacity: 0.28,
+    barFloating: true,
   ),
   HomeThemeEntry(
     id: 'refractive-glass',
@@ -224,6 +237,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: true,
     barTint: Color(0xFF18263C),
     barAccent: Color(0xFF91BFFF),
+    barOpacity: 0.24,
+    barFloating: true,
   ),
   HomeThemeEntry(
     id: 'design-aurora',
@@ -234,6 +249,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: true,
     barTint: Color(0xFF12172E),
     barAccent: Color(0xFF7CF5E4),
+    barOpacity: 0.28,
+    barFloating: true,
   ),
   HomeThemeEntry(
     id: 'design-polar',
@@ -244,6 +261,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: true,
     barTint: Color(0xFF112637),
     barAccent: Color(0xFF82D8FF),
+    barOpacity: 0.28,
+    barFloating: false,
   ),
   HomeThemeEntry(
     id: 'design-rose',
@@ -254,6 +273,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: false,
     barTint: Color(0xFFF8E7E5),
     barAccent: Color(0xFF935464),
+    barOpacity: 0.28,
+    barFloating: true,
   ),
   HomeThemeEntry(
     id: 'rose-glass',
@@ -264,6 +285,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: false,
     barTint: Color(0xFFFFE8E3),
     barAccent: Color(0xFF9C5B63),
+    barOpacity: 0.35,
+    barFloating: true,
   ),
   HomeThemeEntry(
     id: 'design-album',
@@ -274,6 +297,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: false,
     barTint: Color(0xFFE6F0EE),
     barAccent: Color(0xFF276E68),
+    barOpacity: 0.28,
+    barFloating: true,
   ),
   HomeThemeEntry(
     id: 'liquid-glass',
@@ -284,6 +309,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: true,
     barTint: Color(0xFF1C1E2A),
     barAccent: Color(0xFFBDCAFF),
+    barOpacity: 0.24,
+    barFloating: true,
   ),
   HomeThemeEntry(
     id: 'design-radar',
@@ -294,6 +321,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: true,
     barTint: Color(0xFF102D2B),
     barAccent: Color(0xFF89F6CB),
+    barOpacity: 0.28,
+    barFloating: false,
   ),
   HomeThemeEntry(
     id: 'design-paper',
@@ -304,6 +333,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: false,
     barTint: Color(0xFFEEE4CF),
     barAccent: Color(0xFF705666),
+    barOpacity: 0.28,
+    barFloating: false,
   ),
   HomeThemeEntry(
     id: 'design-vinyl',
@@ -314,6 +345,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: true,
     barTint: Color(0xFF302019),
     barAccent: Color(0xFFFFBD70),
+    barOpacity: 0.28,
+    barFloating: true,
   ),
   HomeThemeEntry(
     id: 'design-matrix',
@@ -324,6 +357,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: true,
     barTint: Color(0xFF211831),
     barAccent: Color(0xFFC9A0FF),
+    barOpacity: 0.28,
+    barFloating: false,
   ),
   HomeThemeEntry(
     id: 'design-noir',
@@ -334,6 +369,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     dark: true,
     barTint: Color(0xFF18130E),
     barAccent: Color(0xFFE8C680),
+    barOpacity: 0.28,
+    barFloating: false,
   ),
 ];
 

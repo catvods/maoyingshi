@@ -42,6 +42,18 @@ abstract class B11HostApi {
   @async
   B11TabVideos getTabVideos(String typeId, String typeJson, int page);
 
+  /// Inline filter groups for one tab (themed-home filter panel):
+  /// the tab Class's filters with the effective selection marked
+  /// (dialog/inline overrides over the Class filters' init values) —
+  /// the same data the native TypeFilterDialog shows for the tab.
+  /// Pure in-memory read on the host; completes synchronously.
+  B11TabFilters getTabFilters(String typeId, String typeJson);
+
+  /// Record one inline filter pick for a tab: lands in the same
+  /// per-tab override map the TypeFilterDialog writes
+  /// (onFabFilterSet), so the next getTabVideos call applies it.
+  void setTabFilter(String typeId, String key, String value);
+
   /// Search pill tap: hk:// home site -> HkSearchActivity (reflection,
   /// mobile-only), otherwise SearchActivity.start.
   void openSearch();
@@ -347,6 +359,53 @@ class B11TabVideos {
   String errorTitle;
   String errorMessage;
   String retryLabel;
+}
+
+/// Inline filter groups for one tab (themed-home filter panel): the
+/// tab Class's filters in declaration order, each with its options
+/// and the effective selection marked.
+class B11TabFilters {
+  B11TabFilters({
+    required this.groups,
+  });
+
+  List<B11FilterGroup> groups;
+}
+
+/// One filter group (one row of the themed filter panel).
+class B11FilterGroup {
+  B11FilterGroup({
+    required this.key,
+    required this.name,
+    required this.options,
+  });
+
+  /// Filter key the pick is recorded under (the extend-map key).
+  String key;
+
+  /// Row label (e.g. 类型 / 地区 / 年份).
+  String name;
+
+  List<B11FilterOption> options;
+}
+
+/// One selectable value inside a filter group.
+class B11FilterOption {
+  B11FilterOption({
+    required this.name,
+    required this.value,
+    required this.selected,
+  });
+
+  /// Display label.
+  String name;
+
+  /// Value sent back in setTabFilter and into the extend map.
+  String value;
+
+  /// True when this option is the effective selection (override if
+  /// one was picked, otherwise the Class filter's init value).
+  bool selected;
 }
 
 /// One grid card. Field-for-field mirror of B8CategoryItem: the host

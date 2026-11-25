@@ -24,9 +24,12 @@ import 'pigeon/b8_category_messages.g.dart';
 /// Event bridge: the themes' events map onto the existing host
 /// actions (openItem -> B8 detail chain, selectType -> tab switch,
 /// openSearch/openHistory/openSiteDialog/... on B11HostApi). The
-/// inline filter panel has no snapshot source yet, so filter events
-/// open the native type-filter dialog instead — the same panel the
-/// home's tune FAB opens — and the grid reloads when it closes.
+/// inline filter panel is fed by getTabFilters (the tab Class's
+/// filters with the effective selection) and selectFilter picks go
+/// through setTabFilter into the same host override map the native
+/// type-filter dialog writes; showFilterPicker/showCategoryPicker
+/// still open that native dialog, and the grid reloads when it
+/// closes.
 class ThemedHomeView extends StatefulWidget {
   const ThemedHomeView({
     super.key,
@@ -72,6 +75,8 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
 
   bool _themeReady = false;
   bool _themeFailed = false;
+  List<B11FilterGroup> _filterGroups = <B11FilterGroup>[];
+  bool _showFilters = true;
   List<B12BannerItem> _recommend = <B12BannerItem>[];
   List<B11TabVideoItem> _items = <B11TabVideoItem>[];
   String _siteKey = '';
@@ -163,6 +168,19 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     }
     final int mySerial = serial ?? _loadSerial;
     final B11HomeTab tab = screen.tabs[_tabIndex.clamp(0, screen.tabs.length - 1)];
+    if (page == 1) {
+      try {
+        final B11TabFilters filters =
+            await _b11Api.getTabFilters(tab.typeId, tab.typeJson);
+        if (mounted && mySerial == _loadSerial) {
+          _filterGroups = filters.groups;
+        }
+      } catch (_) {
+        if (mounted && mySerial == _loadSerial) {
+          _filterGroups = <B11FilterGroup>[];
+        }
+      }
+    }
     B11TabVideos? videos;
     try {
       videos = await _b11Api.getTabVideos(tab.typeId, tab.typeJson, page);
@@ -245,11 +263,27 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
             'selected': i == _tabIndex,
           },
       ],
-      'filters': <Map<String, Object?>>[],
-      'hasFilters': false,
-      'showFilters': false,
-      'filterPanelHeight': 0.0,
-      'immersiveFilterPanelHeight': 0.0,
+      'filters': <Map<String, Object?>>[
+        for (final B11FilterGroup group in _filterGroups)
+          <String, Object?>{
+            'key': group.key,
+            'name': group.name,
+            'canExpand': false,
+            'options': <Map<String, Object?>>[
+              for (final B11FilterOption option in group.options)
+                <String, Object?>{
+                  'name': option.name,
+                  'value': option.value,
+                  'filterKey': group.key,
+                  'selected': option.selected,
+                },
+            ],
+          },
+      ],
+      'hasFilters': _filterGroups.isNotEmpty,
+      'showFilters': _showFilters,
+      'filterPanelHeight': _filterGroups.length * 39.0 + 10.0,
+      'immersiveFilterPanelHeight': _filterGroups.length * 39.0 + 10.0,
       'source': <String, Object?>{'name': screen.title},
       'totalLabel': '${_items.length}',
       'hasRecommend': _recommend.isNotEmpty,
@@ -325,6 +359,30 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     } catch (_) {
       // The host navigation failed; the grid stays as it was.
     }
+  }
+
+  /// One inline filter pick: record it host-side (the same
+  /// override map the native dialog writes), then reload the tab's
+  /// first page; _loadPage refetches the groups so the panel shows
+  /// the new selection.
+  Future<void> _applyFilter(String key, String value) async {
+    final B11HomeScreen screen = widget.screen;
+    if (screen.tabs.isEmpty) return;
+    final B11HomeTab tab =
+        screen.tabs[_tabIndex.clamp(0, screen.tabs.length - 1)];
+    try {
+      await _b11Api.setTabFilter(tab.typeId, key, value);
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
+    _loadSerial++;
+    setState(() {
+      _loading = true;
+      _items = <B11TabVideoItem>[];
+    });
+    _pushData();
+    await _loadPage(1);
   }
 
   Future<void> _openFilterDialog() async {
@@ -414,13 +472,17 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
       case 'refresh':
         unawaited(_loadAll());
       case 'toggleFilters':
+        _showFilters = !_showFilters;
+        _pushData();
       case 'showCategoryPicker':
       case 'showFilterPicker':
         unawaited(_openFilterDialog());
       case 'selectFilter':
-        // No inline filter panel yet; selections happen in the
-        // native dialog the filter events above open.
-        break;
+        final Object? filterKey = arguments['key'];
+        final Object? filterValue = arguments['value'];
+        if (filterKey is String && filterValue is String) {
+          unawaited(_applyFilter(filterKey, filterValue));
+        }
       case 'showSourcePicker':
         unawaited(() async {
           try {

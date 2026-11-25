@@ -39,6 +39,9 @@ class GlassBottomBar extends StatefulWidget {
     this.tintOverride,
     this.accentOverride,
     this.darkOverride,
+    this.opacityOverride,
+    this.edgeToEdge = false,
+    this.bottomInset = 0,
   });
 
   final B11HomeScreen screen;
@@ -52,6 +55,21 @@ class GlassBottomBar extends StatefulWidget {
   final Color? tintOverride;
   final Color? accentOverride;
   final bool? darkOverride;
+
+  /// Theme navigation opacity (Lee metadata navigationOpacity):
+  /// replaces the translucency-derived tint alpha when set.
+  final double? opacityOverride;
+
+  /// Theme navigation shape (Lee metadata floatingNavigation):
+  /// false renders the bar edge-to-edge (square, flush with the
+  /// screen bottom, extending over the gesture inset) instead of
+  /// the floating capsule.
+  final bool edgeToEdge;
+
+  /// Extra height below the 64dp content row in edge-to-edge mode
+  /// (the device's bottom gesture inset), filled with the bar's
+  /// own glass/tint so the strip reads as one piece.
+  final double bottomInset;
 
   @override
   State<GlassBottomBar> createState() => GlassBottomBarState();
@@ -132,7 +150,9 @@ class GlassBottomBarState extends State<GlassBottomBar> {
     final Color unselected = dark
         ? Colors.white.withAlpha(184)
         : Colors.black.withAlpha(158);
-    final BorderRadius capsule = BorderRadius.circular(glassBarHeight / 2);
+    final BorderRadius capsule = widget.edgeToEdge
+        ? BorderRadius.zero
+        : BorderRadius.circular(glassBarHeight / 2);
     final Widget rowContent = Row(
         children: items.map((B11NavItem item) {
           final bool selected = item.token == screen.selectedNavToken;
@@ -301,9 +321,17 @@ class GlassBottomBarState extends State<GlassBottomBar> {
     if (!screen.glassEnabled || blur <= 0) {
       // Glass off: opaque capsule, unchanged (b8-home-glass D3).
       return Container(
-        height: glassBarHeight,
-        decoration: BoxDecoration(color: surface, borderRadius: capsule),
-        child: barContent,
+        height: glassBarHeight + widget.bottomInset,
+        decoration: BoxDecoration(
+          color: widget.opacityOverride == null
+              ? surface
+              : surface.withValues(alpha: widget.opacityOverride!),
+          borderRadius: capsule,
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(bottom: widget.bottomInset),
+          child: barContent,
+        ),
       );
     }
     // Liquid-glass parameters, aligned to the native formulas in
@@ -311,7 +339,8 @@ class GlassBottomBarState extends State<GlassBottomBar> {
     // docs/b8-home-glass-v2.md). At the defaults (t = 0.5) the
     // brightness/contrast terms are neutral and saturation is 1.5.
     final double t = screen.glassTranslucency / 100;
-    final double tintAlpha = (0.4 * (2 - 2 * t)).clamp(0.05, 0.8);
+    final double tintAlpha =
+        (widget.opacityOverride ?? (0.4 * (2 - 2 * t))).clamp(0.05, 0.9);
     final double brightness = (0.5 - t).clamp(0.0, 0.5) * 0.12;
     final double contrast = 1 - (0.5 - t).clamp(0.0, 0.5) * 0.25;
     final double saturation = 1.5 - (t - 0.5).clamp(0.0, 0.5);
@@ -374,7 +403,7 @@ class GlassBottomBarState extends State<GlassBottomBar> {
             return BackdropFilter(
               filter: filter,
               child: SizedBox(
-                height: glassBarHeight,
+                height: glassBarHeight + widget.bottomInset,
                 child: Stack(
                   children: [
                     Positioned.fill(
@@ -419,7 +448,13 @@ class GlassBottomBarState extends State<GlassBottomBar> {
                         ),
                       ),
                     Positioned.fill(child: _buildHighlight()),
-                    Positioned.fill(child: barContent),
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: glassBarHeight,
+                      child: barContent,
+                    ),
                   ],
                 ),
               ),
@@ -445,7 +480,9 @@ class GlassBottomBarState extends State<GlassBottomBar> {
         (widget.darkOverride ?? widget.screen.darkMode) ? 0.22 : 0.34;
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(glassBarHeight / 2),
+        borderRadius: widget.edgeToEdge
+            ? BorderRadius.zero
+            : BorderRadius.circular(glassBarHeight / 2),
         border: Border.all(
           color: Colors.white.withAlpha(36),
           width: 1,
@@ -587,27 +624,32 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
         children: [
           widget.child,
           if (show)
-            Positioned(
-              left: glassBarInsetX,
-              right: glassBarInsetX,
-              bottom: glassBarFloat + MediaQuery.paddingOf(context).bottom,
-              child: IgnorePointer(
-                ignoring: _hidden,
-                child: AnimatedSlide(
-                  offset: _hidden ? const Offset(0, 1.8) : Offset.zero,
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOut,
-                  // Material ancestor: at shell level there is no
-                  // Scaffold above the bar, and without one its
-                  // labels fall back to the framework's yellow
-                  // underline text style.
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: ValueListenableBuilder<String>(
-                      valueListenable: homeThemeId,
-                      builder: (context, themeId, _) {
-                        final HomeThemeEntry entry = homeThemeEntry(themeId);
-                        return GlassBottomBar(
+            ValueListenableBuilder<String>(
+              valueListenable: homeThemeId,
+              builder: (context, themeId, _) {
+                final HomeThemeEntry entry = homeThemeEntry(themeId);
+                // Theme navigation shape (Lee metadata): floating
+                // themes keep the capsule; the rest run the bar
+                // edge-to-edge over the gesture inset.
+                final bool floating = entry.barFloating ?? true;
+                final double inset = MediaQuery.paddingOf(context).bottom;
+                return Positioned(
+                  left: floating ? glassBarInsetX : 0,
+                  right: floating ? glassBarInsetX : 0,
+                  bottom: floating ? glassBarFloat + inset : 0,
+                  child: IgnorePointer(
+                    ignoring: _hidden,
+                    child: AnimatedSlide(
+                      offset: _hidden ? const Offset(0, 1.8) : Offset.zero,
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOut,
+                      // Material ancestor: at shell level there is
+                      // no Scaffold above the bar, and without one
+                      // its labels fall back to the framework's
+                      // yellow underline text style.
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: GlassBottomBar(
                           screen: screen,
                           onTap: _onTap,
                           onLongPress: _onLongPress,
@@ -615,12 +657,15 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
                           accentOverride: entry.barAccent,
                           darkOverride:
                               entry.barTint == null ? null : entry.dark,
-                        );
-                      },
+                          opacityOverride: entry.barOpacity,
+                          edgeToEdge: !floating,
+                          bottomInset: floating ? 0 : inset,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
         ],
       ),

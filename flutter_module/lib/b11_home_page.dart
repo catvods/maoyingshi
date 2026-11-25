@@ -2097,7 +2097,7 @@ class _GlassBottomBarState extends State<_GlassBottomBar> {
     // Saturation lift: a second blurred backdrop composited with
     // soft-light over the first (see the Stack below). Strength
     // follows the native saturation term; zero when saturation is 1.
-    final double liftAlpha = ((saturation - 1) * 0.3).clamp(0.0, 0.25);
+    final double liftAlpha = ((saturation - 1) * 0.3).clamp(0.0, 0.32);
     // Lens approximation: a uniform magnification about the bar
     // center. Native refracts up to distortionDp at the rim; the
     // uniform scale keeps the sliding misalignment cue — content
@@ -2106,14 +2106,23 @@ class _GlassBottomBarState extends State<_GlassBottomBar> {
         1 + (screen.glassDistortionDp / 600).clamp(0.0, 0.08);
     final bool useLens = screen.glassDistortionDp > 0 && lensScale > 1.001;
     return Container(
-      // Drop shadow outside the clip (native Shadow.Default).
+      // Drop shadow outside the clip: two layers for depth — a soft
+      // ambient shadow that lifts the capsule off the wallpaper and a
+      // tighter contact shadow that grounds its lower edge. (Was a
+      // single 12dp shadow; the bar read flat against bright
+      // wallpapers.)
       decoration: BoxDecoration(
         borderRadius: capsule,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(screen.darkMode ? 51 : 26),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withAlpha(screen.darkMode ? 64 : 36),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: Colors.black.withAlpha(screen.darkMode ? 70 : 44),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -2196,12 +2205,18 @@ class _GlassBottomBarState extends State<_GlassBottomBar> {
   /// when dispersion is on. Painted above the tint, below the icons.
   Widget _buildHighlight() {
     final bool dispersion = widget.screen.glassDispersion;
-    final double topAlpha = widget.screen.darkMode ? 0.14 : 0.22;
+    // Stronger top light and a shaded lower edge: the bright rim
+    // reads as light catching the capsule's top bevel, the dark
+    // bottom rim as its thickness — together they give the bar its
+    // three-dimensional, molded-glass feel.
+    final double topAlpha = widget.screen.darkMode ? 0.26 : 0.40;
+    final Color bottomShade =
+        Colors.black.withAlpha(widget.screen.darkMode ? 36 : 22);
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(_glassBarHeight / 2),
         border: Border.all(
-          color: Colors.white.withAlpha(26),
+          color: Colors.white.withAlpha(44),
           width: 1,
         ),
         gradient: LinearGradient(
@@ -2209,18 +2224,20 @@ class _GlassBottomBarState extends State<_GlassBottomBar> {
           end: Alignment.bottomCenter,
           colors: dispersion
               ? [
-                  const Color(0xFFE8FFFF).withAlpha(41),
+                  const Color(0xFFE8FFFF).withAlpha(56),
                   Colors.white.withAlpha((topAlpha * 255).round()),
                   Colors.transparent,
-                  const Color(0xFFFFE8F0).withAlpha(18),
+                  const Color(0xFFFFE8F0).withAlpha(24),
+                  bottomShade,
                 ]
               : [
                   Colors.white.withAlpha((topAlpha * 255).round()),
                   Colors.transparent,
+                  bottomShade,
                 ],
           stops: dispersion
-              ? const [0.0, 0.18, 0.45, 1.0]
-              : const [0.0, 0.45],
+              ? const [0.0, 0.18, 0.45, 0.92, 1.0]
+              : const [0.0, 0.45, 1.0],
         ),
       ),
     );

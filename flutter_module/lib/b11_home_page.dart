@@ -2097,7 +2097,10 @@ class _GlassBottomBarState extends State<_GlassBottomBar> {
     // Saturation lift: a second blurred backdrop composited with
     // soft-light over the first (see the Stack below). Strength
     // follows the native saturation term; zero when saturation is 1.
-    final double liftAlpha = ((saturation - 1) * 0.3).clamp(0.0, 0.32);
+    // The lift is kept very low: at higher strengths the soft-light
+    // copy smears the backdrop's colors into a muddy haze and the
+    // glass reads dirty instead of clear.
+    final double liftAlpha = ((saturation - 1) * 0.3).clamp(0.0, 0.10);
     // Lens approximation: a uniform magnification about the bar
     // center. Native refracts up to distortionDp at the rim; the
     // uniform scale keeps the sliding misalignment cue — content
@@ -2155,7 +2158,14 @@ class _GlassBottomBarState extends State<_GlassBottomBar> {
                   children: [
                     Positioned.fill(
                       child: Container(
-                        color: surface.withAlpha((tintAlpha * 255).round()),
+                        // Clean frosted tint: in light mode the
+                        // surface color is blended toward white, so
+                        // the bar reads as bright, clear glass rather
+                        // than tinted plastic over the backdrop.
+                        color: (screen.darkMode
+                                ? surface
+                                : Color.lerp(surface, Colors.white, 0.45)!)
+                            .withAlpha((tintAlpha * 255).round()),
                       ),
                     ),
                     if (liftAlpha > 0.01)
@@ -2205,18 +2215,17 @@ class _GlassBottomBarState extends State<_GlassBottomBar> {
   /// when dispersion is on. Painted above the tint, below the icons.
   Widget _buildHighlight() {
     final bool dispersion = widget.screen.glassDispersion;
-    // Stronger top light and a shaded lower edge: the bright rim
-    // reads as light catching the capsule's top bevel, the dark
-    // bottom rim as its thickness — together they give the bar its
-    // three-dimensional, molded-glass feel.
-    final double topAlpha = widget.screen.darkMode ? 0.26 : 0.40;
-    final Color bottomShade =
-        Colors.black.withAlpha(widget.screen.darkMode ? 36 : 22);
+    // A bright top rim only — light catching the capsule's top edge.
+    // (A shaded lower edge was tried for thickness and removed: it
+    // grayed the lower half of the bar and made the glass look
+    // dirty. Depth comes from the drop shadow, not from darkening
+    // the glass itself.)
+    final double topAlpha = widget.screen.darkMode ? 0.22 : 0.34;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(_glassBarHeight / 2),
         border: Border.all(
-          color: Colors.white.withAlpha(44),
+          color: Colors.white.withAlpha(36),
           width: 1,
         ),
         gradient: LinearGradient(
@@ -2224,20 +2233,18 @@ class _GlassBottomBarState extends State<_GlassBottomBar> {
           end: Alignment.bottomCenter,
           colors: dispersion
               ? [
-                  const Color(0xFFE8FFFF).withAlpha(56),
+                  const Color(0xFFE8FFFF).withAlpha(48),
                   Colors.white.withAlpha((topAlpha * 255).round()),
                   Colors.transparent,
-                  const Color(0xFFFFE8F0).withAlpha(24),
-                  bottomShade,
+                  const Color(0xFFFFE8F0).withAlpha(20),
                 ]
               : [
                   Colors.white.withAlpha((topAlpha * 255).round()),
                   Colors.transparent,
-                  bottomShade,
                 ],
           stops: dispersion
-              ? const [0.0, 0.18, 0.45, 0.92, 1.0]
-              : const [0.0, 0.45, 1.0],
+              ? const [0.0, 0.18, 0.45, 1.0]
+              : const [0.0, 0.45],
         ),
       ),
     );

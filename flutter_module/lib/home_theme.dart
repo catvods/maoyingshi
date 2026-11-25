@@ -18,6 +18,8 @@ class HomeThemeEntry {
     required this.description,
     required this.colors,
     required this.dark,
+    this.barTint,
+    this.barAccent,
   });
 
   /// '' for the built-in home; otherwise the theme file stem.
@@ -51,6 +53,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '深蓝夜空与光谱渐变，轮播纤长、卡片带霓虹描边。',
     colors: <Color>[Color(0xFF07101C), Color(0xFF35E7FF), Color(0xFF8E5CFF)],
     dark: true,
+    barTint: Color(0xFF0D1B3E),
+    barAccent: Color(0xFF35E7FF),
   ),
   HomeThemeEntry(
     id: 'bubble',
@@ -59,6 +63,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '柔和马卡龙色，大圆角卡片像气泡一样轻盈。',
     colors: <Color>[Color(0xFFFF7FB5), Color(0xFFFFD3E0), Color(0xFFB5E7FF)],
     dark: false,
+    barTint: Color(0xFFFFD3E0),
+    barAccent: Color(0xFFFF7FB5),
   ),
   HomeThemeEntry(
     id: 'cloud_archive',
@@ -67,6 +73,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '为竖版海报设计的高级感主题，窄幅轮播、当前卡片抬升。',
     colors: <Color>[Color(0xFF10131A), Color(0xFFC9A86A)],
     dark: true,
+    barTint: Color(0xFF10131A),
+    barAccent: Color(0xFFC9A86A),
   ),
   HomeThemeEntry(
     id: 'crimson_cinema',
@@ -75,6 +83,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '黑红影院风格，超高轮播带来大面积主视觉冲击。',
     colors: <Color>[Color(0xFF1A0505), Color(0xFFE53935)],
     dark: true,
+    barTint: Color(0xFF1A0505),
+    barAccent: Color(0xFFE53935),
   ),
   HomeThemeEntry(
     id: 'editorial',
@@ -83,6 +93,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '像杂志内页一样排版：大编号、宽幅图、清晰的文字层级。',
     colors: <Color>[Color(0xFFF5F0E8), Color(0xFF212121)],
     dark: false,
+    barTint: Color(0xFFF5F0E8),
+    barAccent: Color(0xFFB03A2E),
   ),
   HomeThemeEntry(
     id: 'horizontal_gallery',
@@ -91,6 +103,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '默认就是宽幅剧照墙，图片上直接叠渐变文字层。',
     colors: <Color>[Color(0xFF263238), Color(0xFF90A4AE)],
     dark: true,
+    barTint: Color(0xFF263238),
+    barAccent: Color(0xFF90A4AE),
   ),
   HomeThemeEntry(
     id: 'immersive_palette',
@@ -99,6 +113,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '参考 TMDB 详情页：顶部主视觉承载海报与取色氛围。',
     colors: <Color>[Color(0xFF0B0B10), Color(0xFF5E35B1)],
     dark: true,
+    barTint: Color(0xFF0B0B10),
+    barAccent: Color(0xFF7C4DFF),
   ),
   HomeThemeEntry(
     id: 'ink_minimal',
@@ -107,6 +123,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '最少装饰、黑白配色，布局可在海报、图文行、文字行间切换。',
     colors: <Color>[Color(0xFFFFFFFF), Color(0xFF111111)],
     dark: false,
+    barTint: Color(0xFFFFFFFF),
+    barAccent: Color(0xFF111111),
   ),
   HomeThemeEntry(
     id: 'midnight_rank',
@@ -115,6 +133,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '以排名和文字为主的深夜榜单风，默认无图、靠名次说话。',
     colors: <Color>[Color(0xFF0D0D19), Color(0xFFFFE44D)],
     dark: true,
+    barTint: Color(0xFF0B1026),
+    barAccent: Color(0xFFFFB300),
   ),
   HomeThemeEntry(
     id: 'pixel_arcade',
@@ -123,6 +143,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '方形组件、偏移硬阴影、醒目编号，街机厅的硬朗撞色。',
     colors: <Color>[Color(0xFFFFE44D), Color(0xFF2979FF)],
     dark: true,
+    barTint: Color(0xFF141428),
+    barAccent: Color(0xFFFFE44D),
   ),
   HomeThemeEntry(
     id: 'snow_glass',
@@ -131,6 +153,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '低矮轮播加明亮卡片，像雪后初晴的通透玻璃感。',
     colors: <Color>[Color(0xFFF1F8FC), Color(0xFF75BDE8)],
     dark: false,
+    barTint: Color(0xFFEAF3F7),
+    barAccent: Color(0xFF3D7EA6),
   ),
   HomeThemeEntry(
     id: 'sunlit_gallery',
@@ -139,6 +163,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '明亮暖色的竖版层叠轮播，左右卡片像画廊一样排开。',
     colors: <Color>[Color(0xFFFFF3E0), Color(0xFFFF9800)],
     dark: false,
+    barTint: Color(0xFFFFF3E0),
+    barAccent: Color(0xFFEF6C00),
   ),
   HomeThemeEntry(
     id: 'terminal',
@@ -147,6 +173,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '等宽字体的绿幕终端风，默认纯文字列表，冷静克制。',
     colors: <Color>[Color(0xFF001A00), Color(0xFF00E676)],
     dark: true,
+    barTint: Color(0xFF031007),
+    barAccent: Color(0xFF33FF99),
   ),
   HomeThemeEntry(
     id: 'vhs',
@@ -155,6 +183,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '一屏多张的胶片轮播，暖色渐变与方角标签带你回录像厅。',
     colors: <Color>[Color(0xFF2D1B4E), Color(0xFFFF7043)],
     dark: true,
+    barTint: Color(0xFF2D1B4E),
+    barAccent: Color(0xFFFF7043),
   ),
   // LeeCatVodSimplify's built-in themes (.lzt sources the user
   // exported from that app); same RFW contract, same peek.home
@@ -166,6 +196,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '柔光面板衬着沉浸海报墙，宽幕推荐像午夜场的大银幕。',
     colors: <Color>[Color(0xFF141917), Color(0xFF26342B), Color(0xFFC3D7B5)],
     dark: true,
+    barTint: Color(0xFF141917),
+    barAccent: Color(0xFFC3D7B5),
   ),
   HomeThemeEntry(
     id: 'design-ticket',
@@ -174,6 +206,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '虚线分隔的入场票版式，每部片都像一张存根票根。',
     colors: <Color>[Color(0xFF281B25), Color(0xFF4A2F38), Color(0xFFFFB78D)],
     dark: true,
+    barTint: Color(0xFF281B25),
+    barAccent: Color(0xFFFFB78D),
   ),
   HomeThemeEntry(
     id: 'refractive-glass',
@@ -182,6 +216,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '曲面折射的通透玻璃感，干净明亮的 iOS 风格。',
     colors: <Color>[Color(0xFF18263C), Color(0xFF394667), Color(0xFF91BFFF)],
     dark: true,
+    barTint: Color(0xFF18263C),
+    barAccent: Color(0xFF91BFFF),
   ),
   HomeThemeEntry(
     id: 'design-aurora',
@@ -190,6 +226,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '全景巨幕配渐层玻璃，宽幅影廊像极光铺开。',
     colors: <Color>[Color(0xFF12172E), Color(0xFF34376A), Color(0xFF7CF5E4)],
     dark: true,
+    barTint: Color(0xFF12172E),
+    barAccent: Color(0xFF7CF5E4),
   ),
   HomeThemeEntry(
     id: 'design-polar',
@@ -198,6 +236,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '独立标题底栏加蓝色侧签，像极地科考站的观察窗。',
     colors: <Color>[Color(0xFF112637), Color(0xFF224653), Color(0xFF82D8FF)],
     dark: true,
+    barTint: Color(0xFF112637),
+    barAccent: Color(0xFF82D8FF),
   ),
   HomeThemeEntry(
     id: 'design-rose',
@@ -206,6 +246,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '柔雾粉调里浮着非对称小岛，胶囊控件轻盈漂浮。',
     colors: <Color>[Color(0xFFF8E7E5), Color(0xFFE8CBD4), Color(0xFF935464)],
     dark: false,
+    barTint: Color(0xFFF8E7E5),
+    barAccent: Color(0xFF935464),
   ),
   HomeThemeEntry(
     id: 'rose-glass',
@@ -214,6 +256,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '浅粉底色配圆角海报，悬浮胶囊导航温柔干净。',
     colors: <Color>[Color(0xFFFFE8E3), Color(0xFFF3D9D5), Color(0xFF9C5B63)],
     dark: false,
+    barTint: Color(0xFFFFE8E3),
+    barAccent: Color(0xFF9C5B63),
   ),
   HomeThemeEntry(
     id: 'design-album',
@@ -222,6 +266,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '像翻一本海盐色相册，拍立得卡片留着白边题签。',
     colors: <Color>[Color(0xFFE6F0EE), Color(0xFFC3DDDA), Color(0xFF276E68)],
     dark: false,
+    barTint: Color(0xFFE6F0EE),
+    barAccent: Color(0xFF276E68),
   ),
   HomeThemeEntry(
     id: 'liquid-glass',
@@ -230,6 +276,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '深空底色上漂浮通透胶囊，带流动放大透镜的液态玻璃。',
     colors: <Color>[Color(0xFF1C1E2A), Color(0xFF303548), Color(0xFFBDCAFF)],
     dark: true,
+    barTint: Color(0xFF1C1E2A),
+    barAccent: Color(0xFFBDCAFF),
   ),
   HomeThemeEntry(
     id: 'design-radar',
@@ -238,6 +286,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '环线雷达扫过深空绿，片单像资源档案一样陈列。',
     colors: <Color>[Color(0xFF102D2B), Color(0xFF1C4B43), Color(0xFF89F6CB)],
     dark: true,
+    barTint: Color(0xFF102D2B),
+    barAccent: Color(0xFF89F6CB),
   ),
   HomeThemeEntry(
     id: 'design-paper',
@@ -246,6 +296,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '书页般的刊头与细线目录，像在书房里翻一本影集。',
     colors: <Color>[Color(0xFFEEE4CF), Color(0xFFD7C3BD), Color(0xFF705666)],
     dark: false,
+    barTint: Color(0xFFEEE4CF),
+    barAccent: Color(0xFF705666),
   ),
   HomeThemeEntry(
     id: 'design-vinyl',
@@ -254,6 +306,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '推荐位是一张落日色唱片，圆盘封面缓缓转出暖意。',
     colors: <Color>[Color(0xFF302019), Color(0xFF593829), Color(0xFFFFBD70)],
     dark: true,
+    barTint: Color(0xFF302019),
+    barAccent: Color(0xFFFFBD70),
   ),
   HomeThemeEntry(
     id: 'design-matrix',
@@ -262,6 +316,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '终端刊头加电路网格，方卡矩阵排得整整齐齐。',
     colors: <Color>[Color(0xFF211831), Color(0xFF36254B), Color(0xFFC9A0FF)],
     dark: true,
+    barTint: Color(0xFF211831),
+    barAccent: Color(0xFFC9A0FF),
   ),
   HomeThemeEntry(
     id: 'design-noir',
@@ -270,6 +326,8 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     description: '黑金对开页像首映礼请柬，金线装帧带典藏序号。',
     colors: <Color>[Color(0xFF18130E), Color(0xFF322617), Color(0xFFE8C680)],
     dark: true,
+    barTint: Color(0xFF18130E),
+    barAccent: Color(0xFFE8C680),
   ),
 ];
 

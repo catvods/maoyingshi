@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:material_ui/material_ui.dart';
 import 'package:vector_math/vector_math_64.dart' show Matrix4, Vector3;
 
+import 'home_theme.dart';
 import 'pigeon/b11_home_messages.g.dart';
 
 /// Floating glass bottom bar geometry (the native 88dp glass slot):
@@ -35,11 +36,22 @@ class GlassBottomBar extends StatefulWidget {
     required this.screen,
     required this.onTap,
     required this.onLongPress,
+    this.tintOverride,
+    this.accentOverride,
+    this.darkOverride,
   });
 
   final B11HomeScreen screen;
   final ValueChanged<B11NavItem> onTap;
   final ValueChanged<B11NavItem> onLongPress;
+
+  /// Home-theme overrides: when a 首页主题 is selected, the bar
+  /// follows the theme like it does in the source apps (their
+  /// themes restyle the bottom navigation too) instead of keeping
+  /// the snapshot's neutral glass look.
+  final Color? tintOverride;
+  final Color? accentOverride;
+  final bool? darkOverride;
 
   @override
   State<GlassBottomBar> createState() => GlassBottomBarState();
@@ -113,11 +125,11 @@ class GlassBottomBarState extends State<GlassBottomBar> {
     final B11HomeScreen screen = widget.screen;
     final List<B11NavItem> items = _visibleItems(screen);
     if (items.isEmpty) return const SizedBox.shrink();
-    final Color accent = Color(screen.accentColor);
-    final Color surface = screen.darkMode
-        ? const Color(0xFF1E1E20)
-        : const Color(0xFFF4F4F6);
-    final Color unselected = screen.darkMode
+    final bool dark = widget.darkOverride ?? screen.darkMode;
+    final Color accent = widget.accentOverride ?? Color(screen.accentColor);
+    final Color surface = widget.tintOverride ??
+        (dark ? const Color(0xFF1E1E20) : const Color(0xFFF4F4F6));
+    final Color unselected = dark
         ? Colors.white.withAlpha(184)
         : Colors.black.withAlpha(158);
     final BorderRadius capsule = BorderRadius.circular(glassBarHeight / 2);
@@ -256,7 +268,7 @@ class GlassBottomBarState extends State<GlassBottomBar> {
                           // blue read as a watermark smudge on the
                           // glass; the selected icon/label keep the
                           // accent color).
-                          color: screen.darkMode
+                          color: dark
                               ? const Color(0xFF9AA0A6).withAlpha(80)
                               : const Color(0xFFADB3BC).withAlpha(110),
                           borderRadius: BorderRadius.circular(16),
@@ -327,12 +339,12 @@ class GlassBottomBarState extends State<GlassBottomBar> {
         borderRadius: capsule,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(screen.darkMode ? 64 : 36),
+            color: Colors.black.withAlpha(dark ? 64 : 36),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: Colors.black.withAlpha(screen.darkMode ? 70 : 44),
+            color: Colors.black.withAlpha(dark ? 70 : 44),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -371,7 +383,7 @@ class GlassBottomBarState extends State<GlassBottomBar> {
                         // surface color is blended toward white, so
                         // the bar reads as bright, clear glass rather
                         // than tinted plastic over the backdrop.
-                        color: (screen.darkMode
+                        color: (dark
                                 ? surface
                                 : Color.lerp(surface, Colors.white, 0.45)!)
                             .withAlpha((tintAlpha * 255).round()),
@@ -429,7 +441,8 @@ class GlassBottomBarState extends State<GlassBottomBar> {
     // grayed the lower half of the bar and made the glass look
     // dirty. Depth comes from the drop shadow, not from darkening
     // the glass itself.)
-    final double topAlpha = widget.screen.darkMode ? 0.22 : 0.34;
+    final double topAlpha =
+        (widget.darkOverride ?? widget.screen.darkMode) ? 0.22 : 0.34;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(glassBarHeight / 2),
@@ -590,10 +603,20 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
                   // underline text style.
                   child: Material(
                     type: MaterialType.transparency,
-                    child: GlassBottomBar(
-                      screen: screen,
-                      onTap: _onTap,
-                      onLongPress: _onLongPress,
+                    child: ValueListenableBuilder<String>(
+                      valueListenable: homeThemeId,
+                      builder: (context, themeId, _) {
+                        final HomeThemeEntry entry = homeThemeEntry(themeId);
+                        return GlassBottomBar(
+                          screen: screen,
+                          onTap: _onTap,
+                          onLongPress: _onLongPress,
+                          tintOverride: entry.barTint,
+                          accentOverride: entry.barAccent,
+                          darkOverride:
+                              entry.barTint == null ? null : entry.dark,
+                        );
+                      },
                     ),
                   ),
                 ),

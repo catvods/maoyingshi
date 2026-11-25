@@ -454,93 +454,6 @@ class GlassBottomBarState extends State<GlassBottomBar> {
   }
 }
 
-/// The circular search button that sits at the glass bar's right
-/// end (the native bar's layout): same glass recipe as the capsule —
-/// backdrop blur, a frosted tint brightened toward white in light
-/// mode, a bright rim and the same two-layer shadow — at the bar's
-/// height. Tap opens the search page, long-press searches the
-/// current site (the home top bar's search behavior, B11HostApi).
-class _GlassSearchButton extends StatelessWidget {
-  const _GlassSearchButton({
-    required this.screen,
-    required this.onTap,
-    required this.onLongPress,
-  });
-
-  final B11HomeScreen screen;
-  final VoidCallback onTap;
-  final VoidCallback onLongPress;
-
-  @override
-  Widget build(BuildContext context) {
-    final Color surface =
-        screen.darkMode ? const Color(0xFF1E1E20) : const Color(0xFFF4F4F6);
-    final Color iconColor =
-        screen.darkMode ? Colors.white.withAlpha(230) : Colors.black.withAlpha(200);
-    final List<BoxShadow> shadows = [
-      BoxShadow(
-        color: Colors.black.withAlpha(screen.darkMode ? 64 : 36),
-        blurRadius: 24,
-        offset: const Offset(0, 10),
-      ),
-      BoxShadow(
-        color: Colors.black.withAlpha(screen.darkMode ? 70 : 44),
-        blurRadius: 8,
-        offset: const Offset(0, 3),
-      ),
-    ];
-    final Widget icon = Icon(Icons.search, size: 26, color: iconColor);
-    final double blur = screen.glassBlurDp.toDouble();
-    final Widget disc;
-    if (!screen.glassEnabled || blur <= 0) {
-      disc = Container(
-        width: glassBarHeight,
-        height: glassBarHeight,
-        decoration: BoxDecoration(
-          color: surface,
-          shape: BoxShape.circle,
-          boxShadow: shadows,
-        ),
-        child: icon,
-      );
-    } else {
-      final double t = screen.glassTranslucency / 100;
-      final double tintAlpha = (0.4 * (2 - 2 * t)).clamp(0.05, 0.8);
-      final Color tint = (screen.darkMode
-              ? surface
-              : Color.lerp(surface, Colors.white, 0.45)!)
-          .withAlpha((tintAlpha * 255).round());
-      disc = Container(
-        width: glassBarHeight,
-        height: glassBarHeight,
-        decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: shadows),
-        child: ClipOval(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: tint,
-                border: Border.all(
-                  color: Colors.white.withAlpha(36),
-                  width: 1,
-                ),
-              ),
-              child: icon,
-            ),
-          ),
-        ),
-      );
-    }
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: disc,
-    );
-  }
-}
-
 /// Shell-level host for [GlassBottomBar]: keeps the bar resident
 /// across top-level page switches (it lives in MaterialApp's builder,
 /// above the root Navigator, so a page swap never unmounts it) and
@@ -665,28 +578,10 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
                   offset: _hidden ? const Offset(0, 1.8) : Offset.zero,
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOut,
-                  // The capsule plus the separate circular search
-                  // button at its right, as one cluster (the native
-                  // bar's layout): the circle shares the capsule's
-                  // glass, shadow and hide/show motion.
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: GlassBottomBar(
-                          screen: screen,
-                          onTap: _onTap,
-                          onLongPress: _onLongPress,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      _GlassSearchButton(
-                        screen: screen,
-                        onTap: () => unawaited(_api.openSearch()),
-                        onLongPress: () =>
-                            unawaited(_api.openSearchCurrentSite()),
-                      ),
-                    ],
+                  child: GlassBottomBar(
+                    screen: screen,
+                    onTap: _onTap,
+                    onLongPress: _onLongPress,
                   ),
                 ),
               ),

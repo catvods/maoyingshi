@@ -177,6 +177,9 @@ public class B11HostApiImpl implements B11Messages.B11HostApi {
     /** True while a getHomeShell one-shot load is in flight (B8: single subscription). */
     private boolean loading;
 
+    /** Results of getHomeShell calls that arrived while a load was already in flight (the shell-resident glass bar refreshes the same snapshot as the home page). All of them are answered from the in-flight load instead of failing with "already in progress". */
+    private final List<B11Messages.Result<B11Messages.B11HomeScreen>> pendingShellResults = new ArrayList<>();
+
     /** True while a getTabVideos one-shot load is in flight. The shell and grid loads share one activity-scoped ViewModel, so each method refuses to start while the other is in flight. */
     private boolean loadingTab;
 
@@ -204,8 +207,17 @@ public class B11HostApiImpl implements B11Messages.B11HostApi {
 
     @Override
     public void getHomeShell(B11Messages.Result<B11Messages.B11HomeScreen> result) {
-        if (loading || loadingTab) {
-            result.error(new IllegalStateException("home load already in progress"));
+        if (loading) {
+            // A shell load is already in flight (the home page and the
+            // shell-resident glass bar both refresh this snapshot):
+            // answer this caller from that load instead of failing it.
+            pendingShellResults.add(result);
+            return;
+        }
+        if (loadingTab) {
+            // A tab load owns the shared ViewModel only briefly; retry
+            // in a moment instead of failing the caller.
+            handler.postDelayed(() -> getHomeShell(result), 150);
             return;
         }
         loading = true;
@@ -219,7 +231,7 @@ public class B11HostApiImpl implements B11Messages.B11HostApi {
             loading = false;
             Observer<Result> observer = observerRef.get();
             if (observer != null) viewModel.getResult().removeObserver(observer);
-            result.success(buildScreen(null, activity.getString(R.string.error_play_timeout)));
+            completeShell(result, buildScreen(null, activity.getString(R.string.error_play_timeout)));
         };
         handler.postDelayed(timeout, LOAD_TIMEOUT_MS);
         // B8 crash fix (docs/b8-crash-singletop-fix.md, root cause B):
@@ -239,7 +251,7 @@ public class B11HostApiImpl implements B11Messages.B11HostApi {
                 loading = false;
                 handler.removeCallbacks(timeout);
                 viewModel.getResult().removeObserver(observerRef.get());
-                result.success(buildScreen(loaded, ""));
+                completeShell(result, buildScreen(loaded, ""));
             };
             observerRef.set(observer);
             viewModel.getResult().observeForever(observer);
@@ -253,6 +265,15 @@ public class B11HostApiImpl implements B11Messages.B11HostApi {
         } else {
             startLoad.run();
         }
+    }
+
+    /** Answers the primary caller and every queued concurrent caller with the same screen. */
+    private void completeShell(B11Messages.Result<B11Messages.B11HomeScreen> result, B11Messages.B11HomeScreen screen) {
+        result.success(screen);
+        if (pendingShellResults.isEmpty()) return;
+        List<B11Messages.Result<B11Messages.B11HomeScreen>> pending = new ArrayList<>(pendingShellResults);
+        pendingShellResults.clear();
+        for (B11Messages.Result<B11Messages.B11HomeScreen> queued : pending) queued.success(screen);
     }
 
     /** Builds the shell snapshot. {@code loaded == null} means the watchdog fired. */

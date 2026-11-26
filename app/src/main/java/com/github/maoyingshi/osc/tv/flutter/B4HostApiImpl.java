@@ -99,10 +99,11 @@ public class B4HostApiImpl implements B4Messages.B4HostApi {
 
     @Override
     public B4Messages.B4EnhanceSettings getEnhanceSettings() {
-        List<B4Messages.B4EnhanceRow> rows = new ArrayList<>(28);
+        List<B4Messages.B4EnhanceRow> rows = new ArrayList<>(29);
         // Row order mirrors SettingEnhanceFragment.reorderItems().
         rows.add(row("lab", R.string.setting_lab, activity.getString(R.string.setting_lab_summary), false));
         rows.add(safeRow("labNav", R.string.setting_lab_nav, () -> getSwitch(Setting.isLabNav())));
+        rows.add(safeRow("localSourceDialog", R.string.setting_local_source_dialog, () -> getSwitch(Setting.isLocalSourceDialog())));
         rows.add(customCspRow());
         rows.add(safeRow("webHomeExtension", R.string.setting_web_home_extension, () -> {
             WebHomeExtensionRegistry.Snapshot snapshot = WebHomeExtensionRegistry.get().snapshot();
@@ -242,6 +243,11 @@ public class B4HostApiImpl implements B4Messages.B4HostApi {
         // on purpose (docs/b8-b4-enhance.md §2.10 V6): HomeActivity.onResume
         // refreshes the navigation when the Lab switch changed, and the
         // Flutter screen covers HomeActivity while it is open anyway.
+    }
+
+    @Override
+    public void toggleLocalSourceDialog() {
+        Setting.putLocalSourceDialog(!Setting.isLocalSourceDialog());
     }
 
     @Override

@@ -35,6 +35,7 @@ abstract class B4HostApi {
   /// refresh is covered by HomeActivity.onResume, and the WebHome chrome
   /// reads the Setting lazily on the next WebHome load.
   void toggleLabNav();
+  void toggleLocalSourceDialog();
   void toggleHkMiniapp();
   void toggleDriveCheck();
   void toggleDebugLog();

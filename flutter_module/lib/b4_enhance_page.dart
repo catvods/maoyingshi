@@ -64,6 +64,8 @@ class _EnhanceSettingsViewState extends State<EnhanceSettingsView>
         api.openLab();
       case 'labNav':
         act(() => api.toggleLabNav());
+      case 'localSourceDialog':
+        act(() => api.toggleLocalSourceDialog());
       case 'hkMiniapp':
         act(() => api.toggleHkMiniapp());
       case 'customCsp':
@@ -181,6 +183,8 @@ IconData _iconFor(String key) {
       return Icons.badge_outlined;
     case 'labNav':
       return Icons.science_outlined;
+    case 'localSourceDialog':
+      return Icons.folder_outlined;
     case 'hkMiniapp':
       return Icons.grid_view_outlined;
     case 'customCsp':
@@ -267,6 +271,7 @@ Color _colorFor(String key) {
     case 'loginState':
     case 'driveCheck':
     case 'siteName':
+    case 'localSourceDialog':
     case 'searchCurrentSite':
     case 'playbackWebhook':
       return Colors.blue;
@@ -278,6 +283,7 @@ Color _colorFor(String key) {
 bool _chevronFor(String key) {
   switch (key) {
     case 'labNav':
+    case 'localSourceDialog':
     case 'hkMiniapp':
     case 'webHomeFullscreen':
     case 'playbackArtworkWall':

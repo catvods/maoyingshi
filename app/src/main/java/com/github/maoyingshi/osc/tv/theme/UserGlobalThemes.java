@@ -89,11 +89,11 @@ public final class UserGlobalThemes {
                 try {
                     ThemeProfile profile = ThemeProfileCodec.parse(obj.optString("profile", ""));
                     out.add(new Entry(id, profile));
-                } catch (RuntimeException ignored) {
+                } catch (Exception ignored) {
                     // A record that no longer parses is skipped, never fatal.
                 }
             }
-        } catch (RuntimeException ignored) {
+        } catch (Exception ignored) {
             // A corrupted store reads as empty; saving again rewrites it.
         }
         return out;

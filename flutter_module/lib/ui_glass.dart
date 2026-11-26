@@ -63,7 +63,9 @@ class UiConfig {
   /// Translucency 0..1 (Setting.getGlassTranslucency / 100).
   final double glassTranslucency;
 
-  /// Chromatic fringe on the highlight rim (Setting.isGlassDispersion).
+  /// Chromatic fringe flag (Setting.isGlassDispersion). Retained
+  /// in the config contract; the rim gradient it once tinted was
+  /// removed (it read as a gray band), so nothing consumes it here.
   final bool glassDispersion;
 
   final bool darkMode;
@@ -208,9 +210,10 @@ class _GlassBlurScope extends InheritedWidget {
 /// off.
 ///
 /// Mirrors the home bar's recipe (b8-home-glass): a backdrop blur
-/// under a translucent tint of the surface color, a faint white rim
-/// and a top highlight gradient (with the cyan/magenta dispersion
-/// fringe when dispersion is on). Glass off (or blur 0) renders the
+/// under a translucent tint of the surface color, with a faint
+/// white rim border (no highlight gradient — a sheen read as a
+/// gray band on every surface and was removed). Glass off (or
+/// blur 0) renders the
 /// exact solid surface the caller would have painted before, so the
 /// switch is a pure appearance change. The on/off, the blur and
 /// the tint all come from the global glass parameters (their own
@@ -289,36 +292,11 @@ class GlassSurface extends StatelessWidget {
                       border: Border.all(
                         color: Colors.white.withAlpha(26),
                       ),
-                      // The fade-out stop must be white at alpha 0,
-                      // NOT Colors.transparent: transparent is black
-                      // with alpha 0, and RGB interpolation toward
-                      // black grays the fade zone into a band across
-                      // the surface's upper area (same bug the shell
-                      // bar had, fixed there in b8-c0-37).
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: cfg.glassDispersion
-                            ? [
-                                const Color(0xFFE8FFFF).withAlpha(41),
-                                Colors.white.withAlpha(
-                                  ((cfg.darkMode ? 0.14 : 0.22) * 255)
-                                      .round(),
-                                ),
-                                Colors.white.withAlpha(0),
-                                const Color(0xFFFFE8F0).withAlpha(18),
-                              ]
-                            : [
-                                Colors.white.withAlpha(
-                                  ((cfg.darkMode ? 0.14 : 0.22) * 255)
-                                      .round(),
-                                ),
-                                Colors.white.withAlpha(0),
-                              ],
-                        stops: cfg.glassDispersion
-                            ? const [0.0, 0.18, 0.45, 1.0]
-                            : const [0.0, 0.45],
-                      ),
+                      // Deliberately no highlight gradient here:
+                      // a top sheen read as a gray band across
+                      // every glass surface (user-reported). The
+                      // rim is the 1px border only; the glass
+                      // itself is the blur + tint below.
                     ),
                   ),
                 ),

@@ -6,6 +6,7 @@ import 'b10_collect_page.dart';
 import 'pigeon/b10_collect_messages.g.dart';
 import 'pigeon/b9_search_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
+import 'ui_glass.dart';
 
 /// B8 B9: Flutter version of the mobile search input page
 /// (SearchActivity + SearchFragment, 132 + 479 lines), as a top-level
@@ -295,6 +296,8 @@ class _B9SearchPageState extends State<B9SearchPage>
     if (_error != null) {
       return Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          flexibleSpace: const GlassSurface(child: SizedBox.expand()),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _onBack,
@@ -306,6 +309,8 @@ class _B9SearchPageState extends State<B9SearchPage>
     if (info == null) {
       return Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          flexibleSpace: const GlassSurface(child: SizedBox.expand()),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _onBack,
@@ -322,6 +327,8 @@ class _B9SearchPageState extends State<B9SearchPage>
       },
       child: Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          flexibleSpace: const GlassSurface(child: SizedBox.expand()),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _onBack,
@@ -470,12 +477,10 @@ class _B9SearchPageState extends State<B9SearchPage>
       onTap: onTap,
       onLongPress: onLongPress,
       borderRadius: BorderRadius.circular(16),
-      child: Container(
+      child: GlassSurface(
+        solidColor: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-        ),
         child: Text(
           text,
           style: TextStyle(fontSize: fontSize),

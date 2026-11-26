@@ -9,6 +9,7 @@ import 'b5_personal_page.dart';
 import 'b6_player_page.dart';
 import 'b7_settings_home_page.dart';
 import 'pigeon/b3_settings_a_messages.g.dart';
+import 'ui_glass.dart';
 import 'widgets/settings_row.dart';
 
 /// B8 B3: Flutter version of the four mobile sub-settings pages in the
@@ -338,6 +339,11 @@ mixin _B3MemberState<T extends StatefulWidget> on State<T>
   Widget loadingScaffold({required String title, required VoidCallback onBack}) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const GlassSurface(
+          showRim: false,
+          child: SizedBox.expand(),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,
@@ -355,6 +361,11 @@ mixin _B3MemberState<T extends StatefulWidget> on State<T>
   }) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const GlassSurface(
+          showRim: false,
+          child: SizedBox.expand(),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,
@@ -372,6 +383,11 @@ mixin _B3MemberState<T extends StatefulWidget> on State<T>
   }) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const GlassSurface(
+          showRim: false,
+          child: SizedBox.expand(),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,

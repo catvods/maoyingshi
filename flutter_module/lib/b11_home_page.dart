@@ -9,6 +9,7 @@ import 'package:flutter/gestures.dart'
 import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b11_home_messages.g.dart';
+import 'ui_glass.dart';
 import 'pigeon/b8_category_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
 
@@ -986,7 +987,7 @@ class _B11HomePageState extends State<B11HomePage>
                 style: const TextStyle(fontSize: 14),
               ),
               selected: selected,
-              selectedColor: accent,
+              selectedColor: glassButtonColor(context, accent),
               labelStyle: TextStyle(
                 color: selected
                     ? Colors.white

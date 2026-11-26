@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b16_report_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
+import 'ui_glass.dart';
 
 /// B8 B16: the mobile viewing-report page (ViewingReportActivity), as
 /// the '/report' route on the shared C1 engine. The report is generated
@@ -109,6 +110,10 @@ class _B16ReportPageState extends State<B16ReportPage>
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setDialogState) {
             return AlertDialog(
+              backgroundColor: glassButtonColor(
+                context,
+                Theme.of(context).colorScheme.surfaceContainerHigh,
+              ),
               title: Text(shell.selectRangeTitle),
               content: SizedBox(
                 width: double.maxFinite,
@@ -138,6 +143,12 @@ class _B16ReportPageState extends State<B16ReportPage>
                   child: Text(shell.cancelLabel),
                 ),
                 FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: glassButtonColor(
+                      context,
+                      Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                   onPressed: () => Navigator.of(context).pop(selected),
                   child: Text(shell.generateLabel),
                 ),
@@ -164,6 +175,10 @@ class _B16ReportPageState extends State<B16ReportPage>
       },
       child: Scaffold(
         appBar: AppBar(
+          backgroundColor: glassButtonColor(
+            context,
+            Theme.of(context).colorScheme.surface,
+          ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => _c1Api.closeScreen(),
@@ -386,7 +401,10 @@ class _ReportCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      color: glassButtonColor(
+        context,
+        Theme.of(context).colorScheme.surfaceContainerHighest,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -424,6 +442,12 @@ class _CenterMessage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: glassButtonColor(
+                  context,
+                  Theme.of(context).colorScheme.primary,
+                ),
+              ),
               onPressed: onAction,
               child: Text(actionLabel),
             ),

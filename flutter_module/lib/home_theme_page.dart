@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'home_theme.dart';
 import 'pigeon/c1_messages.g.dart';
+import 'ui_glass.dart';
 
 /// The home theme library (route /home-theme), modeled on the Lee
 /// library: the active theme on top, filter chips （全部 / 内置 /
@@ -64,6 +65,10 @@ class _HomeThemePageState extends State<HomeThemePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: glassButtonColor(
+            context,
+            Theme.of(context).colorScheme.surfaceContainerHigh,
+          ),
           title: const Text('粘贴主题源码'),
           content: TextField(
             controller: controller,
@@ -80,6 +85,12 @@ class _HomeThemePageState extends State<HomeThemePage> {
               child: const Text('取消'),
             ),
             FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: glassButtonColor(
+                  context,
+                  Theme.of(context).colorScheme.primary,
+                ),
+              ),
               onPressed: () => Navigator.of(context).pop(controller.text),
               child: const Text('导入'),
             ),
@@ -116,6 +127,10 @@ class _HomeThemePageState extends State<HomeThemePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: glassButtonColor(
+            context,
+            Theme.of(context).colorScheme.surfaceContainerHigh,
+          ),
           title: Text('删除「${entry.name}」？'),
           content: const Text('删除后无法恢复，需要重新导入主题文件。'),
           actions: <Widget>[
@@ -124,6 +139,12 @@ class _HomeThemePageState extends State<HomeThemePage> {
               child: const Text('取消'),
             ),
             FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: glassButtonColor(
+                  context,
+                  Theme.of(context).colorScheme.primary,
+                ),
+              ),
               onPressed: () => Navigator.of(context).pop(true),
               child: const Text('删除'),
             ),
@@ -150,6 +171,8 @@ class _HomeThemePageState extends State<HomeThemePage> {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        flexibleSpace: const GlassSurface(child: SizedBox.expand()),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: _onBack,
@@ -294,7 +317,10 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: selected ? scheme.primaryContainer : scheme.surfaceContainerHighest,
+          color: glassButtonColor(
+            context,
+            selected ? scheme.primaryContainer : scheme.surfaceContainerHighest,
+          ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selected ? scheme.primary : scheme.outlineVariant,

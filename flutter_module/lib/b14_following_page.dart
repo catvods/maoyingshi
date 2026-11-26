@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/b14_following_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
+import 'ui_glass.dart';
 import 'widgets/pic_image.dart';
 
 /// B8 B14: Flutter version of the native mobile FollowingActivity.
@@ -567,6 +568,10 @@ class _B14FollowingPageState extends State<B14FollowingPage>
     final String? choice = await showDialog<String>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
+        backgroundColor: glassButtonColor(
+          context,
+          Theme.of(context).colorScheme.surfaceContainerHigh,
+        ),
         title: Text(screen.importTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -596,6 +601,12 @@ class _B14FollowingPageState extends State<B14FollowingPage>
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop('import'),
+            style: FilledButton.styleFrom(
+              backgroundColor: glassButtonColor(
+                context,
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
             child: Text(screen.importActionLabel),
           ),
         ],
@@ -626,6 +637,10 @@ class _B14FollowingPageState extends State<B14FollowingPage>
       final bool? importIt = await showDialog<bool>(
         context: context,
         builder: (BuildContext context) => AlertDialog(
+          backgroundColor: glassButtonColor(
+            context,
+            Theme.of(context).colorScheme.surfaceContainerHigh,
+          ),
           title: Text(preview.title),
           content: SingleChildScrollView(
             child: Column(
@@ -645,6 +660,12 @@ class _B14FollowingPageState extends State<B14FollowingPage>
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: glassButtonColor(
+                  context,
+                  Theme.of(context).colorScheme.primary,
+                ),
+              ),
               child: Text(preview.importLabel),
             ),
           ],
@@ -701,6 +722,8 @@ class _B14FollowingPageState extends State<B14FollowingPage>
       },
       child: Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          flexibleSpace: const GlassSurface(child: SizedBox.expand()),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _onBack,
@@ -809,6 +832,12 @@ class _ChannelErrorView extends StatelessWidget {
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: onRetry,
+                style: FilledButton.styleFrom(
+                  backgroundColor: glassButtonColor(
+                    context,
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
                 child: Text(retryLabel),
               ),
             ],
@@ -843,6 +872,12 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 24),
             FilledButton(
               onPressed: onRetry,
+              style: FilledButton.styleFrom(
+                backgroundColor: glassButtonColor(
+                  context,
+                  Theme.of(context).colorScheme.primary,
+                ),
+              ),
               child: Text(screen.retryLabel),
             ),
           ],
@@ -954,6 +989,10 @@ class _FollowingCard extends StatelessWidget {
     );
     return Card(
       margin: const EdgeInsets.only(left: 16, right: 16, bottom: 14),
+      color: glassButtonColor(
+        context,
+        Theme.of(context).colorScheme.surfaceContainerLow,
+      ),
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -999,16 +1038,14 @@ class _FollowingCard extends StatelessWidget {
                             ),
                             if (item.badgeVisible) ...[
                               const SizedBox(width: 8),
-                              Container(
+                              GlassSurface(
+                                solidColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
+                                borderRadius: BorderRadius.circular(10),
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
                                   vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primaryContainer,
-                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Text(
                                   item.badgeText,
@@ -1066,37 +1103,44 @@ class _FollowingCard extends StatelessWidget {
                   children: [
                     if (item.nextSeasonVisible)
                       _actionButton(
+                        context,
                         item.nextSeasonLabel,
                         isBusy('nextSeason'),
                         onNextSeason,
                       ),
                     _actionButton(
+                      context,
                       continueLabel,
                       isBusy('continue'),
                       onContinue,
                     ),
                     _actionButton(
+                      context,
                       checkLabel,
                       isBusy('check'),
                       onCheck,
                     ),
                     if (item.readVisible)
                       _actionButton(
+                        context,
                         readLabel,
                         isBusy('read'),
                         onRead,
                       ),
                     _actionButton(
+                      context,
                       item.notifyLabel,
                       isBusy('notify'),
                       onToggleNotify,
                     ),
                     _actionButton(
+                      context,
                       changeSourceLabel,
                       isBusy('changeSource'),
                       onChangeSource,
                     ),
                     _actionButton(
+                      context,
                       deleteLabel,
                       isBusy('delete'),
                       onDelete,
@@ -1114,12 +1158,21 @@ class _FollowingCard extends StatelessWidget {
 
 /// Per-row tonal action button, approximating the native 38dp tonal
 /// MaterialButtons in the card's HorizontalScrollView.
-Widget _actionButton(String label, bool busy, VoidCallback onPressed) {
+Widget _actionButton(
+  BuildContext context,
+  String label,
+  bool busy,
+  VoidCallback onPressed,
+) {
   return Padding(
     padding: const EdgeInsets.only(right: 8),
     child: FilledButton.tonal(
       onPressed: busy ? null : onPressed,
       style: FilledButton.styleFrom(
+        backgroundColor: glassButtonColor(
+          context,
+          Theme.of(context).colorScheme.secondaryContainer,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 12),
         minimumSize: const Size(0, 38),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,

@@ -425,6 +425,41 @@ public class Setting {
         Prefers.put("liquid_glass", enabled);
     }
 
+    /**
+     * Global glass: the all-components glass surfaces in the Flutter
+     * UI (cards, bars, chips), gated separately from the home bottom
+     * bar's own liquid-glass switch above. The whole parameter set is
+     * independent of the bar's: this switch plus the global blur and
+     * global translucency below (the bar keeps its liquid_glass_*
+     * values). Default off: the first rollout of all-components
+     * glass stuttered on device, so it is opt-in.
+     */
+    public static boolean isGlassGlobal() {
+        return Prefers.getBoolean("glass_global", false);
+    }
+
+    public static void putGlassGlobal(boolean enabled) {
+        Prefers.put("glass_global", enabled);
+    }
+
+    /** Global glass blur sigma in dp (0-40); the bar's blur is separate. */
+    public static int getGlassGlobalBlur() {
+        return Math.max(0, Math.min(40, Prefers.getInt("glass_global_blur", 10)));
+    }
+
+    public static void putGlassGlobalBlur(int blur) {
+        Prefers.put("glass_global_blur", Math.max(0, Math.min(40, blur)));
+    }
+
+    /** Global glass translucency in percent (0-100); the bar's is separate. */
+    public static int getGlassGlobalTranslucency() {
+        return Math.max(0, Math.min(100, Prefers.getInt("glass_global_translucency", 50)));
+    }
+
+    public static void putGlassGlobalTranslucency(int percent) {
+        Prefers.put("glass_global_translucency", Math.max(0, Math.min(100, percent)));
+    }
+
     public static boolean isShortDramaCollected() {
         return Prefers.getBoolean("short_drama_collected", false);
     }

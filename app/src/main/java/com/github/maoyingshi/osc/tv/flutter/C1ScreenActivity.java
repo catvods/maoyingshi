@@ -1064,6 +1064,9 @@ public class C1ScreenActivity extends AppCompatActivity {
     private Map<String, Object> buildUiConfig() {
         Map<String, Object> map = new HashMap<>();
         map.put("glassEnabled", Setting.isLiquidGlass());
+        map.put("glassGlobalEnabled", Setting.isGlassGlobal());
+        map.put("glassGlobalBlurDp", Setting.getGlassGlobalBlur());
+        map.put("glassGlobalTranslucency", Setting.getGlassGlobalTranslucency());
         map.put("glassBlurDp", Setting.getGlassBlur());
         map.put("glassDistortionDp", Setting.getGlassDistortion());
         map.put("glassTranslucency", Setting.getGlassTranslucency());

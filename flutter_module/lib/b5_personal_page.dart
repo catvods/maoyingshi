@@ -119,6 +119,8 @@ class _PersonalSettingsViewState extends State<PersonalSettingsView>
         act(() => api.toggleTouchOptimization());
       case 'liquidGlass':
         act(() => api.toggleLiquidGlass());
+      case 'glassGlobal':
+        act(() => api.toggleGlassGlobal());
       case 'dramaCollected':
         act(() => api.toggleShortDramaCollected());
       case 'glassBlur':
@@ -127,6 +129,10 @@ class _PersonalSettingsViewState extends State<PersonalSettingsView>
         afterDialog(api.openGlassDistortion());
       case 'glassTranslucency':
         afterDialog(api.openGlassTranslucency());
+      case 'glassGlobalBlur':
+        afterDialog(api.openGlassGlobalBlur());
+      case 'glassGlobalTranslucency':
+        afterDialog(api.openGlassGlobalTranslucency());
       case 'glassDispersion':
         act(() => api.toggleGlassDispersion());
       case 'glassReset':
@@ -172,6 +178,8 @@ IconData _iconFor(String key) {
     case 'glassBlur':
     case 'glassDistortion':
     case 'glassTranslucency':
+    case 'glassGlobalBlur':
+    case 'glassGlobalTranslucency':
       return Icons.format_list_numbered;
     case 'followingReminder':
       return Icons.notifications_outlined;
@@ -204,6 +212,7 @@ IconData _iconFor(String key) {
     case 'appBranding':
     case 'homeTheme':
     case 'liquidGlass':
+    case 'glassGlobal':
       return Icons.palette_outlined;
     case 'touchOptimization':
       return Icons.touch_app_outlined;
@@ -223,6 +232,8 @@ Color _colorFor(String key) {
     case 'glassBlur':
     case 'glassDistortion':
     case 'glassTranslucency':
+    case 'glassGlobalBlur':
+    case 'glassGlobalTranslucency':
       return Colors.orange;
     case 'autoBackup':
     case 'searchUi':
@@ -245,6 +256,7 @@ Color _colorFor(String key) {
     case 'appBranding':
     case 'homeTheme':
     case 'liquidGlass':
+    case 'glassGlobal':
       return Colors.purple;
     default:
       return Colors.grey;
@@ -262,6 +274,8 @@ bool _chevronFor(String key) {
     case 'glassBlur':
     case 'glassDistortion':
     case 'glassTranslucency':
+    case 'glassGlobalBlur':
+    case 'glassGlobalTranslucency':
       return true;
     default:
       return false;

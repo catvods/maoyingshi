@@ -106,6 +106,12 @@ public class B5HostApiImpl implements B5Messages.B5HostApi {
                 getSwitch(Setting.isTouchOptimized())));
         rows.add(row("liquidGlass", R.string.setting_liquid_glass, () ->
                 getSwitch(Setting.isLiquidGlass())));
+        rows.add(row("glassGlobal", R.string.setting_glass_global, () ->
+                getSwitch(Setting.isGlassGlobal())));
+        rows.add(row("glassGlobalBlur", R.string.setting_glass_global_blur, () ->
+                String.valueOf(Setting.getGlassGlobalBlur())));
+        rows.add(row("glassGlobalTranslucency", R.string.setting_glass_global_translucency, () ->
+                Setting.getGlassGlobalTranslucency() + "%"));
         rows.add(row("dramaCollected", R.string.setting_short_drama_collected, () ->
                 getSwitch(Setting.isShortDramaCollected())));
         rows.add(row("glassBlur", R.string.setting_glass_blur, () ->
@@ -212,6 +218,12 @@ public class B5HostApiImpl implements B5Messages.B5HostApi {
         Setting.putLiquidGlass(!Setting.isLiquidGlass());
         ConfigEvent.common();
         RefreshEvent.theme();
+    }
+
+    @Override
+    public void toggleGlassGlobal() {
+        Setting.putGlassGlobal(!Setting.isGlassGlobal());
+        ConfigEvent.common();
     }
 
     @Override
@@ -330,6 +342,8 @@ public class B5HostApiImpl implements B5Messages.B5HostApi {
         Setting.putGlassDistortion(30);
         Setting.putGlassTranslucency(50);
         Setting.putGlassDispersion(true);
+        Setting.putGlassGlobalBlur(5);
+        Setting.putGlassGlobalTranslucency(50);
         ConfigEvent.common();
     }
 
@@ -395,6 +409,26 @@ public class B5HostApiImpl implements B5Messages.B5HostApi {
         boolean[] completed = new boolean[]{false};
         SliderNumberDialog.show(activity, R.string.setting_glass_translucency, Setting.getGlassTranslucency(), 0, 100, value -> {
             Setting.putGlassTranslucency(value);
+            ConfigEvent.common();
+            completeOnce(result, completed);
+        });
+    }
+
+    @Override
+    public void openGlassGlobalBlur(B5Messages.VoidResult result) {
+        boolean[] completed = new boolean[]{false};
+        SliderNumberDialog.show(activity, R.string.setting_glass_global_blur, Setting.getGlassGlobalBlur(), 0, 40, value -> {
+            Setting.putGlassGlobalBlur(value);
+            ConfigEvent.common();
+            completeOnce(result, completed);
+        });
+    }
+
+    @Override
+    public void openGlassGlobalTranslucency(B5Messages.VoidResult result) {
+        boolean[] completed = new boolean[]{false};
+        SliderNumberDialog.show(activity, R.string.setting_glass_global_translucency, Setting.getGlassGlobalTranslucency(), 0, 100, value -> {
+            Setting.putGlassGlobalTranslucency(value);
             ConfigEvent.common();
             completeOnce(result, completed);
         });

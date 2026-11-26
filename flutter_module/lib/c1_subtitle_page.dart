@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'pigeon/c1_messages.g.dart';
+import 'ui_glass.dart';
 
 /// B8 C1: Flutter version of the native SettingSubtitleFragment.
 ///
@@ -78,6 +79,10 @@ class _C1SubtitlePageState extends State<C1SubtitlePage>
   }) {
     return Card(
       margin: const EdgeInsets.only(top: 8),
+      color: glassButtonColor(
+        context,
+        Theme.of(context).colorScheme.surfaceContainerLow,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -144,6 +149,10 @@ class _C1SubtitlePageState extends State<C1SubtitlePage>
       },
       child: Scaffold(
       appBar: AppBar(
+        backgroundColor: glassButtonColor(
+          context,
+          Theme.of(context).colorScheme.surface,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => _api.closeScreen(),

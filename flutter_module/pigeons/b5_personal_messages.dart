@@ -36,6 +36,7 @@ abstract class B5HostApi {
   void toggleEpisodeHistory();
   void toggleTouchOptimization();
   void toggleLiquidGlass();
+  void toggleGlassGlobal();
   void toggleShortDramaCollected();
   void toggleGlassDispersion();
 
@@ -83,14 +84,19 @@ abstract class B5HostApi {
   void openGroupRule();
 
   /// Opens the native number-slider dialogs for the glass values
-  /// (blur 0-40, distortion 0-30, translucency 0-100). Async: each
-  /// completes when a value is picked.
+  /// (blur 0-40, distortion 0-30, translucency 0-100, plus the
+  /// independent global-glass pair: blur 0-40, translucency 0-100).
+  /// Async: each completes when a value is picked.
   @async
   void openGlassBlur();
   @async
   void openGlassDistortion();
   @async
   void openGlassTranslucency();
+  @async
+  void openGlassGlobalBlur();
+  @async
+  void openGlassGlobalTranslucency();
 
   /// Auto-backup row: if backup is effectively enabled, turns it off
   /// (completes, state changed); otherwise asks for file access first

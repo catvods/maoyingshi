@@ -21,6 +21,9 @@ import 'package:material_ui/material_ui.dart';
 class UiConfig {
   const UiConfig({
     required this.glassEnabled,
+    required this.globalGlassEnabled,
+    required this.globalBlur,
+    required this.globalTranslucency,
     required this.glassBlur,
     required this.glassDistortion,
     required this.glassTranslucency,
@@ -29,8 +32,25 @@ class UiConfig {
     required this.scheme,
   });
 
-  /// Liquid glass master switch (Setting.isLiquidGlass).
+  /// Liquid glass master switch (Setting.isLiquidGlass). Gates the
+  /// home bottom bar's own glass; the all-components surfaces key
+  /// off [globalGlassEnabled] instead, so the two switch separately.
   final bool glassEnabled;
+
+  /// Global glass switch (Setting.isGlassGlobal, default off): the
+  /// all-components [GlassSurface] treatment on cards, bars and
+  /// chips across the Flutter UI. Independent of [glassEnabled] —
+  /// and its parameters are independent too: [globalBlur] and
+  /// [globalTranslucency] below, never the bar's values.
+  final bool globalGlassEnabled;
+
+  /// Backdrop blur sigma in dp for the global surfaces
+  /// (Setting.getGlassGlobalBlur, 0..40).
+  final double globalBlur;
+
+  /// Translucency 0..1 for the global surfaces
+  /// (Setting.getGlassGlobalTranslucency / 100).
+  final double globalTranslucency;
 
   /// Backdrop blur sigma in dp (Setting.getGlassBlur, 0..40).
   final double glassBlur;
@@ -57,6 +77,9 @@ class UiConfig {
   /// channel answer (and if the channel is unavailable).
   factory UiConfig.fallback() => const UiConfig(
         glassEnabled: true,
+        globalGlassEnabled: false,
+        globalBlur: 10,
+        globalTranslucency: 0.5,
         glassBlur: 10,
         glassDistortion: 30,
         glassTranslucency: 0.5,
@@ -72,6 +95,18 @@ class UiConfig {
 
   /// True when glass surfaces should actually blur.
   bool get glassActive => glassEnabled && glassBlur > 0;
+
+  /// The tint alpha for the global surfaces: the same formula as
+  /// [tintAlpha], fed with the global translucency instead of the
+  /// bar's, so the two chains never influence each other.
+  double get globalTintAlpha =>
+      (0.4 * (2 - 2 * globalTranslucency)).clamp(0.05, 0.8);
+
+  /// True when the all-components glass surfaces should blur: the
+  /// global switch is on and a global blur is configured. The shared
+  /// surfaces key off this, never off [glassActive], so the bottom
+  /// bar's switch can neither enable nor disable them.
+  bool get globalGlassActive => globalGlassEnabled && globalBlur > 0;
 }
 
 /// The live configuration. Widgets that paint glass surfaces listen to
@@ -131,6 +166,12 @@ Future<void> loadUiConfig() async {
     );
     uiConfig.value = UiConfig(
       glassEnabled: map['glassEnabled'] == true,
+      globalGlassEnabled: map['glassGlobalEnabled'] == true,
+      globalBlur: ((map['glassGlobalBlurDp'] as num?)?.toDouble() ?? 10),
+      globalTranslucency:
+          (((map['glassGlobalTranslucency'] as num?)?.toDouble() ?? 50) /
+                  100)
+              .clamp(0.0, 1.0),
       glassBlur: ((map['glassBlurDp'] as num?)?.toDouble() ?? 10),
       glassDistortion: ((map['glassDistortionDp'] as num?)?.toDouble() ?? 30),
       glassTranslucency:
@@ -145,15 +186,35 @@ Future<void> loadUiConfig() async {
   }
 }
 
-/// A surface painted with the app's liquid glass when the switch is
-/// on, and with its plain solid color when it is off.
+/// Marks a subtree whose backdrop is already being blurred by an
+/// ancestor [GlassSurface]. A nested [GlassSurface] inside the scope
+/// paints its tint and rim only, without a second [BackdropFilter]:
+/// stacked backdrop filters over an already-blurred backdrop buy
+/// nothing visually, cost a full extra blur pass each, and were a
+/// prime suspect in the stutter that got the first all-components
+/// glass rollout reverted.
+class _GlassBlurScope extends InheritedWidget {
+  const _GlassBlurScope({required super.child});
+
+  static bool of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_GlassBlurScope>() != null;
+
+  @override
+  bool updateShouldNotify(_GlassBlurScope oldWidget) => false;
+}
+
+/// A surface painted with the app's liquid glass when the global
+/// glass switch is on, and with its plain solid color when it is
+/// off.
 ///
 /// Mirrors the home bar's recipe (b8-home-glass): a backdrop blur
 /// under a translucent tint of the surface color, a faint white rim
 /// and a top highlight gradient (with the cyan/magenta dispersion
 /// fringe when dispersion is on). Glass off (or blur 0) renders the
 /// exact solid surface the caller would have painted before, so the
-/// switch is a pure appearance change.
+/// switch is a pure appearance change. The on/off, the blur and
+/// the tint all come from the global glass parameters (their own
+/// Setting values), never from the bottom bar's chain.
 class GlassSurface extends StatelessWidget {
   const GlassSurface({
     super.key,
@@ -179,6 +240,10 @@ class GlassSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Whether an ancestor GlassSurface is already blurring the
+    // backdrop; read here because the builder below runs under this
+    // widget, where the scope it installs must not count itself.
+    final bool nested = _GlassBlurScope.of(context);
     return ValueListenableBuilder<UiConfig>(
       valueListenable: uiConfig,
       builder: (BuildContext context, UiConfig cfg, Widget? _) {
@@ -186,7 +251,7 @@ class GlassSurface extends StatelessWidget {
             borderRadius ?? BorderRadius.zero;
         final Color solid =
             solidColor ?? Theme.of(context).colorScheme.surface;
-        if (!cfg.glassActive) {
+        if (!cfg.globalGlassActive) {
           return Container(
             decoration: BoxDecoration(color: solid, borderRadius: radius),
             padding: padding,
@@ -195,74 +260,81 @@ class GlassSurface extends StatelessWidget {
         }
         final Color base = tintColor ?? solid;
         final double brightness =
-            (0.5 - cfg.glassTranslucency).clamp(0.0, 0.5) * 0.12;
-        return ClipRRect(
-          borderRadius: radius,
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: cfg.glassBlur,
-              sigmaY: cfg.glassBlur,
+            (0.5 - cfg.globalTranslucency).clamp(0.0, 0.5) * 0.12;
+        final Widget stack = Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                color: base.withAlpha((cfg.globalTintAlpha * 255).round()),
+              ),
             ),
-            child: Stack(
-              children: [
-                Positioned.fill(
+            if (brightness > 0.001)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.white.withAlpha((brightness * 255).round()),
+                ),
+              ),
+            Padding(
+              padding: padding ?? EdgeInsets.zero,
+              child: child,
+            ),
+            if (showRim)
+              Positioned.fill(
+                child: IgnorePointer(
                   child: Container(
-                    color: base.withAlpha((cfg.tintAlpha * 255).round()),
-                  ),
-                ),
-                if (brightness > 0.001)
-                  Positioned.fill(
-                    child: Container(
-                      color:
-                          Colors.white.withAlpha((brightness * 255).round()),
-                    ),
-                  ),
-                Padding(
-                  padding: padding ?? EdgeInsets.zero,
-                  child: child,
-                ),
-                if (showRim)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: radius.resolve(
-                            Directionality.of(context),
-                          ),
-                          border: Border.all(
-                            color: Colors.white.withAlpha(26),
-                          ),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: cfg.glassDispersion
-                                ? [
-                                    const Color(0xFFE8FFFF).withAlpha(41),
-                                    Colors.white.withAlpha(
-                                      ((cfg.darkMode ? 0.14 : 0.22) * 255)
-                                          .round(),
-                                    ),
-                                    Colors.transparent,
-                                    const Color(0xFFFFE8F0).withAlpha(18),
-                                  ]
-                                : [
-                                    Colors.white.withAlpha(
-                                      ((cfg.darkMode ? 0.14 : 0.22) * 255)
-                                          .round(),
-                                    ),
-                                    Colors.transparent,
-                                  ],
-                            stops: cfg.glassDispersion
-                                ? const [0.0, 0.18, 0.45, 1.0]
-                                : const [0.0, 0.45],
-                          ),
-                        ),
+                    decoration: BoxDecoration(
+                      borderRadius: radius.resolve(
+                        Directionality.of(context),
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withAlpha(26),
+                      ),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: cfg.glassDispersion
+                            ? [
+                                const Color(0xFFE8FFFF).withAlpha(41),
+                                Colors.white.withAlpha(
+                                  ((cfg.darkMode ? 0.14 : 0.22) * 255)
+                                      .round(),
+                                ),
+                                Colors.transparent,
+                                const Color(0xFFFFE8F0).withAlpha(18),
+                              ]
+                            : [
+                                Colors.white.withAlpha(
+                                  ((cfg.darkMode ? 0.14 : 0.22) * 255)
+                                      .round(),
+                                ),
+                                Colors.transparent,
+                              ],
+                        stops: cfg.glassDispersion
+                            ? const [0.0, 0.18, 0.45, 1.0]
+                            : const [0.0, 0.45],
                       ),
                     ),
                   ),
-              ],
-            ),
-          ),
+                ),
+              ),
+          ],
+        );
+        // Anti-nesting: inside an already-blurred GlassSurface, add
+        // only the tint/rim layer — no second BackdropFilter (see
+        // _GlassBlurScope). The scope is installed either way so
+        // deeper surfaces keep skipping their own blur.
+        final Widget body = nested
+            ? stack
+            : BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: cfg.globalBlur,
+                  sigmaY: cfg.globalBlur,
+                ),
+                child: stack,
+              );
+        return ClipRRect(
+          borderRadius: radius,
+          child: _GlassBlurScope(child: body),
         );
       },
     );
@@ -270,13 +342,14 @@ class GlassSurface extends StatelessWidget {
 }
 
 /// The background color for a Material-style button or chip whose
-/// style only takes a color: the translucent glass tint while glass
-/// is on, the plain color while it is off. Large surfaces should use
-/// [GlassSurface] so they get the real backdrop blur.
+/// style only takes a color: the translucent glass tint while the
+/// global glass switch is on, the plain color while it is off.
+/// Large surfaces should use [GlassSurface] so they get the real
+/// backdrop blur.
 Color glassButtonColor(BuildContext context, Color base) {
   final UiConfig cfg = uiConfig.value;
-  if (!cfg.glassActive) return base;
-  return base.withAlpha((cfg.tintAlpha * 255).round());
+  if (!cfg.globalGlassActive) return base;
+  return base.withAlpha((cfg.globalTintAlpha * 255).round());
 }
 
 /// Wraps dialog content in a [GlassSurface]-backed transparent

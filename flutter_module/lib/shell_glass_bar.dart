@@ -550,16 +550,21 @@ class GlassBottomBarState extends State<GlassBottomBar> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
+          // The fade-out stop must be white at alpha 0, NOT
+          // Colors.transparent: transparent is black with alpha
+          // 0, and the gradient's RGB interpolation toward black
+          // darkened the fade zone into a gray band across the
+          // bar's upper middle (user-reported on every page).
           colors: dispersion
               ? [
                   const Color(0xFFE8FFFF).withAlpha(48),
                   Colors.white.withAlpha((topAlpha * 255).round()),
-                  Colors.transparent,
+                  Colors.white.withAlpha(0),
                   const Color(0xFFFFE8F0).withAlpha(20),
                 ]
               : [
                   Colors.white.withAlpha((topAlpha * 255).round()),
-                  Colors.transparent,
+                  Colors.white.withAlpha(0),
                 ],
           stops: dispersion
               ? const [0.0, 0.18, 0.45, 1.0]

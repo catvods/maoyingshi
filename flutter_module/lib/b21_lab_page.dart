@@ -1141,10 +1141,18 @@ class _B21LabListViewState extends State<_B21LabListView>
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: shell?.switchGroupLabel,
-        onPressed: _showGroupSheet,
-        child: const Icon(Icons.tune),
+      // Raised over the shell-resident glass bar: the default
+      // endFloat spot leaves the button's bottom at 16dp, almost
+      // entirely hidden behind the floating bar (16dp + 64dp);
+      // +82 puts a clear ~18dp gap above the bar, matching the
+      // home page FABs.
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 82),
+        child: FloatingActionButton(
+          tooltip: shell?.switchGroupLabel,
+          onPressed: _showGroupSheet,
+          child: const Icon(Icons.tune),
+        ),
       ),
     );
   }

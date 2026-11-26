@@ -35,7 +35,11 @@ import com.github.maoyingshi.osc.tv.setting.AutoBackupPolicy;
 import com.github.maoyingshi.osc.tv.setting.Setting;
 import com.github.maoyingshi.osc.tv.theme.GlobalThemes;
 import com.github.maoyingshi.osc.tv.theme.ThemeController;
+import com.github.maoyingshi.osc.tv.theme.ThemeEditor;
+import com.github.maoyingshi.osc.tv.theme.ThemeProfile;
+import com.github.maoyingshi.osc.tv.theme.ThemeProfileValidator;
 import com.github.maoyingshi.osc.tv.theme.ThemeTokens;
+import com.github.maoyingshi.osc.tv.theme.UserGlobalThemes;
 import com.github.maoyingshi.osc.tv.utils.CrashRestartMode;
 import com.github.maoyingshi.osc.tv.utils.FileChooser;
 import com.github.maoyingshi.osc.tv.utils.Notify;
@@ -860,6 +864,140 @@ public class C1ScreenActivity extends AppCompatActivity {
         }
     }
 
+    // ------------------------------------------------------------------
+    // User global themes (editor)
+    //
+    // The global theme editor's data path: the form reads a package's
+    // core slots (built-in catalog packages and user packages alike,
+    // via GlobalThemes.profileFor) and saves back into
+    // UserGlobalThemes only — built-ins are templates, never targets.
+    // A save starts from the base package's full profile and overrides
+    // just the form's core slots, so slots the form does not expose
+    // keep the base package's character.
+    // ------------------------------------------------------------------
+
+    /// The core color slots the global theme editor form exposes.
+    private static final String[] GLOBAL_THEME_CORE_SLOTS = {
+            "primary", "primaryContainer", "surface", "surfaceContainer",
+            "surfaceContainerHigh", "onSurface", "onSurfaceVariant", "outline"};
+
+    private Map<String, Object> globalThemeEditorData(ThemeProfile profile) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("name", profile.displayName());
+        map.put("light", globalThemeSlotMap(profile, false));
+        map.put("dark", globalThemeSlotMap(profile, true));
+        return map;
+    }
+
+    /// Core slot values for one mode: the profile's explicit value,
+    /// or the resolved token when the slot is unset (the default and
+    /// wallpaper packages carry no explicit slots), so the form
+    /// always opens on concrete colors.
+    private Map<String, String> globalThemeSlotMap(ThemeProfile profile, boolean dark) {
+        ThemeProfile.SlotSet slots = profile.slots(dark);
+        ThemeTokens tokens = new ThemeEditor(profile).preview(dark, 0);
+        Map<String, String> map = new HashMap<>();
+        for (String slot : GLOBAL_THEME_CORE_SLOTS) {
+            String value = globalThemeSlotValue(slots, slot);
+            if (value == null) value = String.format("#%06X", globalThemeTokenValue(tokens, slot) & 0xFFFFFF);
+            map.put(slot, value);
+        }
+        return map;
+    }
+
+    private static String globalThemeSlotValue(ThemeProfile.SlotSet slots, String slot) {
+        return switch (slot) {
+            case "primary" -> slots.primary;
+            case "primaryContainer" -> slots.primaryContainer;
+            case "surface" -> slots.surface;
+            case "surfaceContainer" -> slots.surfaceContainer;
+            case "surfaceContainerHigh" -> slots.surfaceContainerHigh;
+            case "onSurface" -> slots.onSurface;
+            case "onSurfaceVariant" -> slots.onSurfaceVariant;
+            case "outline" -> slots.outline;
+            default -> null;
+        };
+    }
+
+    private static int globalThemeTokenValue(ThemeTokens tokens, String slot) {
+        return switch (slot) {
+            case "primary" -> tokens.colorPrimary();
+            case "primaryContainer" -> tokens.colorPrimaryContainer();
+            case "surface" -> tokens.colorSurface();
+            case "surfaceContainer" -> tokens.colorSurfaceContainer();
+            case "surfaceContainerHigh" -> tokens.colorSurfaceContainerHigh();
+            case "onSurface" -> tokens.colorOnSurface();
+            case "onSurfaceVariant" -> tokens.colorOnSurfaceVariant();
+            case "outline" -> tokens.colorOutline();
+            default -> 0;
+        };
+    }
+
+    private static void setGlobalThemeSlot(ThemeProfile.SlotSet slots, String slot, String value) {
+        switch (slot) {
+            case "primary" -> slots.primary = value;
+            case "primaryContainer" -> slots.primaryContainer = value;
+            case "surface" -> slots.surface = value;
+            case "surfaceContainer" -> slots.surfaceContainer = value;
+            case "surfaceContainerHigh" -> slots.surfaceContainerHigh = value;
+            case "onSurface" -> slots.onSurface = value;
+            case "onSurfaceVariant" -> slots.onSurfaceVariant = value;
+            case "outline" -> slots.outline = value;
+            default -> {
+            }
+        }
+    }
+
+    private static void applyGlobalThemeSlots(ThemeProfile.SlotSet slots, Object raw) {
+        if (!(raw instanceof Map)) return;
+        Map<?, ?> map = (Map<?, ?>) raw;
+        for (String slot : GLOBAL_THEME_CORE_SLOTS) {
+            Object value = map.get(slot);
+            if (value == null) continue;
+            String text = String.valueOf(value).trim();
+            if (!text.isEmpty()) setGlobalThemeSlot(slots, slot, text);
+        }
+    }
+
+    /**
+     * Saves a user global theme from the editor form: {id (existing
+     * user id when editing, "" when creating), baseId (the template
+     * package when creating), name, light, dark}. The result is
+     * always a user package — built-ins are only ever the base.
+     * User packages are static palettes, so the saved profile drops
+     * any seed: its slots fully describe it.
+     */
+    private Map<String, Object> saveUserGlobalTheme(Map<?, ?> args) throws Exception {
+        if (args == null) throw new IllegalArgumentException("参数不正确");
+        String editId = String.valueOf(args.getOrDefault("id", ""));
+        String baseId = String.valueOf(args.getOrDefault("baseId", ""));
+        String name = String.valueOf(args.getOrDefault("name", "")).trim();
+        if (name.isEmpty()) throw new IllegalArgumentException("请填写主题名");
+        if (name.length() > 64) throw new IllegalArgumentException("主题名太长（最多 64 字）");
+        ThemeProfile profile;
+        if (UserGlobalThemes.isUserId(editId)) {
+            profile = GlobalThemes.profileFor(editId);
+            if (profile == null) throw new IllegalArgumentException("要编辑的主题不存在");
+        } else {
+            profile = GlobalThemes.profileFor(baseId);
+            if (profile == null) profile = GlobalThemes.profileFor("");
+        }
+        applyGlobalThemeSlots(profile.slots(false), args.get("light"));
+        applyGlobalThemeSlots(profile.slots(true), args.get("dark"));
+        String userId = UserGlobalThemes.isUserId(editId) ? editId : UserGlobalThemes.newId(name);
+        profile.id = UserGlobalThemes.profileIdFor(userId);
+        profile.name = name;
+        profile.seedSource = ThemeProfile.SEED_NONE;
+        profile.seedColor = null;
+        ThemeProfileValidator.Result validated = ThemeProfileValidator.validate(profile);
+        if (!validated.valid()) throw new IllegalArgumentException("配色不合法：" + validated.message());
+        UserGlobalThemes.Entry saved = UserGlobalThemes.save(userId, validated.profile());
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", saved.id);
+        map.put("name", saved.name);
+        return map;
+    }
+
     /**
      * B8 host rebind (see docs/b8-host-rebind-fix.md): registers every
      * Pigeon HostApi impl on the given messenger, bound to this Activity
@@ -905,6 +1043,24 @@ public class C1ScreenActivity extends AppCompatActivity {
                 String id = call.arguments == null ? "" : String.valueOf(call.arguments);
                 if (GlobalThemes.apply(getPreferences(MODE_PRIVATE), id)) result.success(true);
                 else result.error("apply_failed", "全局主题应用失败", null);
+            }
+            else if ("listUserGlobalThemes".equals(call.method)) result.success(UserGlobalThemes.listMaps());
+            else if ("getGlobalThemeEditorData".equals(call.method)) {
+                String id = call.arguments == null ? "" : String.valueOf(call.arguments);
+                ThemeProfile profile = GlobalThemes.profileFor(id);
+                if (profile == null) result.error("not_found", "主题不存在", null);
+                else result.success(globalThemeEditorData(profile));
+            }
+            else if ("saveUserGlobalTheme".equals(call.method)) {
+                try {
+                    result.success(saveUserGlobalTheme(call.arguments instanceof Map ? (Map<?, ?>) call.arguments : null));
+                } catch (Exception e) {
+                    result.error("invalid_theme", e.getMessage(), null);
+                }
+            }
+            else if ("deleteUserGlobalTheme".equals(call.method)) {
+                UserGlobalThemes.delete(call.arguments == null ? "" : String.valueOf(call.arguments));
+                result.success(null);
             }
             else if ("listUserThemes".equals(call.method)) result.success(listUserThemeMaps());
             else if ("getUserThemeText".equals(call.method)) {

@@ -127,6 +127,9 @@ const List<GlobalThemeEntry> globalThemeCatalog = <GlobalThemeEntry>[
 ];
 
 GlobalThemeEntry? globalThemeEntry(String id) {
+  for (final GlobalThemeEntry entry in userGlobalThemes.value) {
+    if (entry.id == id) return entry;
+  }
   for (final GlobalThemeEntry entry in globalThemeCatalog) {
     if (entry.id == id) return entry;
   }
@@ -171,4 +174,155 @@ Future<bool> setGlobalThemeId(String id) async {
   }
   await loadUiConfig();
   return true;
+}
+
+// ---------------------------------------------------------------------------
+// User global themes (editor)
+//
+// Packages the user builds in the global theme editor. They are
+// stored by the host as complete ThemeProfiles (UserGlobalThemes)
+// and apply through the same setGlobalThemeId path as a built-in
+// package; ids start with 'user-'. Built-ins are never overwritten —
+// the editor only ever writes here, using a built-in (or an existing
+// user package) as its template base.
+// ---------------------------------------------------------------------------
+
+final ValueNotifier<List<GlobalThemeEntry>> userGlobalThemes =
+    ValueNotifier<List<GlobalThemeEntry>>(<GlobalThemeEntry>[]);
+
+bool isUserGlobalThemeId(String id) => id.startsWith('user-');
+
+/// The core color slots the editor form exposes, per light/dark
+/// mode. Mirrors the host's GLOBAL_THEME_CORE_SLOTS in
+/// C1ScreenActivity; the host fills every one with a concrete value
+/// (the profile's own, or the resolved token when unset).
+const List<String> globalThemeCoreSlots = <String>[
+  'primary',
+  'primaryContainer',
+  'surface',
+  'surfaceContainer',
+  'surfaceContainerHigh',
+  'onSurface',
+  'onSurfaceVariant',
+  'outline',
+];
+
+Color? _globalHex(String hex) {
+  String h = hex.replaceAll('#', '');
+  if (h.length == 6) h = 'FF$h';
+  if (h.length != 8) return null;
+  final int? v = int.tryParse(h, radix: 16);
+  return v == null ? null : Color(v);
+}
+
+GlobalThemeEntry _userGlobalEntryFromHost(Map<dynamic, dynamic> map) {
+  final String id = '${map['id'] ?? ''}';
+  final String name = '${map['name'] ?? ''}';
+  final Color surface =
+      _globalHex('${map['surface'] ?? ''}') ?? const Color(0xFF455A64);
+  final Color primary =
+      _globalHex('${map['primary'] ?? ''}') ?? const Color(0xFF90A4AE);
+  return GlobalThemeEntry(
+    id: id,
+    name: name.isEmpty ? '未命名主题' : name,
+    tag: '我的主题',
+    description: '在主题编辑器里自己配的全局配色，点选即应用。',
+    colors: <Color>[surface, primary],
+    dark: surface.computeLuminance() < 0.35,
+  );
+}
+
+/// (Re)loads the user package list from the host. Never throws.
+Future<void> loadUserGlobalThemes() async {
+  try {
+    final List<dynamic>? raw = await _globalThemeChannel
+        .invokeMethod<List<dynamic>>('listUserGlobalThemes');
+    final List<GlobalThemeEntry> entries = <GlobalThemeEntry>[];
+    for (final dynamic item in raw ?? const <dynamic>[]) {
+      if (item is Map<dynamic, dynamic>) {
+        entries.add(_userGlobalEntryFromHost(item));
+      }
+    }
+    userGlobalThemes.value = entries;
+  } catch (_) {
+    // Keep the current list when the host cannot answer.
+  }
+}
+
+/// The editor form's starting values for a package: its name and
+/// the core slot colors of both modes, every slot concrete.
+class GlobalThemeEditorData {
+  const GlobalThemeEditorData({
+    required this.name,
+    required this.light,
+    required this.dark,
+  });
+
+  final String name;
+  final Map<String, String> light;
+  final Map<String, String> dark;
+}
+
+Map<String, String> _slotMap(Object? raw) {
+  final Map<String, String> out = <String, String>{};
+  if (raw is Map<dynamic, dynamic>) {
+    for (final String slot in globalThemeCoreSlots) {
+      out[slot] = '${raw[slot] ?? ''}';
+    }
+  }
+  return out;
+}
+
+/// Loads a package's editor data (built-in catalog id, '' for the
+/// default, or a user package id). Throws on host errors.
+Future<GlobalThemeEditorData> getGlobalThemeEditorData(String id) async {
+  final Map<dynamic, dynamic>? map = await _globalThemeChannel
+      .invokeMethod<Map<dynamic, dynamic>>('getGlobalThemeEditorData', id);
+  if (map == null) throw StateError('global theme not found: $id');
+  return GlobalThemeEditorData(
+    name: '${map['name'] ?? ''}',
+    light: _slotMap(map['light']),
+    dark: _slotMap(map['dark']),
+  );
+}
+
+/// Saves the editor form as a user package: [id] is the user
+/// package being edited (null when creating), [baseId] the template
+/// package a creation starts from. Returns the saved entry after
+/// refreshing the list. Throws on host errors.
+Future<GlobalThemeEntry?> saveUserGlobalTheme({
+  String? id,
+  required String baseId,
+  required String name,
+  required Map<String, String> light,
+  required Map<String, String> dark,
+}) async {
+  final Map<dynamic, dynamic>? map =
+      await _globalThemeChannel.invokeMethod<Map<dynamic, dynamic>>(
+    'saveUserGlobalTheme',
+    <String, Object>{
+      'id': id ?? '',
+      'baseId': baseId,
+      'name': name,
+      'light': light,
+      'dark': dark,
+    },
+  );
+  if (map == null) return null;
+  await loadUserGlobalThemes();
+  final String savedId = '${map['id'] ?? ''}';
+  for (final GlobalThemeEntry entry in userGlobalThemes.value) {
+    if (entry.id == savedId) return entry;
+  }
+  return null;
+}
+
+/// Deletes a user package. The applied profile is data of its own,
+/// so deleting the package that is currently applied leaves the
+/// colors in place; the selection then reads as 自定义， exactly
+/// like a theme-color hand edit.
+Future<void> deleteUserGlobalTheme(String id) async {
+  await _globalThemeChannel.invokeMethod<void>('deleteUserGlobalTheme', id);
+  await loadUserGlobalThemes();
+  await loadGlobalThemeId();
 }

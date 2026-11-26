@@ -22,6 +22,13 @@ import android.content.SharedPreferences;
  * matches a package and the selection reads as custom until another
  * package is applied.
  *
+ * <p>User-authored packages live in {@link UserGlobalThemes} and are
+ * resolved alongside the catalog here — {@link #apply},
+ * {@link #currentId()} and {@link #nameForId(String)} all recognize
+ * their ids — so a user package is indistinguishable from a built-in
+ * one once applied. Built-ins themselves are never overwritten: the
+ * editor saves into the user store only.
+ *
  * <p>Palette provenance: the four Lee-named packages （浅色 / 深色 /
  * 亮色主题 / 暖白影院） follow the directions LeeCat's own changelog
  * documents — warm white + orange-gold for 浅色， cool white + blue
@@ -83,14 +90,21 @@ public final class GlobalThemes {
     public static String nameForId(String id) {
         if (CUSTOM_ID.equals(id)) return "自定义";
         Entry entry = find(id);
-        return entry != null ? entry.name : "默认";
+        if (entry != null) return entry.name;
+        if (UserGlobalThemes.isUserId(id)) {
+            UserGlobalThemes.Entry user = UserGlobalThemes.find(id);
+            if (user != null) return user.name;
+        }
+        return "默认";
     }
 
     /**
      * The package the saved profile currently is: the entry whose
-     * profile id the profile carries, or {@link #CUSTOM_ID} when the
-     * profile came from the theme-color editor (a non-catalog preset
-     * or hand edits) rather than from this library.
+     * profile id the profile carries — a built-in catalog entry or a
+     * user package from {@link UserGlobalThemes} — or
+     * {@link #CUSTOM_ID} when the profile came from the theme-color
+     * editor (a non-catalog preset or hand edits) rather than from
+     * this library.
      */
     public static String currentId() {
         ThemeProfile profile = ThemeProfileStore.load();
@@ -98,8 +112,28 @@ public final class GlobalThemes {
             for (Entry entry : ENTRIES) {
                 if (entry.profileId.equals(profile.id)) return entry.id;
             }
+            for (UserGlobalThemes.Entry user : UserGlobalThemes.list()) {
+                if (UserGlobalThemes.profileIdFor(user.id).equals(profile.id)) return user.id;
+            }
         }
         return CUSTOM_ID;
+    }
+
+    /**
+     * The profile a package stands for: the built profile for a
+     * catalog id ("" and unknown ids give the default), or a copy of
+     * the stored profile for a user package id (null when that record
+     * is gone). The global theme editor reads its form values from
+     * this and uses it as the base a save overrides.
+     */
+    public static ThemeProfile profileFor(String id) {
+        if (UserGlobalThemes.isUserId(id)) {
+            UserGlobalThemes.Entry user = UserGlobalThemes.find(id);
+            return user == null ? null : user.profile.copy();
+        }
+        Entry entry = find(id);
+        if (entry == null) entry = find("");
+        return build(entry);
     }
 
     /**
@@ -110,6 +144,22 @@ public final class GlobalThemes {
      * the profile; the previous profile then stays in effect.
      */
     public static boolean apply(SharedPreferences prefs, String id) {
+        if (UserGlobalThemes.isUserId(id)) {
+            // A user package applies its stored profile as-is (the
+            // palette is the package; only the light/dark mode stays
+            // the user's current one, like the non-appearance
+            // built-ins), through the same store as every package.
+            UserGlobalThemes.Entry user = UserGlobalThemes.find(id);
+            if (user != null) {
+                ThemeProfile profile = user.profile.copy();
+                profile.mode = ThemeProfile.normalizeMode(ThemeProfileStore.load().mode);
+                ThemeProfileStore.ApplyResult result = ThemeProfileStore.apply(profile);
+                if (!result.success()) return false;
+                if (prefs != null) prefs.edit().putString(PREF_KEY, user.id).apply();
+                return true;
+            }
+            // The record is gone: fall through to the default package.
+        }
         Entry entry = find(id);
         if (entry == null) entry = find("");
         ThemeProfile profile = build(entry);

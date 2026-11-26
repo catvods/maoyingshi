@@ -166,6 +166,8 @@ void main() async {
   // The imported user themes, so a persisted user selection
   // resolves in the catalog from the first frame.
   await loadUserThemes();
+  // The user-authored global themes, for the same reason.
+  await loadUserGlobalThemes();
   String initialRoute = '/';
   try {
     initialRoute = await C1HostApi().getInitialRoute();

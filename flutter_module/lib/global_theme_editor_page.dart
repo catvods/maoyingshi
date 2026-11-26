@@ -3,6 +3,7 @@ import 'dart:async' show unawaited;
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:material_ui/material_ui.dart';
 
+import 'color_picker.dart';
 import 'global_theme.dart';
 import 'ui_glass.dart';
 
@@ -14,8 +15,9 @@ import 'ui_glass.dart';
 /// package through the host (never over a built-in); the host
 /// starts from the template's full ThemeProfile and overrides just
 /// these core slots, so slots the form does not expose keep the
-/// template's character. Colors are picked from a simple swatch
-/// palette or typed as #RRGGBB hex.
+/// template's character. Colors are picked from the shared
+/// visual colour picker (preset swatches + HSV sliders) or typed
+/// as #RRGGBB hex.
 ///
 /// Pops with the saved [GlobalThemeEntry], or null when backed out.
 class GlobalThemeEditorPage extends StatefulWidget {
@@ -50,14 +52,6 @@ const Map<String, String> _slotLabels = <String, String>{
   'onSurfaceVariant': '次要文字',
   'outline': '描边',
 };
-
-/// The simple palette offered next to the hex inputs.
-const List<String> _palette = <String>[
-  '#0B57D0', '#1565C0', '#006B74', '#386A20', '#A65D13', '#AE315B',
-  '#7043A6', '#596168', '#E53935', '#EF6C00', '#F9A825', '#43A047',
-  '#00897B', '#3949AB', '#8E24AA', '#6D4C41', '#455A64', '#252A30',
-  '#F5F0E6', '#FBF5EA', '#F6F9FC', '#FFFFFF', '#111111', '#000000',
-];
 
 String? _normalizeHex(String raw) {
   String h = raw.trim().replaceAll('#', '');
@@ -135,51 +129,23 @@ class _GlobalThemeEditorPageState extends State<GlobalThemeEditorPage> {
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _pickColor(TextEditingController controller) async {
-    final String? picked = await showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: glassButtonColor(
-            context,
-            Theme.of(context).colorScheme.surfaceContainerHigh,
-          ),
-          title: const Text('选一个颜色'),
-          content: SizedBox(
-            width: 280,
-            child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: <Widget>[
-                for (final String hex in _palette)
-                  InkWell(
-                    onTap: () => Navigator.of(context).pop(hex),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: _hexColor(hex),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
-            ),
-          ],
-        );
-      },
+  /// The same visual colour picker as the merged theme editor:
+  /// preset swatches + HSV sliders, confirmed back into the
+  /// field as '#RRGGBB'. The row's hex box stays for typing.
+  Future<void> _pickColor(
+    String label,
+    TextEditingController controller,
+  ) async {
+    final Color initial =
+        _hexColor(controller.text) ?? const Color(0xFF808080);
+    final Color? picked = await showColorPickerDialog(
+      context,
+      title: label,
+      initialColor: initial,
     );
-    if (picked != null) controller.text = picked;
+    if (picked != null) {
+      controller.text = colorPickerHex(picked, upperCase: true);
+    }
   }
 
   Map<String, String>? _collect(Map<String, TextEditingController> fields) {
@@ -246,7 +212,7 @@ class _GlobalThemeEditorPageState extends State<GlobalThemeEditorPage> {
             child: Text(label, style: const TextStyle(fontSize: 13)),
           ),
           InkWell(
-            onTap: () => unawaited(_pickColor(controller)),
+            onTap: () => unawaited(_pickColor(label, controller)),
             borderRadius: BorderRadius.circular(8),
             child: Container(
               width: 34,

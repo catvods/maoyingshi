@@ -5,6 +5,7 @@ import 'package:flutter/services.dart' show PlatformException;
 import 'package:material_ui/material_ui.dart';
 import 'package:rfw/formats.dart' show parseLibraryFile;
 
+import 'color_picker.dart';
 import 'global_theme.dart';
 import 'home_theme.dart';
 import 'merged_theme.dart';
@@ -387,28 +388,59 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
     );
   }
 
+  /// Opens the visual colour picker for one of the four palette
+  /// fields; the picked colour lands back in the field's
+  /// controller as '#rrggbb', so saving and applying downstream
+  /// are untouched. Cancelling leaves the field as it was.
+  Future<void> _pickColor(
+    String label,
+    TextEditingController controller,
+  ) async {
+    final Color initial =
+        mergedHexColor(controller.text) ?? const Color(0xFF808080);
+    final Color? picked = await showColorPickerDialog(
+      context,
+      title: label,
+      initialColor: initial,
+    );
+    if (picked != null) controller.text = mergedColorHex(picked);
+  }
+
+  /// A palette field: swatch + hex readout, not a keyboard field.
+  /// Tapping anywhere on the row opens the colour picker (which
+  /// still offers a manual hex box inside, for those who want it).
   Widget _hexField(String label, TextEditingController controller) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(28)),
-          ),
-          prefixIcon: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: _swatch(controller),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outlineVariant,
+      child: InkWell(
+        onTap: () => unawaited(_pickColor(label, controller)),
+        borderRadius: BorderRadius.circular(28),
+        child: InputDecorator(
+          decoration: InputDecoration(
+            labelText: label,
+            border: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(28)),
+            ),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: _swatch(controller),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: scheme.outlineVariant),
                 ),
               ),
+            ),
+            suffixIcon: const Icon(Icons.palette),
+          ),
+          child: Text(
+            controller.text.isEmpty ? '点按选择颜色' : controller.text,
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontFamily: 'monospace',
             ),
           ),
         ),

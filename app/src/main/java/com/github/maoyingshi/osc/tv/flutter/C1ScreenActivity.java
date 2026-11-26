@@ -38,6 +38,7 @@ import com.github.maoyingshi.osc.tv.theme.GlobalThemes;
 import com.github.maoyingshi.osc.tv.theme.ThemeController;
 import com.github.maoyingshi.osc.tv.theme.ThemeEditor;
 import com.github.maoyingshi.osc.tv.theme.ThemeProfile;
+import com.github.maoyingshi.osc.tv.theme.ThemeProfileStore;
 import com.github.maoyingshi.osc.tv.theme.ThemeProfileValidator;
 import com.github.maoyingshi.osc.tv.theme.ThemeTokens;
 import com.github.maoyingshi.osc.tv.theme.UserGlobalThemes;

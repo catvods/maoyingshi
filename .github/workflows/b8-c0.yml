@@ -371,4 +371,4 @@ jobs:
       - name: Run module unit tests
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:testMobileArm64_v8aReleaseUnitTest --tests "com.github.maoyingshi.osc.tv.module.*" --no-daemon
+          ./gradlew :app:testMobileArm64_v8aDebugUnitTest --tests "com.github.maoyingshi.osc.tv.module.*" --no-daemon

@@ -73,7 +73,12 @@ public final class ThemePresets {
             profile.seedColor = ThemeProfileValidator.formatColor(seed);
             profile.light = slots(false, selectedStyle);
             profile.dark = slots(true, selectedStyle);
-            // Store the same safe values the runtime will display, not a misleading pre-correction swatch.
+            fillResolved(profile, id, selectedStyle);
+            return profile;
+        }
+
+        // Store the same safe values the runtime will display, not a misleading pre-correction swatch.
+        private static void fillResolved(ThemeProfile profile, String id, ThemePaletteStyle selectedStyle) {
             for (boolean dark : new boolean[]{false, true}) {
                 ThemeTokens resolved = new ThemeEditor(profile).preview(dark, 0);
                 if (ThemeResolver.lastDiagnostic().startsWith("fallback")) {
@@ -86,10 +91,15 @@ public final class ThemePresets {
                 // 预设就不是「完整调色板」了。用户改过遮罩色后它仍会在复合底色上被夹到 ≥4.5:1。
                 slots.onItemOverlay = hex(resolved.colorOnPrimary());
             }
-            return profile;
         }
 
         private ThemeProfile.SlotSet slots(boolean dark, ThemePaletteStyle selectedStyle) {
+            return slotsFor(seed, secondary, success, warning, dark, selectedStyle);
+        }
+
+
+        private static ThemeProfile.SlotSet slotsFor(int seed, int secondary, int success, int warning,
+                                                     boolean dark, ThemePaletteStyle selectedStyle) {
             DynamicScheme scheme = selectedStyle.create(seed, dark);
             ThemeProfile.SlotSet slots = new ThemeProfile.SlotSet();
             boolean monochrome = selectedStyle == ThemePaletteStyle.MONOCHROME;
@@ -106,11 +116,11 @@ public final class ThemePresets {
             slots.onSurface = hex(Hct.from(hue, neutralChroma / 2, dark ? 94 : 12).toInt());
             slots.onSurfaceVariant = hex(Hct.from(hue, neutralChroma / 2, dark ? 80 : 32).toInt());
             slots.outline = hex(Hct.from(hue, neutralChroma, dark ? 62 : 48).toInt());
-            slots.success = semantic(success, dark);
+            slots.success = semantic(seed, success, dark);
             // 播放页「当前播放」环色：默认沿用成功色的语义绿，但保持独立槽位可单独编辑。
             slots.playerCurrent = slots.success;
-            slots.warning = semantic(warning, dark);
-            slots.error = semantic(0xFFBA1A1A, dark);
+            slots.warning = semantic(seed, warning, dark);
+            slots.error = semantic(seed, 0xFFBA1A1A, dark);
             // 条目遮罩：40% 黑刚好等于编译期 @color/black_40（#66000000），所以写清这两个槽
             // 不会改变遮罩观感，只是让「完整预设」名下有全部颜色槽（ThemePresetsTest 的契约）。
             slots.itemOverlay = hex(0xFF000000);
@@ -118,7 +128,7 @@ public final class ThemePresets {
             return slots;
         }
 
-        private String semantic(int color, boolean dark) {
+        private static String semantic(int seed, int color, boolean dark) {
             // Material harmonization shifts hue by at most 15 degrees; green/amber/red remain semantic.
             Hct harmonized = Hct.fromInt(Blend.harmonize(color, seed));
             return hex(Hct.from(harmonized.getHue(), harmonized.getChroma(), dark ? 80 : 36).toInt());
@@ -136,6 +146,27 @@ public final class ThemePresets {
             return preset;
         }
         return null;
+    }
+
+    /**
+     * A complete profile generated from an arbitrary seed colour — the
+     * merged theme library's palette path. A merged theme carries four
+     * explicit colours; the seed (its 主色) generates the full light/dark
+     * slot sets exactly the way a built-in preset's seed does, and the
+     * caller then overrides the palette mode's slots with the explicit
+     * colours (see GlobalThemes.buildPaletteProfile).
+     */
+    public static ThemeProfile completeProfile(String id, String name, int seed, ThemePaletteStyle style) {
+        ThemeProfile profile = ThemeProfile.defaultProfile();
+        profile.id = id;
+        profile.name = name;
+        profile.paletteStyle = style.id();
+        profile.seedSource = ThemeProfile.SEED_CUSTOM;
+        profile.seedColor = ThemeProfileValidator.formatColor(seed);
+        profile.light = Preset.slotsFor(seed, seed, 0xFF25734A, 0xFF8B5900, false, style);
+        profile.dark = Preset.slotsFor(seed, seed, 0xFF25734A, 0xFF8B5900, true, style);
+        Preset.fillResolved(profile, id, style);
+        return profile;
     }
 
     /** A style change updates template-generated slots, but never discards individual user edits. */

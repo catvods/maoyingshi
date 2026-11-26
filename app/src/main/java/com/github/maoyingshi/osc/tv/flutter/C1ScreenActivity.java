@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -190,6 +191,7 @@ public class C1ScreenActivity extends AppCompatActivity {
     public static final String ROUTE_HOME_THEME = "/home-theme";
     /** Global theme library route (no parameters). */
     public static final String ROUTE_GLOBAL_THEME = "/global-theme";
+    public static final String ROUTE_THEME = "/theme";
     /** Local-file browser route; append "?selectDir=&readMode=" (both URL-encoded booleans). */
     public static final String ROUTE_LOCAL = "/local";
     /** App-branding page route (no parameters). */
@@ -1002,6 +1004,154 @@ public class C1ScreenActivity extends AppCompatActivity {
         return map;
     }
 
+    // ------------------------------------------------------------------
+    // Merged themes (theme library merge)
+    //
+    // One theme = a home structure (RFW layout, the home_theme_id
+    // preference) bound to a palette (a ThemeProfile through the
+    // store). Applying writes both sides in one call so the library
+    // stays tap-to-apply: the Dart side then refreshes its
+    // homeThemeId notifier (home rebuilds) and the UI config (every
+    // screen repaints) from the returned structure id. The selection
+    // itself is the merged_theme_id preference: a catalog structure
+    // id, "palette:<global id>" for a palette-only entry, or a user
+    // merged record id from UserGlobalThemes.
+    // ------------------------------------------------------------------
+
+    private static String mergedArg(Map<?, ?> args, String key) {
+        if (args == null) return null;
+        Object value = args.get(key);
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private Map<String, Object> applyMergedTheme(Map<?, ?> args) throws Exception {
+        if (args == null) throw new IllegalArgumentException("参数不正确");
+        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        String mergedId = mergedArg(args, "mergedId");
+        if (mergedId == null) mergedId = "";
+        UserGlobalThemes.MergedEntry record = UserGlobalThemes.findMerged(mergedId);
+        if (record != null) {
+            // A user merged theme: its materialized structure source
+            // plus its stored palette profile, in one step.
+            prefs.edit().putString("home_theme_id", record.structureSourceId()).apply();
+            ThemeProfile profile = record.profile.copy();
+            profile.mode = ThemeProfile.normalizeMode(ThemeProfileStore.load().mode);
+            if (!ThemeProfileStore.apply(profile).success()) {
+                throw new IllegalStateException("主题配色应用失败");
+            }
+        } else {
+            if (args.containsKey("structureId")) {
+                String structureId = mergedArg(args, "structureId");
+                prefs.edit().putString("home_theme_id", structureId == null ? "" : structureId).apply();
+            }
+            String globalId = mergedArg(args, "globalId");
+            if (globalId != null) {
+                if (!GlobalThemes.apply(prefs, globalId)) {
+                    throw new IllegalStateException("主题配色应用失败");
+                }
+            } else if (args.get("palette") instanceof Map) {
+                Map<?, ?> palette = (Map<?, ?>) args.get("palette");
+                String profileId = UserGlobalThemes.mergedProfileIdFor(
+                        mergedId.replaceAll("[^a-zA-Z0-9-]", ""));
+                if (!GlobalThemes.applyPalette(profileId, mergedArg(args, "name"),
+                        mergedArg(palette, "accent"), mergedArg(palette, "background"),
+                        mergedArg(palette, "gradient"), mergedArg(palette, "surface"))) {
+                    throw new IllegalStateException("主题配色应用失败");
+                }
+            }
+        }
+        prefs.edit().putString("merged_theme_id", mergedId).apply();
+        Map<String, Object> out = new HashMap<>();
+        out.put("structureId", prefs.getString("home_theme_id", ""));
+        return out;
+    }
+
+    /**
+     * Saves a parametric-editor theme as a merged record: {id
+     * (existing user merged id when editing, "" when creating),
+     * name, description, structureSourceId (the materialized user
+     * source theme the editor just saved), structureRef, accent,
+     * background, gradient, surface, layout, hero, heroHeight,
+     * gridColumns, cardRadius, floatingNavigation, glassNavigation,
+     * navigationOpacity, titleFont}. The palette profile is built
+     * from the four colours here, so the record applies exactly like
+     * a catalog merged theme. Saving the record that is currently
+     * applied re-applies it, so an edit to the live theme takes
+     * effect without another tap.
+     */
+    private Map<String, Object> saveMergedTheme(Map<?, ?> args) throws Exception {
+        if (args == null) throw new IllegalArgumentException("参数不正确");
+        String editId = mergedArg(args, "id");
+        String name = mergedArg(args, "name");
+        name = name == null ? "" : name.trim();
+        if (name.isEmpty()) throw new IllegalArgumentException("请填写主题名");
+        if (name.length() > 30) throw new IllegalArgumentException("主题名太长（最多 30 字）");
+        String description = mergedArg(args, "description");
+        if (description != null && description.length() > 100) {
+            throw new IllegalArgumentException("描述太长（最多 100 字）");
+        }
+        String userId = UserGlobalThemes.isUserId(editId) ? editId : UserGlobalThemes.newId(name);
+        ThemeProfile profile = GlobalThemes.buildPaletteProfile(
+                UserGlobalThemes.mergedProfileIdFor(userId), name,
+                mergedArg(args, "accent"), mergedArg(args, "background"),
+                mergedArg(args, "gradient"), mergedArg(args, "surface"));
+        ThemeProfileValidator.Result validated = ThemeProfileValidator.validate(profile);
+        if (!validated.valid()) throw new IllegalArgumentException("配色不合法：" + validated.message());
+        org.json.JSONObject params = new org.json.JSONObject();
+        params.put("name", name);
+        params.put("description", description == null ? "" : description);
+        params.put("structureSourceId", mergedArg(args, "structureSourceId"));
+        params.put("structureRef", mergedArg(args, "structureRef"));
+        params.put("accent", mergedArg(args, "accent"));
+        params.put("background", mergedArg(args, "background"));
+        params.put("gradient", mergedArg(args, "gradient"));
+        params.put("surface", mergedArg(args, "surface"));
+        params.put("layout", mergedArg(args, "layout"));
+        params.put("hero", Boolean.TRUE.equals(args.get("hero")));
+        params.put("heroHeight", args.get("heroHeight") instanceof Number ? ((Number) args.get("heroHeight")).doubleValue() : 220.0);
+        params.put("gridColumns", args.get("gridColumns") instanceof Number ? ((Number) args.get("gridColumns")).intValue() : 3);
+        params.put("cardRadius", args.get("cardRadius") instanceof Number ? ((Number) args.get("cardRadius")).doubleValue() : 18.0);
+        params.put("floatingNavigation", Boolean.TRUE.equals(args.get("floatingNavigation")));
+        params.put("glassNavigation", Boolean.TRUE.equals(args.get("glassNavigation")));
+        params.put("navigationOpacity", args.get("navigationOpacity") instanceof Number ? ((Number) args.get("navigationOpacity")).doubleValue() : 0.28);
+        params.put("titleFont", mergedArg(args, "titleFont"));
+        UserGlobalThemes.MergedEntry saved = UserGlobalThemes.saveMerged(userId, params, validated.profile());
+        // An edit to the live merged theme re-applies at once.
+        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        if (userId.equals(prefs.getString("merged_theme_id", ""))) {
+            Map<String, Object> applyArgs = new HashMap<>();
+            applyArgs.put("mergedId", userId);
+            applyMergedTheme(applyArgs);
+        }
+        Map<String, Object> out = new HashMap<>();
+        out.put("id", saved.id);
+        out.put("name", saved.name);
+        out.put("structureSourceId", saved.structureSourceId());
+        return out;
+    }
+
+    /**
+     * Deletes a merged record. When the record was the applied
+     * theme, the merged selection clears; when the home still points
+     * at the record's materialized structure source, it falls back
+     * to the built-in home (the Dart side deletes the source file
+     * right after). Returns the structure id the home now uses.
+     */
+    private Map<String, Object> deleteMergedTheme(String id) {
+        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        UserGlobalThemes.MergedEntry record = UserGlobalThemes.findMerged(id);
+        UserGlobalThemes.deleteMerged(id);
+        if (id.equals(prefs.getString("merged_theme_id", ""))) {
+            prefs.edit().putString("merged_theme_id", "").apply();
+        }
+        if (record != null && record.structureSourceId().equals(prefs.getString("home_theme_id", ""))) {
+            prefs.edit().putString("home_theme_id", "").apply();
+        }
+        Map<String, Object> out = new HashMap<>();
+        out.put("structureId", prefs.getString("home_theme_id", ""));
+        return out;
+    }
+
     /**
      * B8 host rebind (see docs/b8-host-rebind-fix.md): registers every
      * Pigeon HostApi impl on the given messenger, bound to this Activity
@@ -1065,6 +1215,29 @@ public class C1ScreenActivity extends AppCompatActivity {
             else if ("deleteUserGlobalTheme".equals(call.method)) {
                 UserGlobalThemes.delete(call.arguments == null ? "" : String.valueOf(call.arguments));
                 result.success(null);
+            }
+            else if ("getMergedThemeId".equals(call.method)) result.success(getPreferences(MODE_PRIVATE).getString("merged_theme_id", ""));
+            else if ("applyMergedTheme".equals(call.method)) {
+                try {
+                    result.success(applyMergedTheme(call.arguments instanceof Map ? (Map<?, ?>) call.arguments : null));
+                } catch (Exception e) {
+                    result.error("apply_failed", e.getMessage(), null);
+                }
+            }
+            else if ("listMergedThemes".equals(call.method)) result.success(UserGlobalThemes.mergedMaps());
+            else if ("saveMergedTheme".equals(call.method)) {
+                try {
+                    result.success(saveMergedTheme(call.arguments instanceof Map ? (Map<?, ?>) call.arguments : null));
+                } catch (Exception e) {
+                    result.error("invalid_theme", e.getMessage(), null);
+                }
+            }
+            else if ("deleteMergedTheme".equals(call.method)) {
+                try {
+                    result.success(deleteMergedTheme(call.arguments == null ? "" : String.valueOf(call.arguments)));
+                } catch (Exception e) {
+                    result.error("delete_failed", e.getMessage(), null);
+                }
             }
             else if ("listUserThemes".equals(call.method)) result.success(listUserThemeMaps());
             else if ("getUserThemeText".equals(call.method)) {

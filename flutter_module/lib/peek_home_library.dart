@@ -21,6 +21,12 @@ class PeekHomeHooks {
 
   /// PeekStickyGrid reports scrolling near the end of the grid.
   static VoidCallback? onGridEndReached;
+
+  /// The active parametric theme's title font family ('serif' /
+  /// 'monospace'; null for the default sans). The bridge sets it
+  /// from the theme's meta while the themed home is mounted; the
+  /// caption widgets below render item titles with it.
+  static String? titleFontFamily;
 }
 
 BoxFit _fit(Object? value, BoxFit fallback) {
@@ -248,11 +254,12 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFFFFFFFF),
+                style: TextStyle(
+                  color: const Color(0xFFFFFFFF),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   decoration: TextDecoration.none,
+                  fontFamily: PeekHomeHooks.titleFontFamily,
                 ),
               ),
               if (remarks.isNotEmpty)
@@ -290,6 +297,7 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 decoration: TextDecoration.none,
+                fontFamily: PeekHomeHooks.titleFontFamily,
               ),
             ),
             if (remarks.isNotEmpty)

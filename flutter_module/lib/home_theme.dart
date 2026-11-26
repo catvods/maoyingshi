@@ -462,6 +462,10 @@ HomeThemeEntry _userEntryFromHost(Map<dynamic, dynamic> map) {
   final Color? accent = _metaHex(_metaString(meta, 'accent') ?? '');
   final RegExpMatch? nav = RegExp(r'"navigationOpacity"\s*:\s*([0-9.]+)')
       .firstMatch(meta);
+  // A meta that turns glass navigation off wants a solid bar: the
+  // bar's opacity override is the switch the shell bar honours.
+  final bool glassNavOff = meta.contains('"glassNavigation": false') ||
+      meta.contains('"glassNavigation":false');
   return HomeThemeEntry(
     id: id,
     name: name.isEmpty ? '未命名主题' : name,
@@ -471,7 +475,9 @@ HomeThemeEntry _userEntryFromHost(Map<dynamic, dynamic> map) {
     dark: dark,
     barTint: colors.first,
     barAccent: accent,
-    barOpacity: nav == null ? null : double.tryParse(nav.group(1)!),
+    barOpacity: glassNavOff
+        ? 1.0
+        : (nav == null ? null : double.tryParse(nav.group(1)!)),
     barFloating: meta.contains('"floatingNavigation": false') ||
             meta.contains('"floatingNavigation":false')
         ? false

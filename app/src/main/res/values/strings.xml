@@ -3043,6 +3043,8 @@
     <string name="setting_home_theme_sub">Home layout, filters and bottom-bar style</string>
     <string name="setting_global_theme">Global theme</string>
     <string name="setting_global_theme_sub">App-wide colors for every screen</string>
+    <string name="setting_theme_library">Theme</string>
+    <string name="setting_theme_library_sub">Home layout and app-wide colors, one library</string>
     <string name="setting_following_reminder_sub">Remind before airing, 15/30/60 min early</string>
     <string name="setting_following_reminder_off">Off</string>
     <string name="setting_following_reminder_value">%1$d min early</string>

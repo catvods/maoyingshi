@@ -88,6 +88,15 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
   bool _hasMore = false;
   int _nextPage = 1;
   String _displayStyle = 'grid';
+
+  /// Component parameters of a parametric-editor theme, read from
+  /// its leecat meta header in _loadThemeLibrary and fed into the
+  /// data below. Built-in and plain imported themes carry no
+  /// parametric marker, so every value stays at the bridge's
+  /// long-standing defaults for them.
+  bool _paramHero = true;
+  double? _paramHeroHeight;
+  int? _paramGridColumns;
   String _errorMessage = '';
   int _immersiveIndex = 0;
   int _loadSerial = 0;
@@ -140,17 +149,62 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
       PeekHomeHooks.onGridEndReached = null;
     }
     PeekHomeHooks.onCarouselPage = null;
+    PeekHomeHooks.titleFontFamily = null;
     super.dispose();
   }
 
   Future<void> _loadThemeLibrary() async {
     try {
       final String text = await loadThemeText(homeThemeId.value);
+      _readEditorParams(text);
       _runtime.update(_themeName, parseLibraryFile(text));
       if (mounted) setState(() => _themeReady = true);
     } catch (_) {
       if (mounted) setState(() => _themeFailed = true);
     }
+  }
+
+  /// Reads the parametric editor's component parameters out of a
+  /// materialized theme's leecat meta header (the bridge's data
+  /// fields are the injection points the RFW sources branch on:
+  /// layout -> displayStyle, hero -> hasRecommend, heroHeight and
+  /// gridColumns verbatim). The title font goes through the peek
+  /// library's hook: its caption widgets render the item titles.
+  void _readEditorParams(String text) {
+    final int nl = text.indexOf('\n');
+    final String first = nl >= 0 ? text.substring(0, nl) : text;
+    if (!first.contains('leecat-theme:')) return;
+    if (!first.contains('"parametric":true') &&
+        !first.contains('"parametric": true')) {
+      return;
+    }
+    String? metaString(String key) =>
+        RegExp('"$key"\\s*:\\s*"([^"]*)"').firstMatch(first)?.group(1);
+    double? metaNumber(String key) {
+      final RegExpMatch? m =
+          RegExp('"$key"\\s*:\\s*([0-9.]+)').firstMatch(first);
+      return m == null ? null : double.tryParse(m.group(1)!);
+    }
+
+    final String? layout = metaString('layout');
+    if (layout != null) {
+      _displayStyle = switch (layout) {
+        'landscape' => 'banner',
+        'compact' => 'list',
+        _ => 'grid',
+      };
+    }
+    if (first.contains('"hero":false') || first.contains('"hero": false')) {
+      _paramHero = false;
+    }
+    _paramHeroHeight = metaNumber('heroHeight');
+    final double? columns = metaNumber('gridColumns');
+    if (columns != null) _paramGridColumns = columns.round().clamp(2, 4);
+    PeekHomeHooks.titleFontFamily = switch (metaString('titleFont')) {
+      'serif' => 'serif',
+      'mono' => 'monospace',
+      _ => null,
+    };
   }
 
   Future<void> _loadAll() async {
@@ -487,14 +541,14 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
       'immersiveFilterPanelHeight': _filterGroups.length * 39.0 + 10.0,
       'source': <String, Object?>{'name': screen.title},
       'totalLabel': '${_items.length}',
-      'hasRecommend': _recommend.isNotEmpty,
+      'hasRecommend': _paramHero && _recommend.isNotEmpty,
       'hasManyClasses': screen.tabs.length > 5,
       'displayStyle': _displayStyle,
-      'gridColumns': 3,
+      'gridColumns': _paramGridColumns ?? 3,
       'largeGridColumns': 2,
       'bannerColumns': 2,
-      'glassGridColumns': 3,
-      'heroHeight': 220.0,
+      'glassGridColumns': _paramGridColumns ?? 3,
+      'heroHeight': _paramHeroHeight ?? 220.0,
       'wideListRatio': 2.4,
       'textListRatio': 5.5,
       // The pinned header must reserve the filter panel's height

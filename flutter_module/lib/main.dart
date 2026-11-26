@@ -7,9 +7,9 @@ import 'ui_glass.dart';
 import 'b10_collect_page.dart';
 import 'b11_home_page.dart';
 import 'global_theme.dart';
-import 'global_theme_page.dart';
 import 'home_theme.dart';
-import 'home_theme_page.dart';
+import 'merged_theme.dart';
+import 'theme_library_page.dart';
 import 'b14_following_page.dart';
 import 'b15_local_page.dart';
 import 'b16_report_page.dart';
@@ -168,6 +168,10 @@ void main() async {
   await loadUserThemes();
   // The user-authored global themes, for the same reason.
   await loadUserGlobalThemes();
+  // The merged theme selection and the user's merged themes, so
+  // the library opens on the right state from the first frame.
+  await loadMergedThemeId();
+  await loadMergedUserThemes();
   String initialRoute = '/';
   try {
     initialRoute = await C1HostApi().getInitialRoute();
@@ -217,12 +221,14 @@ final Map<String, WidgetBuilder> _c0Routes = {
   // untouched. hk:// sites and WebHome themes fall back to the
   // native home in the host diversion, never in Dart.
   '/home': (context) => const B11HomePage(),
-  // The home theme library (ported PeekPro themes); opened from
-  // the personal settings page.
-  '/home-theme': (context) => const HomeThemePage(),
-  // The global theme library (whole-app palette packages); opened
-  // from the settings home's general group, under the home theme.
-  '/global-theme': (context) => const GlobalThemePage(),
+  // The merged theme library (home structures bound to whole-app
+  // palettes); the settings home's single theme row opens /theme.
+  '/theme': (context) => const ThemeLibraryPage(),
+  // Compatibility: the pre-merge routes land in the same library —
+  // the home-theme route on the full list, the global-theme route
+  // on the palette-only filter.
+  '/home-theme': (context) => const ThemeLibraryPage(),
+  '/global-theme': (context) => const ThemeLibraryPage(initialFilter: 3),
   // B8 B3: the settings family. One literal route per member (the
   // routes table matches exact strings); '/settings' without a
   // member defaults to the first member, TMDB. B4/B5/B6/B7 add

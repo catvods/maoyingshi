@@ -2,6 +2,8 @@ package com.github.maoyingshi.osc.tv.theme;
 
 import android.content.SharedPreferences;
 
+import com.google.android.material.color.utilities.Hct;
+
 /**
  * Global themes: named whole-app palette packages — the LeeCat-style
  * 全局主题 library that sits next to the home themes. Where a home
@@ -169,6 +171,92 @@ public final class GlobalThemes {
         if (!result.success()) return false;
         if (prefs != null) prefs.edit().putString(PREF_KEY, entry.id).apply();
         return true;
+    }
+
+    // ------------------------------------------------------------------
+    // Four-colour palettes (merged theme library)
+    //
+    // A merged theme (see the theme library merge) binds a home
+    // structure to a LeeCat-meta-shaped palette: 主色 (accent), 背景色
+    // (background), 渐变色 (gradient) and 面板色 (surface). Building
+    // its profile generates the complete slot sets from the accent
+    // seed through the preset machinery, then overrides the slot set
+    // of the palette's own mode — dark for a dark palette, light for
+    // a light one, by the background's luminance — with the four
+    // explicit colours:
+    //   主色   -> primary (+ focus, + seed)
+    //   背景色 -> surface
+    //   渐变色 -> primaryContainer
+    //   面板色 -> surfaceContainer (+ surfaceContainerHigh, tone-shifted)
+    // The other mode's slots stay seed-generated, so the palette
+    // reads coherently in both appearances, and the generated
+    // onSurface of the overridden mode stays valid because it was
+    // generated for a surface of the same luminance side.
+    // ------------------------------------------------------------------
+
+    /** Builds (but does not apply) the profile a four-colour palette stands for. */
+    public static ThemeProfile buildPaletteProfile(String profileId, String name,
+                                                   String accent, String background,
+                                                   String gradient, String surface) {
+        int seed = parseColor(accent, 0xFF0B57D0);
+        ThemeProfile profile = ThemePresets.completeProfile(
+                profileId, name, seed, ThemePaletteStyle.TONAL_SPOT);
+        boolean darkPalette = luminance(parseColor(background, 0xFF000000)) < 0.35;
+        ThemeProfile.SlotSet slots = profile.slots(darkPalette);
+        slots.primary = formatColor(seed);
+        slots.focus = slots.primary;
+        slots.surface = formatColor(parseColor(background, darkPalette ? 0xFF101418 : 0xFFF7F7F7));
+        slots.primaryContainer = formatColor(parseColor(gradient, seed));
+        int surfaceColor = parseColor(surface, parseColor(background, 0xFF20242A));
+        slots.surfaceContainer = formatColor(surfaceColor);
+        slots.surfaceContainerHigh = formatColor(toneShift(surfaceColor, darkPalette ? 6 : -6));
+        profile.seedSource = ThemeProfile.SEED_CUSTOM;
+        profile.seedColor = formatColor(seed);
+        return profile;
+    }
+
+    /**
+     * Applies a four-colour palette as the saved profile, keeping the
+     * current light/dark mode. Returns false when the store rejects
+     * the profile; the previous profile then stays in effect.
+     */
+    public static boolean applyPalette(String profileId, String name,
+                                       String accent, String background,
+                                       String gradient, String surface) {
+        ThemeProfile profile = buildPaletteProfile(profileId, name, accent, background, gradient, surface);
+        profile.mode = ThemeProfile.normalizeMode(ThemeProfileStore.load().mode);
+        return ThemeProfileStore.apply(profile).success();
+    }
+
+    /** Parses "#RRGGBB" / "RRGGBB" / "#AARRGGBB"; the fallback on anything else. */
+    public static int parseColor(String hex, int fallback) {
+        if (hex == null) return fallback;
+        String text = hex.trim();
+        if (text.startsWith("#")) text = text.substring(1);
+        if (text.length() == 8) text = text.substring(2);
+        if (text.length() != 6) return fallback;
+        try {
+            return 0xFF000000 | Integer.parseInt(text, 16);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private static String formatColor(int color) {
+        return ThemeProfileValidator.formatColor(color);
+    }
+
+    private static double luminance(int color) {
+        double r = ((color >> 16) & 0xFF) / 255.0;
+        double g = ((color >> 8) & 0xFF) / 255.0;
+        double b = (color & 0xFF) / 255.0;
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+
+    private static int toneShift(int color, double toneDelta) {
+        Hct hct = Hct.fromInt(color);
+        double tone = Math.max(0, Math.min(100, hct.getTone() + toneDelta));
+        return Hct.from(hct.getHue(), hct.getChroma(), tone).toInt();
     }
 
     private static ThemeProfile build(Entry entry) {

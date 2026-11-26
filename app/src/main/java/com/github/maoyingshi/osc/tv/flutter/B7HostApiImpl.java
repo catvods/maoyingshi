@@ -229,12 +229,13 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
 
     private B7Messages.B7SettingsGroup generalGroup() {
         List<B7Messages.B7SettingsRow> rows = new ArrayList<>();
-        RowText homeTheme = safeRow(this::homeThemeName);
-        rows.add(row("homeTheme", R.string.setting_home_theme, R.string.setting_home_theme_sub,
+        // The merged theme library: one row for home structure +
+        // app-wide palette (the home-theme and global-theme rows
+        // merged; the row key stays "homeTheme" so the Dart page's
+        // tap/icon cases are unchanged).
+        RowText homeTheme = safeRow(this::mergedThemeName);
+        rows.add(row("homeTheme", R.string.setting_theme_library, R.string.setting_theme_library_sub,
                 homeTheme.text, homeTheme.error, false, ""));
-        RowText globalTheme = safeRow(this::globalThemeName);
-        rows.add(row("globalTheme", R.string.setting_global_theme, R.string.setting_global_theme_sub,
-                globalTheme.text, globalTheme.error, false, ""));
         RowText appearance = safeRow(this::getThemeModeText);
         rows.add(row("appearance", R.string.setting_appearance, R.string.setting_appearance_sub,
                 appearance.text, appearance.error, false, ""));
@@ -671,7 +672,7 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
 
     @Override
     public void openHomeTheme() {
-        C1ScreenActivity.start(activity, C1ScreenActivity.ROUTE_HOME_THEME);
+        C1ScreenActivity.start(activity, C1ScreenActivity.ROUTE_THEME);
     }
 
     @Override
@@ -689,6 +690,26 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
         ThemePresets.Preset preset = ThemePresets.find(ThemeProfileStore.load());
         if (preset != null) return activity.getString(preset.label);
         return GlobalThemes.nameForId(GlobalThemes.CUSTOM_ID);
+    }
+
+    /// The merged theme row's value text: the merged selection's
+    /// name when one was applied from the merged library (a user
+    /// merged theme's own name, a palette-only entry's package name,
+    /// or the default); otherwise the home structure's name, which
+    /// is what a pre-merge selection amounts to.
+    private String mergedThemeName() {
+        String mergedId = activity.getPreferences(android.content.Context.MODE_PRIVATE)
+                .getString("merged_theme_id", "");
+        if (mergedId != null && !mergedId.isEmpty()) {
+            com.github.maoyingshi.osc.tv.theme.UserGlobalThemes.MergedEntry user =
+                    com.github.maoyingshi.osc.tv.theme.UserGlobalThemes.findMerged(mergedId);
+            if (user != null) return user.name;
+            if (mergedId.startsWith("palette:")) {
+                return GlobalThemes.nameForId(mergedId.substring("palette:".length())) + "（配色）";
+            }
+            if ("default".equals(mergedId)) return "默认主题";
+        }
+        return homeThemeName();
     }
 
     /// The home-theme row's value text: the persisted selection's

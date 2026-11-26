@@ -86,6 +86,7 @@ public final class UserGlobalThemes {
                 if (obj == null) continue;
                 String id = obj.optString("id", "");
                 if (!isUserId(id)) continue;
+                if (KIND_MERGED.equals(obj.optString("kind", ""))) continue;
                 try {
                     ThemeProfile profile = ThemeProfileCodec.parse(obj.optString("profile", ""));
                     out.add(new Entry(id, profile));
@@ -155,13 +156,179 @@ public final class UserGlobalThemes {
     }
 
     private static void persist(List<Entry> entries) throws Exception {
-        JSONArray array = new JSONArray();
+        JSONArray array = loadRawMergedOnly();
         for (Entry entry : entries) {
             JSONObject obj = new JSONObject();
             obj.put("id", entry.id);
             obj.put("profile", ThemeProfileCodec.encode(entry.profile));
             array.put(obj);
         }
+        persistRaw(array);
+    }
+
+    private static JSONArray loadRaw() {
+        String raw = Prefers.getString(KEY, "");
+        if (raw == null || raw.isBlank()) return new JSONArray();
+        try {
+            return new JSONArray(raw);
+        } catch (Exception ignored) {
+            return new JSONArray();
+        }
+    }
+
+    /** The merged-theme records of the raw store, kept verbatim. */
+    private static JSONArray loadRawMergedOnly() {
+        JSONArray raw = loadRaw();
+        JSONArray out = new JSONArray();
+        for (int i = 0; i < raw.length(); i++) {
+            JSONObject obj = raw.optJSONObject(i);
+            if (obj != null && KIND_MERGED.equals(obj.optString("kind", ""))) out.put(obj);
+        }
+        return out;
+    }
+
+    private static void persistRaw(JSONArray array) {
         Prefers.getPrefers().edit().putString(KEY, array.toString()).apply();
+    }
+
+    // ------------------------------------------------------------------
+    // Merged themes
+    //
+    // Records of the merged theme library: a home structure bound to
+    // a four-colour palette plus the parametric editor's component
+    // parameters. They share this store's JSON array (kind =
+    // "merged") so the app keeps exactly one user-theme store; the
+    // palette-package list above skips them, and every write path
+    // preserves the other kind's records. The record's profile is
+    // the palette profile built at save time (its id is
+    // "webhtv.theme." + id, so GlobalThemes.currentId() never
+    // mistakes it for a palette package); the editor parameters ride
+    // in the "merged" object for re-editing.
+    // ------------------------------------------------------------------
+
+    public static final String KIND_MERGED = "merged";
+    public static final String PROFILE_ID_PREFIX_MERGED = "webhtv.theme.";
+
+    public static final class MergedEntry {
+        public final String id;
+        public final String name;
+        public final ThemeProfile profile;
+        /** Editor parameters: structure, colours and component options. */
+        public final JSONObject params;
+
+        private MergedEntry(String id, ThemeProfile profile, JSONObject params) {
+            this.id = id;
+            this.profile = profile;
+            this.params = params;
+            this.name = params.optString("name", profile.displayName());
+        }
+
+        public String structureSourceId() {
+            return params.optString("structureSourceId", "");
+        }
+    }
+
+    public static String mergedProfileIdFor(String id) {
+        return PROFILE_ID_PREFIX_MERGED + id;
+    }
+
+    /** All merged-theme records, in creation order. Broken records are skipped. */
+    public static List<MergedEntry> listMerged() {
+        List<MergedEntry> out = new ArrayList<>();
+        JSONArray raw = loadRaw();
+        for (int i = 0; i < raw.length(); i++) {
+            JSONObject obj = raw.optJSONObject(i);
+            if (obj == null || !KIND_MERGED.equals(obj.optString("kind", ""))) continue;
+            String id = obj.optString("id", "");
+            if (!isUserId(id)) continue;
+            JSONObject params = obj.optJSONObject("merged");
+            if (params == null) continue;
+            try {
+                ThemeProfile profile = ThemeProfileCodec.parse(obj.optString("profile", ""));
+                out.add(new MergedEntry(id, profile, params));
+            } catch (Exception ignored) {
+                // A record that no longer parses is skipped, never fatal.
+            }
+        }
+        return out;
+    }
+
+    public static MergedEntry findMerged(String id) {
+        if (!isUserId(id)) return null;
+        for (MergedEntry entry : listMerged()) if (entry.id.equals(id)) return entry;
+        return null;
+    }
+
+    /** Creates or replaces a merged-theme record; returns the stored entry. */
+    public static MergedEntry saveMerged(String id, JSONObject params, ThemeProfile profile) throws Exception {
+        JSONArray raw = loadRaw();
+        JSONArray out = new JSONArray();
+        JSONObject record = new JSONObject();
+        record.put("id", id);
+        record.put("kind", KIND_MERGED);
+        record.put("profile", ThemeProfileCodec.encode(profile));
+        record.put("merged", params);
+        boolean replaced = false;
+        for (int i = 0; i < raw.length(); i++) {
+            JSONObject obj = raw.optJSONObject(i);
+            if (obj != null && KIND_MERGED.equals(obj.optString("kind", ""))
+                    && id.equals(obj.optString("id", ""))) {
+                out.put(record);
+                replaced = true;
+            } else if (obj != null) {
+                out.put(obj);
+            }
+        }
+        if (!replaced) out.put(record);
+        persistRaw(out);
+        return new MergedEntry(id, profile, params);
+    }
+
+    public static void deleteMerged(String id) {
+        if (!isUserId(id)) return;
+        JSONArray raw = loadRaw();
+        JSONArray out = new JSONArray();
+        boolean changed = false;
+        for (int i = 0; i < raw.length(); i++) {
+            JSONObject obj = raw.optJSONObject(i);
+            if (obj != null && KIND_MERGED.equals(obj.optString("kind", ""))
+                    && id.equals(obj.optString("id", ""))) {
+                changed = true;
+                continue;
+            }
+            if (obj != null) out.put(obj);
+        }
+        if (changed) persistRaw(out);
+    }
+
+    /** Channel view of the merged records: editor parameters plus preview colours. */
+    public static List<Map<String, Object>> mergedMaps() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (MergedEntry entry : listMerged()) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", entry.id);
+            map.put("name", entry.name);
+            JSONObject p = entry.params;
+            map.put("description", p.optString("description", ""));
+            map.put("structureSourceId", p.optString("structureSourceId", ""));
+            map.put("structureRef", p.optString("structureRef", ""));
+            map.put("accent", p.optString("accent", ""));
+            map.put("background", p.optString("background", ""));
+            map.put("gradient", p.optString("gradient", ""));
+            map.put("surface", p.optString("surface", ""));
+            map.put("layout", p.optString("layout", "posters"));
+            map.put("hero", p.optBoolean("hero", true));
+            map.put("heroHeight", p.optDouble("heroHeight", 220.0));
+            map.put("gridColumns", p.optInt("gridColumns", 3));
+            map.put("cardRadius", p.optDouble("cardRadius", 18.0));
+            map.put("floatingNavigation", p.optBoolean("floatingNavigation", true));
+            map.put("glassNavigation", p.optBoolean("glassNavigation", false));
+            map.put("navigationOpacity", p.optDouble("navigationOpacity", 0.28));
+            map.put("titleFont", p.optString("titleFont", "sans"));
+            map.put("profileSurface", orEmpty(entry.profile.slots(false).surface));
+            map.put("profilePrimary", orEmpty(entry.profile.slots(false).primary));
+            out.add(map);
+        }
+        return out;
     }
 }

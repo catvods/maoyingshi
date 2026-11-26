@@ -14,10 +14,14 @@ import com.github.maoyingshi.osc.tv.impl.BufferListener;
 import com.github.maoyingshi.osc.tv.impl.SpeedListener;
 import com.github.maoyingshi.osc.tv.impl.UaListener;
 import com.github.maoyingshi.osc.tv.player.lut.LutSetting;
+import com.github.maoyingshi.osc.tv.player.lut.LutStore;
 import com.github.maoyingshi.osc.tv.player.mpv.MpvConfigStore;
 import com.github.maoyingshi.osc.tv.setting.PlaybackPerformanceSetting;
 import com.github.maoyingshi.osc.tv.setting.PlayerButtonSetting;
 import com.github.maoyingshi.osc.tv.setting.LiveSetting;
+import com.github.maoyingshi.osc.tv.module.ModuleDefinition;
+import com.github.maoyingshi.osc.tv.module.ModuleManager;
+import com.github.maoyingshi.osc.tv.module.ModulePrompt;
 import com.github.maoyingshi.osc.tv.setting.PlayerSetting;
 import com.github.maoyingshi.osc.tv.setting.PreloadSetting;
 import com.github.maoyingshi.osc.tv.setting.Setting;
@@ -181,6 +185,11 @@ public class SettingPlayerActivity extends BaseActivity implements UaListener, B
 
     private void setKernel(View view) {
         PlayerKernelDialog.show(this, PlayerSetting.getPlayer(), index -> {
+            ModuleDefinition module = PlayerSetting.moduleForPlayer(index);
+            if (module != null && !PlayerSetting.isPlayerAvailable(index)) {
+                ModulePrompt.showMissingModule(this, module);
+                return;
+            }
             mBinding.kernelText.setText(kernel[index]);
             PlayerSetting.putPlayer(index);
             setMpvRows();
@@ -196,6 +205,14 @@ public class SettingPlayerActivity extends BaseActivity implements UaListener, B
     }
 
     private void onLut(View view) {
+        if (!ModuleManager.getInstance(this).isInstalled(ModuleDefinition.LUT.id)
+                && !LutStore.hasBundledPresets()) {
+            // 取消仍打开对话框：包内自带 1 个默认 LUT 可用。
+            // hasBundledPresets 是 fork 过渡期探测：.cube 还在 assets 时不弹提示，P4 移出后恒 false。
+            ModulePrompt.showMissingModule(this, ModuleDefinition.LUT,
+                    () -> LutDialog.show(this, null, () -> mBinding.lutText.setText(LutSetting.getSummary())));
+            return;
+        }
         LutDialog.show(this, null, () -> mBinding.lutText.setText(LutSetting.getSummary()));
     }
 

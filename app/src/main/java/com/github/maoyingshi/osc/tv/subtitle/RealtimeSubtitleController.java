@@ -269,8 +269,11 @@ public final class RealtimeSubtitleController {
         worker.execute(() -> prepareModel(request, spec, true));
     }
 
-    /** 过渡期探测：Sherpa 原生库还在包内（jniLibs）时，按老路能加载即视为可用。 */
-    private static boolean isBundledSherpaLoadable() {
+    /**
+     * 过渡期探测：Sherpa 原生库还在包内（jniLibs）时，按老路能加载即视为可用。
+     * 公开给 TrackDialog 的未安装提示门控共用同一探测（包内可用时不弹提示）。
+     */
+    public static boolean isBundledSherpaLoadable() {
         if (bundledSherpaLoadable != null) return bundledSherpaLoadable;
         boolean loadable;
         try {

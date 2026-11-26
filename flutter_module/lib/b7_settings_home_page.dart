@@ -224,6 +224,8 @@ class _SettingsHomeViewState extends State<SettingsHomeView>
         afterDialog(api.openLocalSource());
       case 'lab':
         api.openLab();
+      case 'module':
+        api.openModulePage();
       case 'gitcloud':
         afterDialog(api.openGitCloud());
       case 'onekey':
@@ -573,6 +575,8 @@ mixin _B7MemberState<T extends StatefulWidget> on State<T>
       return (Icons.cloud_done_outlined, Colors.blue);
     case 'site_health':
       return (Icons.health_and_safety_outlined, Colors.green);
+    case 'module':
+      return (Icons.extension_outlined, Colors.purple);
     case 'cache':
       return (Icons.delete_outlined, Colors.orange);
     case 'backup':

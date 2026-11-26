@@ -34,6 +34,7 @@ import com.github.maoyingshi.osc.tv.setting.Setting;
 import com.github.maoyingshi.osc.tv.setting.SiteHealthStore;
 import com.github.maoyingshi.osc.tv.theme.WebHtvAlertDialogBuilder;
 import com.github.maoyingshi.osc.tv.lab.LabActivity;
+import com.github.maoyingshi.osc.tv.module.ModuleActivity;
 import com.github.maoyingshi.osc.tv.ui.activity.VideoActivity;
 import com.github.maoyingshi.osc.tv.ui.dialog.AboutDialog;
 import com.github.maoyingshi.osc.tv.ui.dialog.BackupProgressDialog;
@@ -275,6 +276,10 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
         RowText siteHealth = safeRow(this::getSiteHealthText);
         rows.add(row("site_health", R.string.setting_site_health, R.string.setting_site_health_sub,
                 siteHealth.text, siteHealth.error, false, ""));
+        // Module row last in the feature group, mirroring the native
+        // SettingFragment placement (ROW_MODULE after following reminder).
+        rows.add(row("module", R.string.setting_module, R.string.setting_module_sub,
+                "", false, false, ""));
         return group(activity.getString(R.string.setting_group_feature), rows);
     }
 
@@ -758,6 +763,11 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
             return;
         }
         LabActivity.start(activity);
+    }
+
+    @Override
+    public void openModulePage() {
+        ModuleActivity.start(activity);
     }
 
     @Override

@@ -10,7 +10,11 @@ import androidx.fragment.app.FragmentManager;
 import com.github.maoyingshi.osc.tv.R;
 import com.github.maoyingshi.osc.tv.impl.SpeedListener;
 import com.github.maoyingshi.osc.tv.impl.UaListener;
+import com.github.maoyingshi.osc.tv.module.ModuleDefinition;
+import com.github.maoyingshi.osc.tv.module.ModuleManager;
+import com.github.maoyingshi.osc.tv.module.ModulePrompt;
 import com.github.maoyingshi.osc.tv.player.lut.LutSetting;
+import com.github.maoyingshi.osc.tv.player.lut.LutStore;
 import com.github.maoyingshi.osc.tv.player.mpv.MpvConfigStore;
 import com.github.maoyingshi.osc.tv.setting.LiveSetting;
 import com.github.maoyingshi.osc.tv.setting.PlaybackPerformanceSetting;
@@ -240,6 +244,13 @@ public class B6HostApiImpl implements B6Messages.B6HostApi {
             // constant and only calls the listener when it changed, so
             // picking the current kernel completes nothing.
             PlayerKernelDialog.show(activity, PlayerSetting.getPlayer(), target -> {
+                // 模块未安装提示（上游 SettingPlayerFragment.onKernel 的接法，落到宿主侧）：
+                // 弹提示则不 putPlayer、pigeon 调用不完成，Dart 侧不刷新（内核未变）。
+                ModuleDefinition module = PlayerSetting.moduleForPlayer(target);
+                if (module != null && !PlayerSetting.isPlayerAvailable(target)) {
+                    ModulePrompt.showMissingModule(activity, module);
+                    return;
+                }
                 PlayerSetting.putPlayer(target);
                 completeOnce(result, completed);
             });
@@ -307,6 +318,15 @@ public class B6HostApiImpl implements B6Messages.B6HostApi {
     public void openLut(B6Messages.VoidResult result) {
         boolean[] completed = new boolean[1];
         try {
+            // LUT 模块未安装先弹提示（上游 SettingPlayerFragment.onLut 的接法）：
+            // 取消仍打开对话框，包内自带 1 个默认 LUT 可用。hasBundledPresets 是 fork
+            // 过渡期探测：.cube 还在 assets 时不弹提示，P4 移出后恒 false。
+            if (!ModuleManager.getInstance(activity).isInstalled(ModuleDefinition.LUT.id)
+                    && !LutStore.hasBundledPresets()) {
+                ModulePrompt.showMissingModule(activity, ModuleDefinition.LUT,
+                        () -> LutDialog.show(playerHostFragment(), () -> completeOnce(result, completed)));
+                return;
+            }
             // Fragment overload: the Activity overload needs a
             // PlayerManager instance, which this impl does not hold.
             LutDialog.show(playerHostFragment(), () -> completeOnce(result, completed));

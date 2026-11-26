@@ -73,6 +73,8 @@ import com.github.maoyingshi.osc.tv.service.PlaybackService;
 import com.github.maoyingshi.osc.tv.setting.LiveEpgSetting;
 import com.github.maoyingshi.osc.tv.setting.LiveSetting;
 import com.github.maoyingshi.osc.tv.setting.PlayerButtonSetting;
+import com.github.maoyingshi.osc.tv.module.ModuleDefinition;
+import com.github.maoyingshi.osc.tv.module.ModulePrompt;
 import com.github.maoyingshi.osc.tv.setting.PlayerSetting;
 import com.github.maoyingshi.osc.tv.setting.CustomCspSetting;
 import com.github.maoyingshi.osc.tv.setting.Setting;
@@ -954,6 +956,11 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     }
 
     private void switchPlayerKernel(int type) {
+        ModuleDefinition module = PlayerSetting.moduleForPlayer(type);
+        if (module != null && !PlayerSetting.isPlayerAvailable(type)) {
+            ModulePrompt.showMissingModule(this, module);
+            return;
+        }
         player().switchPlayer(type);
         setPlayerKernel();
         setDecode();

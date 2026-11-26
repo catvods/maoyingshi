@@ -111,6 +111,31 @@ public class LutStore {
         }
     }
 
+    private static Boolean bundledPresets;
+
+    /**
+     * 过渡期探测：assets 里除留基础包的默认项（乌托邦.cube）外是否还有随包 LUT 预设。
+     * LUT 入口的未安装提示用它判断：包内预设仍可用时不打扰用户（与 P2 各包内探测
+     * 同一策略）；P4 把 12 个 .cube 移出 assets 后恒为 false，回到纯模块判定。
+     */
+    public static boolean hasBundledPresets() {
+        if (bundledPresets != null) return bundledPresets;
+        boolean found = false;
+        try {
+            String[] children = App.get().getAssets().list(ASSET_DIR);
+            if (children != null) {
+                int count = 0;
+                for (String child : children) {
+                    if (LutPreset.formatOf(child) != null) count++;
+                }
+                found = count > 1;
+            }
+        } catch (IOException ignored) {
+        }
+        bundledPresets = found;
+        return found;
+    }
+
     public static void resortCache() {
         synchronized (LOCK) {
             if (presets != null) sortPresets(presets);

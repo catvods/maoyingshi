@@ -233,6 +233,19 @@ public class PlayerSetting {
         return ModuleManager.getInstance(app).isInstalled(moduleId);
     }
 
+    /**
+     * 内核对应的模块（EXO/系统随包走，无模块）；供“请到模块里面下载”提示的 call site 用。
+     * fork 无 VLC 内核常量，上游的 VLC 映射不落：{@link ModuleDefinition#VLC} 仅作
+     * 格式/测试兼容保留，没有任何内核常量能映射到它。
+     */
+    public static ModuleDefinition moduleForPlayer(int player) {
+        return switch (player) {
+            case IJK -> ModuleDefinition.IJK;
+            case MPV -> ModuleDefinition.MPV;
+            default -> null;
+        };
+    }
+
     private static Boolean bundledIjkLoadable;
 
     /** 过渡期探测：ijk 的 .so 还在包内（jniLibs）时，按老路能加载即视为可用。 */

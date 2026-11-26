@@ -85,6 +85,12 @@ abstract class B7HostApi {
   /// home-theme library — a root route the host asserts. Fire-and-forget.
   void openHomeTheme();
 
+  /// Module row (last in the feature group, mirroring the native
+  /// SettingFragment ROW_MODULE placement): opens the native
+  /// ModuleActivity (optional-module downloads / local import).
+  /// Fire-and-forget: it opens another screen.
+  void openModulePage();
+
   /// Local-source row: the native LocalSourceDialog (mobile-only, opened
   /// via reflection). Async: completes when the dialog is dismissed
   /// (no change callback; same dismissal watcher as openAppearance).

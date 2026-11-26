@@ -130,6 +130,8 @@ import com.github.maoyingshi.osc.tv.setting.PlayerButtonSetting;
 import com.github.maoyingshi.osc.tv.setting.MultiThreadProxySetting;
 import com.github.maoyingshi.osc.tv.setting.PlaybackExperimentSetting;
 import com.github.maoyingshi.osc.tv.setting.PreloadSetting;
+import com.github.maoyingshi.osc.tv.module.ModuleDefinition;
+import com.github.maoyingshi.osc.tv.module.ModulePrompt;
 import com.github.maoyingshi.osc.tv.setting.PlayerSetting;
 import com.github.maoyingshi.osc.tv.setting.FlagSwitchPlaybackPolicy;
 import com.github.maoyingshi.osc.tv.ui.dialog.PlayerKernelDialog;
@@ -5662,6 +5664,11 @@ private final Task.Scope mPersonalRecommendationTasks = new Task.Scope(Task.reco
         new WebHtvAlertDialogBuilder(this).setItems(items, (dialog, index) -> {
             if (index < kernel.length) {
                 int which = PlayerSetting.kernelAt(index);
+                ModuleDefinition module = PlayerSetting.moduleForPlayer(which);
+                if (module != null && !PlayerSetting.isPlayerAvailable(which)) {
+                    ModulePrompt.showMissingModule(this, module);
+                    return;
+                }
                 if (!refreshAndSwitchPlayerKernel(which)) {
                     clearLyrics();
                     player().switchPlayerManually(which);

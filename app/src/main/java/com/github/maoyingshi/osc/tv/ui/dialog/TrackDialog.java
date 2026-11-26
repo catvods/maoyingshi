@@ -34,6 +34,9 @@ import com.github.maoyingshi.osc.tv.player.PlayerManager;
 import com.github.maoyingshi.osc.tv.player.exo.TrackUtil;
 import com.github.maoyingshi.osc.tv.service.AiSubtitleTranslationService;
 import com.github.maoyingshi.osc.tv.setting.PlaybackPerformanceSetting;
+import com.github.maoyingshi.osc.tv.module.ModuleDefinition;
+import com.github.maoyingshi.osc.tv.module.ModuleManager;
+import com.github.maoyingshi.osc.tv.module.ModulePrompt;
 import com.github.maoyingshi.osc.tv.setting.PlayerSetting;
 import com.github.maoyingshi.osc.tv.setting.Setting;
 import com.github.maoyingshi.osc.tv.subtitle.RealtimeSubtitleController;
@@ -234,6 +237,13 @@ public final class TrackDialog extends BaseBottomSheetDialog implements TrackAda
         if (controller.isEnabled() || controller.isPreparing()) {
             stopRealtimeAi();
             showAiMessage(R.string.subtitle_realtime_off);
+            return;
+        }
+        if (!ModuleManager.getInstance(requireActivity()).isInstalled(ModuleDefinition.SHERPA.id)
+                && !RealtimeSubtitleController.isBundledSherpaLoadable()) {
+            // fork 过渡期适配：libsherpa-onnx-jni.so 还在 jniLibs 时包内可用，不弹提示；
+            // P4 移出后探测恒 false，回到上游的纯模块判定。
+            ModulePrompt.showMissingModule(this, ModuleDefinition.SHERPA);
             return;
         }
         if (!controller.isModelReady()) {

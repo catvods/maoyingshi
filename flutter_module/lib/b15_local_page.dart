@@ -185,9 +185,14 @@ class _B15LocalPageState extends State<B15LocalPage>
     if (screen == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (screen.items.isEmpty) {
+    if (screen.items.isEmpty && !screen.selectDir) {
       // Native empty state: title + description + one main action
-      // ("重新扫描"), which refetches the current directory.
+      // ("重新扫描"), which refetches the current directory. In
+      // select-dir mode the native adapter's count is items + 1 (the
+      // synthetic "选择当前目录" row), so its empty state never shows
+      // and even a folder with no subdirectories stays selectable;
+      // gating on selectDir here mirrors that — without it an empty
+      // folder is a dead end with no way to pick the current dir.
       return _CenterMessage(
         title: screen.emptyTitle,
         description: screen.emptyDescription,
@@ -198,6 +203,9 @@ class _B15LocalPageState extends State<B15LocalPage>
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView.builder(
+        // Keep pull-to-refresh (the rescan path) reachable when the
+        // list holds only the select-current-dir row.
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount:
             screen.items.length + (screen.selectDir ? 1 : 0),
         itemBuilder: (BuildContext context, int index) {

@@ -1751,6 +1751,8 @@
     <string name="file_empty_title">这里没有内容</string>
     <string name="file_empty_description">这个目录下没有可显示的项。如果是刚放进来的文件，重新扫描即可看到。</string>
     <string name="file_empty_action">重新扫描</string>
+    <string name="file_permission_title">需要文件访问权限</string>
+    <string name="file_permission_description">尚未授予文件访问权限，无法读取这个目录。请在系统设置中允许文件访问，然后重新扫描。</string>
     <string name="error_retry">重试</string>
     <string name="error_play_next">已经是最后一集了！</string>
     <string name="error_play_prev">已经是第一集了！</string>

@@ -1799,6 +1799,8 @@
     <string name="file_empty_title">Nothing here</string>
     <string name="file_empty_description">This folder has no items to show. If you just added files, rescan to pick them up.</string>
     <string name="file_empty_action">Rescan</string>
+    <string name="file_permission_title">Storage permission needed</string>
+    <string name="file_permission_description">File access has not been granted, so this folder cannot be read. Allow file access in system settings, then rescan.</string>
     <string name="error_retry">Retry</string>
     <string name="error_play_next">It\'s the last episode!</string>
     <string name="error_play_prev">It\'s the first episode!</string>

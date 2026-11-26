@@ -13,6 +13,7 @@ import com.github.catvod.utils.Path;
 import com.github.maoyingshi.osc.tv.App;
 import com.github.maoyingshi.osc.tv.R;
 import com.github.maoyingshi.osc.tv.setting.AppBranding;
+import com.github.maoyingshi.osc.tv.setting.Setting;
 import com.github.maoyingshi.osc.tv.ui.web.WebReaderActivity;
 import com.github.maoyingshi.osc.tv.utils.PermissionUtil;
 import com.github.maoyingshi.osc.tv.utils.Task;
@@ -119,8 +120,9 @@ public class B15HostApiImpl implements B15Messages.B15HostApi {
     private B15Messages.B15LocalScreen buildScreen(String dirPath, boolean selectDir, boolean readMode) {
         File dir = TextUtils.isEmpty(dirPath) ? Path.root() : new File(dirPath);
         List<B15Messages.B15LocalItem> items = new ArrayList<>();
+        boolean[] listFailed = {false};
         try {
-            for (File file : list(dir, selectDir)) {
+            for (File file : list(dir, selectDir, listFailed)) {
                 items.add(new B15Messages.B15LocalItem.Builder()
                         .setName(file.getName())
                         .setPath(file.getAbsolutePath())
@@ -130,6 +132,10 @@ public class B15HostApiImpl implements B15Messages.B15HostApi {
         } catch (Throwable e) {
             e.printStackTrace();
         }
+        // A listing that failed while file access is not granted is a
+        // permission problem, not an empty folder: the empty state
+        // must say so instead of showing the generic "nothing here".
+        boolean noAccess = listFailed[0] && !Setting.hasFileAccess();
         File parent = dir.getParentFile();
         boolean isRoot = Path.root().equals(dir);
         return new B15Messages.B15LocalScreen.Builder()
@@ -139,8 +145,10 @@ public class B15HostApiImpl implements B15Messages.B15HostApi {
                 .setSelectDir(selectDir)
                 .setReadMode(readMode)
                 .setSelectCurrentDirLabel(activity.getString(R.string.lut_select_current_dir))
-                .setEmptyTitle(activity.getString(R.string.file_empty_title))
-                .setEmptyDescription(activity.getString(R.string.file_empty_description))
+                .setEmptyTitle(activity.getString(noAccess
+                        ? R.string.file_permission_title : R.string.file_empty_title))
+                .setEmptyDescription(activity.getString(noAccess
+                        ? R.string.file_permission_description : R.string.file_empty_description))
                 .setEmptyActionLabel(activity.getString(R.string.file_empty_action))
                 .setRetryLabel(activity.getString(R.string.error_retry))
                 .setErrorText("")
@@ -148,11 +156,20 @@ public class B15HostApiImpl implements B15Messages.B15HostApi {
                 .build();
     }
 
-    /** Native FileActivity.list, verbatim. */
-    private List<File> list(File dir, boolean selectDir) {
-        if (!selectDir) return Path.list(dir);
-        File[] files = dir.listFiles(File::isDirectory);
-        if (files == null) return new ArrayList<>();
+    /**
+     * Native FileActivity.list, verbatim (file mode is Path.list:
+     * unfiltered listFiles + sort). {@code failedOut[0]} additionally
+     * reports whether the listing itself failed (listFiles returned
+     * null, typically because storage access is missing) — a case the
+     * native page folds into "empty", kept distinguishable here so
+     * buildScreen can name it honestly.
+     */
+    private List<File> list(File dir, boolean selectDir, boolean[] failedOut) {
+        File[] files = selectDir ? dir.listFiles(File::isDirectory) : dir.listFiles();
+        if (files == null) {
+            failedOut[0] = true;
+            return new ArrayList<>();
+        }
         Path.sort(files);
         return Arrays.asList(files);
     }

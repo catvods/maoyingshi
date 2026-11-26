@@ -592,11 +592,19 @@ class ShellGlassBarHost extends StatefulWidget {
   const ShellGlassBarHost({
     super.key,
     required this.routeListenable,
+    required this.modalListenable,
     required this.child,
   });
 
   /// The shell's current top-level route (main.dart's shellRoute).
   final ValueListenable<String> routeListenable;
+
+  /// Depth of modal routes (sheets/dialogs/menus) on the root
+  /// navigator (main.dart's shellModalDepth). The bar lives above
+  /// the navigator, so it must step aside while a modal is up —
+  /// otherwise it covers the sheet's lower rows and stays bright
+  /// over the scrim.
+  final ValueListenable<int> modalListenable;
   final Widget child;
 
   @override
@@ -607,6 +615,7 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
   final B11HostApi _api = B11HostApi();
   B11HomeScreen? _screen;
   bool _hidden = false;
+  bool _modal = false;
   String _route = '/';
   String _themeId = '';
 
@@ -615,6 +624,8 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
     super.initState();
     _route = widget.routeListenable.value;
     widget.routeListenable.addListener(_onRouteChanged);
+    _modal = widget.modalListenable.value > 0;
+    widget.modalListenable.addListener(_onModalChanged);
     _themeId = homeThemeId.value;
     homeThemeId.addListener(_onThemeChanged);
     _load();
@@ -623,8 +634,14 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
   @override
   void dispose() {
     widget.routeListenable.removeListener(_onRouteChanged);
+    widget.modalListenable.removeListener(_onModalChanged);
     homeThemeId.removeListener(_onThemeChanged);
     super.dispose();
+  }
+
+  void _onModalChanged() {
+    if (!mounted) return;
+    setState(() => _modal = widget.modalListenable.value > 0);
   }
 
   void _onThemeChanged() {
@@ -719,9 +736,10 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
               right: floating ? glassBarInsetX : 0,
               bottom: floating ? glassBarFloat + inset : 0,
               child: IgnorePointer(
-                ignoring: _hidden,
+                ignoring: _hidden || _modal,
                 child: AnimatedSlide(
-                  offset: _hidden ? const Offset(0, 1.8) : Offset.zero,
+                  offset:
+                      (_hidden || _modal) ? const Offset(0, 1.8) : Offset.zero,
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOut,
                   // Material ancestor: at shell level there is

@@ -51,6 +51,36 @@ String? _currentTopRoute;
 /// is assigned.
 final ValueNotifier<String> shellRoute = ValueNotifier<String>('/');
 
+/// Depth of modal (popup) routes on the root navigator: bottom
+/// sheets, dialogs, menus. The shell glass bar lives above the
+/// navigator, so without this it paints (bright and undimmed)
+/// over a sheet and its scrim and covers the sheet's lower rows;
+/// the bar host hides the bar while any modal route is up.
+final ValueNotifier<int> shellModalDepth = ValueNotifier<int>(0);
+
+class _ShellModalObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PopupRoute) shellModalDepth.value++;
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PopupRoute && shellModalDepth.value > 0) {
+      shellModalDepth.value--;
+    }
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PopupRoute && shellModalDepth.value > 0) {
+      shellModalDepth.value--;
+    }
+  }
+}
+
+final _ShellModalObserver _shellModalObserver = _ShellModalObserver();
+
 /// Switches the root navigator to [route], dropping the whole stack. A
 /// no-op when Dart is already showing [route], or when the navigator is
 /// not built yet (unreachable in practice: the host only sends on engine
@@ -347,11 +377,13 @@ class C0ShellApp extends StatelessWidget {
           builder: (BuildContext context, Widget? child) =>
               ShellGlassBarHost(
             routeListenable: shellRoute,
+            modalListenable: shellModalDepth,
             child: child ?? const SizedBox.shrink(),
           ),
           // B8 relaunch: the root navigator key lets the host-driven
           // showRoute handler reset the route stack on engine reuse.
           navigatorKey: _rootNavigatorKey,
+          navigatorObservers: [_shellModalObserver],
           theme: ThemeData(
             colorScheme: cfg.scheme ??
                 ColorScheme.fromSeed(seedColor: const Color(0xFF0B57D0)),

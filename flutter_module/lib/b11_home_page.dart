@@ -713,13 +713,14 @@ class _B11HomePageState extends State<B11HomePage>
         if (!themed)
           Positioned(
           right: _fabMargin,
-          // +10: the shell-resident glass bar floats higher than the
+          // +26: the shell-resident glass bar floats higher than the
           // native bottom navigation the pager anchor was measured
-          // against; the FABs (filter/top/link) need the extra lift
-          // to clear it.
+          // against; at +10 the FABs (filter/top/link) sat ~2dp
+          // above the bar's top edge and read as stuck to it, so
+          // they get a clear ~18dp gap above the bar.
           bottom: _pagerBottom +
               _fabMargin +
-              10 +
+              26 +
               MediaQuery.paddingOf(context).bottom,
           child: _buildFabOverlay(screen),
         ),

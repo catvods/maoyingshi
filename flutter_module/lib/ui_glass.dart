@@ -289,6 +289,12 @@ class GlassSurface extends StatelessWidget {
                       border: Border.all(
                         color: Colors.white.withAlpha(26),
                       ),
+                      // The fade-out stop must be white at alpha 0,
+                      // NOT Colors.transparent: transparent is black
+                      // with alpha 0, and RGB interpolation toward
+                      // black grays the fade zone into a band across
+                      // the surface's upper area (same bug the shell
+                      // bar had, fixed there in b8-c0-37).
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -299,7 +305,7 @@ class GlassSurface extends StatelessWidget {
                                   ((cfg.darkMode ? 0.14 : 0.22) * 255)
                                       .round(),
                                 ),
-                                Colors.transparent,
+                                Colors.white.withAlpha(0),
                                 const Color(0xFFFFE8F0).withAlpha(18),
                               ]
                             : [
@@ -307,7 +313,7 @@ class GlassSurface extends StatelessWidget {
                                   ((cfg.darkMode ? 0.14 : 0.22) * 255)
                                       .round(),
                                 ),
-                                Colors.transparent,
+                                Colors.white.withAlpha(0),
                               ],
                         stops: cfg.glassDispersion
                             ? const [0.0, 0.18, 0.45, 1.0]

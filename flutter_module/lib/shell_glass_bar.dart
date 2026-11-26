@@ -378,12 +378,12 @@ class GlassBottomBarState extends State<GlassBottomBar> {
         borderRadius: capsule,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(dark ? 64 : 22),
+            color: Colors.black.withAlpha(dark ? 64 : 10),
             blurRadius: 24,
-            offset: const Offset(0, 10),
+            offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: Colors.black.withAlpha(dark ? 70 : 28),
+            color: Colors.black.withAlpha(dark ? 70 : 14),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),

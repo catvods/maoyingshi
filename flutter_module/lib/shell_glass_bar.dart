@@ -149,7 +149,7 @@ class GlassBottomBarState extends State<GlassBottomBar> {
         (dark ? const Color(0xFF1E1E20) : const Color(0xFFF4F4F6));
     final Color unselected = dark
         ? Colors.white.withAlpha(184)
-        : Colors.black.withAlpha(158);
+        : Colors.black.withAlpha(205);
     final BorderRadius capsule = widget.edgeToEdge
         ? BorderRadius.zero
         : BorderRadius.circular(glassBarHeight / 2);
@@ -290,7 +290,7 @@ class GlassBottomBarState extends State<GlassBottomBar> {
                           // accent color).
                           color: dark
                               ? const Color(0xFF9AA0A6).withAlpha(80)
-                              : const Color(0xFFADB3BC).withAlpha(110),
+                              : const Color(0xFFE9E9EC).withAlpha(235),
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
@@ -339,17 +339,19 @@ class GlassBottomBarState extends State<GlassBottomBar> {
     // docs/b8-home-glass-v2.md). At the defaults (t = 0.5) the
     // brightness/contrast terms are neutral and saturation is 1.5.
     final double t = screen.glassTranslucency / 100;
-    // Clearer glass (user: the bar read milky/hazy): the tint layer
-    // is thinner than the native formula's, so more of the backdrop
-    // shows through and the bar reads bright and transparent rather
-    // than chalky.
-    final double tintAlpha =
-        (widget.opacityOverride ?? (0.27 * (2 - 2 * t))).clamp(0.05, 0.9);
-    // The backdrop blur is trimmed for the same reason: full-strength
-    // blur over bright posters washes the bar into a fog.
-    final double effBlur = blur * 0.72;
+    // Reference look (user-supplied): a bright, near-white frost.
+    // In light mode the tint is white and mostly opaque, washing
+    // the backdrop out to clean frost instead of letting its colors
+    // bleed through as a milky haze; dark mode keeps the thinner
+    // tint so the bar stays deep.
+    final double tintAlpha = (widget.opacityOverride ??
+            (dark ? 0.27 * (2 - 2 * t) : 0.86 - 0.12 * t))
+        .clamp(0.05, 0.92);
+    final double effBlur = blur * 0.9;
     final double brightness = (0.5 - t).clamp(0.0, 0.5) * 0.12;
-    final double contrast = 1 - (0.5 - t).clamp(0.0, 0.5) * 0.25;
+    // The gray contrast wash muddies the light frost; dark only.
+    final double contrast =
+        dark ? 1 - (0.5 - t).clamp(0.0, 0.5) * 0.25 : 1.0;
     final double saturation = 1.5 - (t - 0.5).clamp(0.0, 0.5);
     // Saturation lift: a second blurred backdrop composited with
     // soft-light over the first (see the Stack below). Strength
@@ -357,7 +359,8 @@ class GlassBottomBarState extends State<GlassBottomBar> {
     // The lift is kept very low: at higher strengths the soft-light
     // copy smears the backdrop's colors into a muddy haze and the
     // glass reads dirty instead of clear.
-    final double liftAlpha = ((saturation - 1) * 0.3).clamp(0.0, 0.06);
+    final double liftAlpha =
+        ((saturation - 1) * 0.3).clamp(0.0, dark ? 0.06 : 0.02);
     // Lens approximation: a uniform magnification about the bar
     // center. Native refracts up to distortionDp at the rim; the
     // uniform scale keeps the sliding misalignment cue — content
@@ -375,12 +378,12 @@ class GlassBottomBarState extends State<GlassBottomBar> {
         borderRadius: capsule,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(dark ? 64 : 36),
+            color: Colors.black.withAlpha(dark ? 64 : 22),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: Colors.black.withAlpha(dark ? 70 : 44),
+            color: Colors.black.withAlpha(dark ? 70 : 28),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -421,7 +424,7 @@ class GlassBottomBarState extends State<GlassBottomBar> {
                         // than tinted plastic over the backdrop.
                         color: (dark
                                 ? surface
-                                : Color.lerp(surface, Colors.white, 0.60)!)
+                                : Color.lerp(surface, Colors.white, 0.78)!)
                             .withAlpha((tintAlpha * 255).round()),
                       ),
                     ),

@@ -91,6 +91,14 @@ class GlassBottomBarState extends State<GlassBottomBar> {
   double _dragStartX = 0;
   double _dragStartIndex = 0;
 
+  /// A drag-settle the host has not confirmed yet: the index the
+  /// pill was dropped on, and the deadline for the refreshed
+  /// snapshot to confirm it. Until then a stale snapshot (route
+  /// changes rebuild the bar before the new snapshot lands) must
+  /// not heal the pill back to the old selection.
+  int? _settleIndex;
+  DateTime? _settleDeadline;
+
   @override
   void initState() {
     super.initState();
@@ -104,6 +112,18 @@ class GlassBottomBarState extends State<GlassBottomBar> {
     super.didUpdateWidget(oldWidget);
     if (_dragging) return;
     final int selected = _selectedIndex(_visibleItems(widget.screen));
+    if (_settleIndex != null) {
+      if (selected == _settleIndex) {
+        _settleIndex = null;
+        _settleDeadline = null;
+      } else if (_settleDeadline != null &&
+          DateTime.now().isBefore(_settleDeadline!)) {
+        return;
+      } else {
+        _settleIndex = null;
+        _settleDeadline = null;
+      }
+    }
     if (selected >= 0 && selected.toDouble() != _pillTarget) {
       // Plain assignment: build() runs right after didUpdateWidget,
       // and the new target animates the pill to the selected tab.
@@ -153,9 +173,16 @@ class GlassBottomBarState extends State<GlassBottomBar> {
     final BorderRadius capsule = widget.edgeToEdge
         ? BorderRadius.zero
         : BorderRadius.circular(glassBarHeight / 2);
+    // While dragging (or waiting for a drag-settle to be
+    // confirmed) the highlight follows the pill, not the stale
+    // snapshot selection.
+    final String effToken = (_dragging || _settleIndex != null) &&
+            items.isNotEmpty
+        ? items[_pillTarget.round().clamp(0, items.length - 1)].token
+        : screen.selectedNavToken;
     final Widget rowContent = Row(
         children: items.map((B11NavItem item) {
-          final bool selected = item.token == screen.selectedNavToken;
+          final bool selected = item.token == effToken;
           final Color color = selected ? accent : unselected;
           final Widget label = Text(
             item.label,
@@ -262,7 +289,12 @@ class GlassBottomBarState extends State<GlassBottomBar> {
               _dragging = false;
               _pillTarget = target.toDouble();
             });
-            if (changed) widget.onTap(items[target]);
+            if (changed) {
+              _settleIndex = target;
+              _settleDeadline =
+                  DateTime.now().add(const Duration(milliseconds: 1500));
+              widget.onTap(items[target]);
+            }
           },
           onHorizontalDragCancel: () {
             setState(() {

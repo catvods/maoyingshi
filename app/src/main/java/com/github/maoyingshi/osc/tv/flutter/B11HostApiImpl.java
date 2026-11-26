@@ -1336,7 +1336,13 @@ public class B11HostApiImpl implements B11Messages.B11HostApi {
         if (token == null) return;
         switch (token) {
             case "vod":
-                // Already on the home screen; Dart scrolls to top.
+                // The bar is shell-resident now: from the lab,
+                // following and settings routes this must navigate
+                // back home (it used to be a no-op from the home
+                // page's own bar, which stranded users on the other
+                // pages). On the home route itself the start is a
+                // no-op (singleTop + same-route assertion).
+                C1ScreenActivity.start(activity, C1ScreenActivity.ROUTE_HOME);
                 break;
             case "live":
                 LiveActivity.start(activity);

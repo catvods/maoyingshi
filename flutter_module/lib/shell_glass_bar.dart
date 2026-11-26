@@ -40,6 +40,7 @@ class GlassBottomBar extends StatefulWidget {
     this.accentOverride,
     this.darkOverride,
     this.opacityOverride,
+    this.selectedTokenOverride,
     this.edgeToEdge = false,
     this.bottomInset = 0,
   });
@@ -55,6 +56,13 @@ class GlassBottomBar extends StatefulWidget {
   final Color? tintOverride;
   final Color? accentOverride;
   final bool? darkOverride;
+
+  /// Selection override: the B11 snapshot's selectedNavToken is
+  /// hard-coded to 'vod' host-side (the snapshot describes the
+  /// home screen), so the shell host passes the token matching
+  /// the current route instead; the bar highlights where the
+  /// user actually is.
+  final String? selectedTokenOverride;
 
   /// Theme navigation opacity (Lee metadata navigationOpacity):
   /// replaces the translucency-derived tint alpha when set.
@@ -136,8 +144,11 @@ class GlassBottomBarState extends State<GlassBottomBar> {
   List<B11NavItem> _visibleItems(B11HomeScreen screen) =>
       screen.navItems.where((B11NavItem item) => item.visible).toList();
 
+  String get _effectiveToken =>
+      widget.selectedTokenOverride ?? widget.screen.selectedNavToken;
+
   int _selectedIndex(List<B11NavItem> items) => items.indexWhere(
-        (B11NavItem item) => item.token == widget.screen.selectedNavToken,
+        (B11NavItem item) => item.token == _effectiveToken,
       );
 
   IconData _iconFor(String token) {
@@ -179,7 +190,7 @@ class GlassBottomBarState extends State<GlassBottomBar> {
     final String effToken = (_dragging || _settleIndex != null) &&
             items.isNotEmpty
         ? items[_pillTarget.round().clamp(0, items.length - 1)].token
-        : screen.selectedNavToken;
+        : _effectiveToken;
     final Widget rowContent = Row(
         children: items.map((B11NavItem item) {
           final bool selected = item.token == effToken;
@@ -670,6 +681,16 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
     final B11HomeScreen? screen = _screen;
     final bool show = _barRoute && screen != null;
     final HomeThemeEntry entry = homeThemeEntry(_themeId);
+    // The snapshot always reports 'vod' as the selection (it
+    // describes the home screen); on the other shell routes the
+    // bar must highlight the section the route belongs to.
+    final String routeToken = _route == '/lab'
+        ? 'local_source'
+        : (_route == '/keep' || _route == '/following')
+            ? 'following'
+            : _route.startsWith('/settings')
+                ? 'setting'
+                : 'vod';
     // Theme navigation shape (Lee metadata): floating themes keep
     // the capsule; the rest run the bar edge-to-edge over the
     // gesture inset.
@@ -706,6 +727,7 @@ class _ShellGlassBarHostState extends State<ShellGlassBarHost> {
                       darkOverride:
                           entry.barTint == null ? null : entry.dark,
                       opacityOverride: entry.barOpacity,
+                      selectedTokenOverride: routeToken,
                       edgeToEdge: !floating,
                       bottomInset: floating ? 0 : inset,
                     ),

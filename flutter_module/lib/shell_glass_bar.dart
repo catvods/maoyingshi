@@ -419,18 +419,25 @@ class GlassBottomBarState extends State<GlassBottomBar> {
       // wallpapers.)
       decoration: BoxDecoration(
         borderRadius: capsule,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(dark ? 64 : 10),
-            blurRadius: 24,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: Colors.black.withAlpha(dark ? 70 : 14),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        // Light mode: no drop shadow at all. Even a faint one
+        // pooled into a visible gray band under the capsule on
+        // light wallpapers (user-reported twice); the reference
+        // bar carries no visible shadow either — the tint edge
+        // and the top highlight separate it from the page.
+        boxShadow: dark
+            ? [
+                BoxShadow(
+                  color: Colors.black.withAlpha(64),
+                  blurRadius: 24,
+                  offset: const Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: Colors.black.withAlpha(70),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : const [],
       ),
       child: ClipRRect(
         borderRadius: capsule,

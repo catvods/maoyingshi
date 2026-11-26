@@ -210,15 +210,32 @@ class _GlassBlurScope extends InheritedWidget {
 /// off.
 ///
 /// Mirrors the home bar's recipe (b8-home-glass): a backdrop blur
-/// under a translucent tint of the surface color, with a faint
-/// white rim border (no highlight gradient — a sheen read as a
-/// gray band on every surface and was removed). Glass off (or
+/// under a translucent tint of the surface color, framed by a
+/// defined 1px rim (no highlight gradient — a sheen read as a
+/// gray band on every surface and was removed). The frame is
+/// mode-aware: white in dark mode, black in light mode, each at
+/// an alpha chosen to stay clearly visible — a white-only frame
+/// is invisible on light glass at any alpha, and a flat 1px
+/// hairline reads as an edge, never as a band. Glass off (or
 /// blur 0) renders the
 /// exact solid surface the caller would have painted before, so the
 /// switch is a pure appearance change. The on/off, the blur and
 /// the tint all come from the global glass parameters (their own
 /// Setting values), never from the bottom bar's chain.
-class GlassSurface extends StatelessWidget {
+///
+/// Performance shape (scrolling lists stuttered with the switch
+/// on):
+/// - The glass result is wrapped in a [RepaintBoundary], so one
+///   list row's repaint never invalidates its neighbours.
+/// - A surface measured below the blur threshold (see
+///   [_glassBlurMinHeight] / [_glassBlurMinArea]) skips its
+///   [BackdropFilter] and paints tint + frame only: at that size
+///   a blur is indistinguishable from the tint, while every
+///   filter still costs a full save-layer blur pass. The poster
+///   badges and title strips on media cards are the main case —
+///   a scrolling grid used to carry up to three backdrop
+///   filters per card.
+class GlassSurface extends StatefulWidget {
   const GlassSurface({
     super.key,
     required this.child,
@@ -242,6 +259,53 @@ class GlassSurface extends StatelessWidget {
   final bool showRim;
 
   @override
+  State<GlassSurface> createState() => _GlassSurfaceState();
+}
+
+/// Painted height under which a [GlassSurface] skips its backdrop
+/// blur: 32dp is about three times the default sigma (10), so the
+/// whole surface is edge and the blur has nothing left to soften
+/// that the tint does not already cover.
+const double _glassBlurMinHeight = 32;
+
+/// Painted area under which a [GlassSurface] skips its backdrop
+/// blur even when it is tall enough: 8192dp² (say 128×64) is
+/// about the smallest patch whose blur reads as more than its
+/// tint.
+const double _glassBlurMinArea = 8192;
+
+class _GlassSurfaceState extends State<GlassSurface> {
+  final GlobalKey _surfaceKey = GlobalKey();
+
+  /// Whether the last measured painted size fell below the blur
+  /// threshold. Starts false (blur, the historical behaviour);
+  /// a small surface settles into tint-only a frame after it is
+  /// first laid out — an invisible swap at that size.
+  bool _belowBlurThreshold = false;
+  bool _measureQueued = false;
+
+  /// Schedules a one-off painted-size read after the next frame.
+  /// Called from the builder below, so config flips and parent
+  /// rebuilds re-measure; the queued flag keeps it to one
+  /// callback per frame, and state only changes when the
+  /// verdict flips.
+  void _queueMeasure() {
+    if (_measureQueued) return;
+    _measureQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureQueued = false;
+      if (!mounted) return;
+      final Size? size = _surfaceKey.currentContext?.size;
+      if (size == null) return;
+      final bool small = size.height < _glassBlurMinHeight ||
+          size.width * size.height < _glassBlurMinArea;
+      if (small != _belowBlurThreshold) {
+        setState(() => _belowBlurThreshold = small);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Whether an ancestor GlassSurface is already blurring the
     // backdrop; read here because the builder below runs under this
@@ -251,17 +315,18 @@ class GlassSurface extends StatelessWidget {
       valueListenable: uiConfig,
       builder: (BuildContext context, UiConfig cfg, Widget? _) {
         final BorderRadiusGeometry radius =
-            borderRadius ?? BorderRadius.zero;
+            widget.borderRadius ?? BorderRadius.zero;
         final Color solid =
-            solidColor ?? Theme.of(context).colorScheme.surface;
+            widget.solidColor ?? Theme.of(context).colorScheme.surface;
         if (!cfg.globalGlassActive) {
           return Container(
             decoration: BoxDecoration(color: solid, borderRadius: radius),
-            padding: padding,
-            child: child,
+            padding: widget.padding,
+            child: widget.child,
           );
         }
-        final Color base = tintColor ?? solid;
+        _queueMeasure();
+        final Color base = widget.tintColor ?? solid;
         final double brightness =
             (0.5 - cfg.globalTranslucency).clamp(0.0, 0.5) * 0.12;
         final Widget stack = Stack(
@@ -278,10 +343,10 @@ class GlassSurface extends StatelessWidget {
                 ),
               ),
             Padding(
-              padding: padding ?? EdgeInsets.zero,
-              child: child,
+              padding: widget.padding ?? EdgeInsets.zero,
+              child: widget.child,
             ),
-            if (showRim)
+            if (widget.showRim)
               Positioned.fill(
                 child: IgnorePointer(
                   child: Container(
@@ -290,7 +355,17 @@ class GlassSurface extends StatelessWidget {
                         Directionality.of(context),
                       ),
                       border: Border.all(
-                        color: Colors.white.withAlpha(26),
+                        // The frame: a flat 1px hairline, no
+                        // gradient. Dark mode takes white at
+                        // alpha 72 (the home bar's alpha-36 rim,
+                        // doubled, so it clearly reads); light
+                        // mode takes black at alpha 36, because
+                        // a white frame on light glass stays
+                        // invisible no matter the alpha.
+                        color: cfg.darkMode
+                            ? Colors.white.withAlpha(72)
+                            : Colors.black.withAlpha(36),
+                        width: 1,
                       ),
                       // Deliberately no highlight gradient here:
                       // a top sheen read as a gray band across
@@ -305,20 +380,33 @@ class GlassSurface extends StatelessWidget {
         );
         // Anti-nesting: inside an already-blurred GlassSurface, add
         // only the tint/rim layer — no second BackdropFilter (see
-        // _GlassBlurScope). The scope is installed either way so
-        // deeper surfaces keep skipping their own blur.
-        final Widget body = nested
-            ? stack
-            : BackdropFilter(
+        // _GlassBlurScope). Below-threshold surfaces take the same
+        // filterless path (see _glassBlurMinHeight). The scope is
+        // installed only when the backdrop really is blurred, by
+        // this surface or an ancestor, so a small tint-only
+        // surface does not make its children skip a blur they
+        // still need.
+        final bool blur = !nested && !_belowBlurThreshold;
+        final Widget body = blur
+            ? BackdropFilter(
                 filter: ImageFilter.blur(
                   sigmaX: cfg.globalBlur,
                   sigmaY: cfg.globalBlur,
                 ),
                 child: stack,
-              );
-        return ClipRRect(
-          borderRadius: radius,
-          child: _GlassBlurScope(child: body),
+              )
+            : stack;
+        final Widget scoped =
+            (blur || nested) ? _GlassBlurScope(child: body) : body;
+        // RepaintBoundary: in a scrolling list each surface's
+        // glass becomes its own layer, so a neighbour's repaint
+        // (a splash, a progress tick) never re-rasterises it.
+        return RepaintBoundary(
+          child: ClipRRect(
+            key: _surfaceKey,
+            borderRadius: radius,
+            child: scoped,
+          ),
         );
       },
     );

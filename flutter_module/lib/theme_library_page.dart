@@ -24,11 +24,18 @@ import 'ui_glass.dart';
 /// advanced route, and each card's menu reaches the parametric
 /// editor, the source editor, export and delete as its kind allows.
 ///
-/// Back behaviour: this page is a host screen stacked over the
-/// settings home, and its back button (and the host's root back)
-/// closes the screen back to settings — the filters are plain page
-/// state, never routes, and both editors are pushed inside this
-/// screen, so back from an editor returns here.
+/// Back behaviour: entering this page is a host route assertion
+/// (B7 row -> C1ScreenActivity.start -> onNewIntent recordPush ->
+/// _showRoute replaces the root stack), so the host history holds
+/// [/settings, /theme] and the host root back would land back on
+/// the settings home — but only if Dart signals it. The PopScope
+/// below converts a system back press into that signal
+/// (closeScreen), exactly like every other top-level page; without
+/// it the press dies at the root Navigator (this page is its only
+/// route) and the unhandled pop closes the whole task to the
+/// desktop. The filters are plain page state, never routes, and
+/// both editors are pushed as plain routes above this page, so
+/// back from an editor pops back here.
 class ThemeLibraryPage extends StatefulWidget {
   const ThemeLibraryPage({super.key, this.initialFilter = 0});
 
@@ -296,7 +303,19 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
   @override
   Widget build(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
-    return Scaffold(
+    // System back takes the same path as the app-bar arrow
+    // (_onBack -> closeScreen -> the host pops its route history
+    // back to /settings). Every other top-level page carries this
+    // PopScope; this page shipped without one, so a system back
+    // press fell through the root Navigator to the system and
+    // closed the task to the desktop.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) return;
+        unawaited(_onBack());
+      },
+      child: Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         flexibleSpace: const GlassSurface(child: SizedBox.expand()),
@@ -356,6 +375,7 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
             },
           );
         },
+      ),
       ),
     );
   }

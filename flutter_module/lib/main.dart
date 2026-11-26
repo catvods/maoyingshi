@@ -83,6 +83,19 @@ class _ShellModalObserver extends NavigatorObserver {
 
 final _ShellModalObserver _shellModalObserver = _ShellModalObserver();
 
+/// The same [_shellModalObserver], shared with the family pages
+/// that host an inner Navigator (B3 settings, B21 lab, B8
+/// category): a modal route pushed on an inner Navigator is
+/// invisible to the root Navigator's observer list — the lab group
+/// sheet (showModalBottomSheet defaults to the nearest Navigator)
+/// never raised [shellModalDepth], so the shell bar stayed painted
+/// over it. Those Navigators register this shared instance too, so
+/// their sheets and menus hide the bar exactly like root-Navigator
+/// modals do. One instance serves every Navigator: a route push
+/// notifies only its own Navigator's observers, so the depth count
+/// stays exact.
+NavigatorObserver get shellModalObserver => _shellModalObserver;
+
 /// Switches the root navigator to [route], dropping the whole stack. A
 /// no-op when Dart is already showing [route], or when the navigator is
 /// not built yet (unreachable in practice: the host only sends on engine

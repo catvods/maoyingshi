@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:material_ui/material_ui.dart';
 
+import 'main.dart';
 import 'pigeon/b8_category_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
 import 'ui_glass.dart';
@@ -81,6 +82,11 @@ class _B8CategoryPageState extends State<B8CategoryPage> {
       },
       child: Navigator(
         key: _navigatorKey,
+        // No modal is shown from inside this Navigator today, but
+        // it is the same latent trap as the lab sheet: register the
+        // shared shell-modal observer so a future inner sheet or
+        // menu hides the shell bar like a root modal does.
+        observers: <NavigatorObserver>[shellModalObserver],
         onGenerateRoute: (RouteSettings settings) => MaterialPageRoute<void>(
           builder: (_) => _B8CategoryListView(
             siteKey: widget.siteKey,

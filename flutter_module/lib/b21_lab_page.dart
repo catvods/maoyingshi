@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart'
     show Velocity, VelocityTracker, kTouchSlop;
 import 'package:material_ui/material_ui.dart';
 
+import 'main.dart';
 import 'pigeon/b21_lab_messages.g.dart';
 import 'pigeon/c1_messages.g.dart';
 import 'ui_glass.dart';
@@ -96,6 +97,11 @@ class _B21LabPageState extends State<B21LabPage> {
       },
       child: Navigator(
         key: _navigatorKey,
+        // The group sheet is shown from inside this Navigator
+        // (showModalBottomSheet defaults to the nearest one), so
+        // the root observer alone never sees it and the shell bar
+        // covers it; the shared observer reports inner modals too.
+        observers: <NavigatorObserver>[shellModalObserver],
         initialRoute: '/list',
         // Exactly one initial route. The framework's default initial
         // routes split '/list' into '/' + '/list' and push BOTH; the

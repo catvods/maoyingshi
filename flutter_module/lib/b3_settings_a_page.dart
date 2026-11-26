@@ -8,6 +8,7 @@ import 'b4_enhance_page.dart';
 import 'b5_personal_page.dart';
 import 'b6_player_page.dart';
 import 'b7_settings_home_page.dart';
+import 'main.dart';
 import 'pigeon/b3_settings_a_messages.g.dart';
 import 'ui_glass.dart';
 import 'widgets/settings_row.dart';
@@ -188,6 +189,10 @@ class _B3SettingsPageState extends State<B3SettingsPage> {
         ],
         observers: <NavigatorObserver>[
           _MemberObserver((String member) => _currentMember = member),
+          // Inner-Navigator modals (sheets/menus shown from a
+          // member view) must hide the shell bar like root ones do;
+          // the root observer never sees them.
+          shellModalObserver,
         ],
         onGenerateRoute: _generateRoute,
       ),

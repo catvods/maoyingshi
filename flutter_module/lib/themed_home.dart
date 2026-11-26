@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:rfw/formats.dart';
@@ -89,6 +92,21 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
   int _immersiveIndex = 0;
   int _loadSerial = 0;
 
+  /// Immersive palette extracted from the current recommend
+  /// poster's pixels (see _syncImmersivePalette). Until extraction
+  /// lands — and whenever it fails — these hold the fixed dark
+  /// palette the bridge originally shipped.
+  static const List<int> _fallbackImmersivePalette = <int>[
+    0xFF1A237E,
+    0xFF4A148C,
+    0xFF0B0B10,
+  ];
+  int _immersivePrimary = _fallbackImmersivePalette[0];
+  int _immersiveSecondary = _fallbackImmersivePalette[1];
+  int _immersiveBackground = _fallbackImmersivePalette[2];
+  final Map<String, List<int>> _paletteCache = <String, List<int>>{};
+  final Set<String> _palettePending = <String>{};
+
   @override
   void initState() {
     super.initState();
@@ -99,6 +117,7 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
       if (index != _immersiveIndex && index < _recommend.length) {
         _immersiveIndex = index;
         _pushData();
+        _syncImmersivePalette();
       }
     };
     unawaited(_loadThemeLibrary());
@@ -149,6 +168,7 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
       if (!mounted || serial != _loadSerial) return;
       _recommend = <B12BannerItem>[];
     }
+    _syncImmersivePalette();
     await _loadPage(1, serial);
   }
 
@@ -212,6 +232,189 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     if (_loading || _loadingMore || !_hasMore) return;
     _loadingMore = true;
     unawaited(_loadPage(_nextPage));
+  }
+
+  /// Points the immersive palette at the current recommend item:
+  /// a cached extraction applies at once; a fresh one is kicked
+  /// off and applied when it lands if that poster is still the
+  /// immersive one. With no poster — or when extraction fails —
+  /// the fixed fallback palette stays, exactly what the bridge
+  /// fed before real extraction existed.
+  void _syncImmersivePalette() {
+    if (_recommend.isEmpty) {
+      _applyImmersivePalette(_fallbackImmersivePalette);
+      return;
+    }
+    final B12BannerItem item =
+        _recommend[_immersiveIndex.clamp(0, _recommend.length - 1)];
+    final String url = item.picUrl;
+    if (url.isEmpty) {
+      _applyImmersivePalette(_fallbackImmersivePalette);
+      return;
+    }
+    final List<int>? cached = _paletteCache[url];
+    if (cached != null) {
+      _applyImmersivePalette(cached);
+      return;
+    }
+    if (!_palettePending.add(url)) return;
+    unawaited(() async {
+      final List<int>? palette = await _extractPalette(url);
+      _palettePending.remove(url);
+      if (palette != null) _paletteCache[url] = palette;
+      if (!mounted || _recommend.isEmpty) return;
+      final B12BannerItem current =
+          _recommend[_immersiveIndex.clamp(0, _recommend.length - 1)];
+      if (current.picUrl != url) return;
+      _applyImmersivePalette(palette ?? _fallbackImmersivePalette);
+    }());
+  }
+
+  void _applyImmersivePalette(List<int> palette) {
+    if (_immersivePrimary == palette[0] &&
+        _immersiveSecondary == palette[1] &&
+        _immersiveBackground == palette[2]) {
+      return;
+    }
+    _immersivePrimary = palette[0];
+    _immersiveSecondary = palette[1];
+    _immersiveBackground = palette[2];
+    _pushData();
+  }
+
+  /// Extracts [primary, secondary, background] ARGB values from a
+  /// poster: decode it, downscale to 24x24, and read the pixels —
+  /// primary is the dominant colour bucket, secondary the most
+  /// saturated populous bucket with a distinct hue, background
+  /// the dominant colour darkened toward black. Pure dart:ui
+  /// work; no palette package. Null on any failure.
+  Future<List<int>?> _extractPalette(String url) async {
+    final ui.Image? image = await _loadNetworkImage(url)
+        .timeout(const Duration(seconds: 15), onTimeout: () => null);
+    if (image == null) return null;
+    try {
+      const int size = 24;
+      final ui.PictureRecorder recorder = ui.PictureRecorder();
+      final ui.Canvas canvas = ui.Canvas(recorder);
+      canvas.drawImageRect(
+        image,
+        ui.Rect.fromLTWH(
+            0, 0, image.width.toDouble(), image.height.toDouble()),
+        ui.Rect.fromLTWH(0, 0, size.toDouble(), size.toDouble()),
+        ui.Paint()..filterQuality = ui.FilterQuality.low,
+      );
+      final ui.Image small =
+          await recorder.endRecording().toImage(size, size);
+      final ByteData? bytes =
+          await small.toByteData(format: ui.ImageByteFormat.rawRgba);
+      if (bytes == null) return null;
+      return _paletteFromPixels(bytes, size * size);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<ui.Image?> _loadNetworkImage(String url) {
+    final Completer<ui.Image?> completer = Completer<ui.Image?>();
+    final ImageStream stream =
+        NetworkImage(url).resolve(const ImageConfiguration());
+    late final ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (ImageInfo info, bool synchronousCall) {
+        stream.removeListener(listener);
+        if (!completer.isCompleted) completer.complete(info.image);
+      },
+      onError: (Object error, StackTrace? stackTrace) {
+        stream.removeListener(listener);
+        if (!completer.isCompleted) completer.complete(null);
+      },
+    );
+    stream.addListener(listener);
+    return completer.future;
+  }
+
+  List<int>? _paletteFromPixels(ByteData bytes, int pixelCount) {
+    final Uint8List data = bytes.buffer.asUint8List();
+    // 4x4x4 RGB buckets, each [count, rSum, gSum, bSum].
+    final List<List<int>> buckets =
+        List<List<int>>.generate(64, (_) => <int>[0, 0, 0, 0]);
+    int opaque = 0;
+    for (int i = 0; i < pixelCount; i++) {
+      final int offset = i * 4;
+      if (data[offset + 3] < 125) continue;
+      final int r = data[offset];
+      final int g = data[offset + 1];
+      final int b = data[offset + 2];
+      final List<int> bucket =
+          buckets[((r >> 6) << 4) | ((g >> 6) << 2) | (b >> 6)];
+      bucket[0]++;
+      bucket[1] += r;
+      bucket[2] += g;
+      bucket[3] += b;
+      opaque++;
+    }
+    if (opaque == 0) return null;
+    List<int> bucketColor(int index) {
+      final List<int> bucket = buckets[index];
+      return <int>[
+        (bucket[1] / bucket[0]).round(),
+        (bucket[2] / bucket[0]).round(),
+        (bucket[3] / bucket[0]).round(),
+      ];
+    }
+
+    int dominant = 0;
+    for (int i = 1; i < buckets.length; i++) {
+      if (buckets[i][0] > buckets[dominant][0]) dominant = i;
+    }
+    final List<int> primary = bucketColor(dominant);
+    final double primaryHue = _hue(primary[0], primary[1], primary[2]);
+    int secondaryIndex = -1;
+    double bestScore = -1;
+    for (int i = 0; i < buckets.length; i++) {
+      if (i == dominant || buckets[i][0] == 0) continue;
+      final List<int> color = bucketColor(i);
+      double hueDiff =
+          (_hue(color[0], color[1], color[2]) - primaryHue).abs();
+      if (hueDiff > 180) hueDiff = 360 - hueDiff;
+      if (hueDiff < 24) continue;
+      final double score =
+          buckets[i][0] * (0.3 + _saturation(color[0], color[1], color[2]));
+      if (score > bestScore) {
+        bestScore = score;
+        secondaryIndex = i;
+      }
+    }
+    final List<int> secondary =
+        secondaryIndex >= 0 ? bucketColor(secondaryIndex) : primary;
+    final List<int> background = <int>[
+      (primary[0] * 0.30).round(),
+      (primary[1] * 0.30).round(),
+      (primary[2] * 0.30).round(),
+    ];
+    int argb(List<int> color) =>
+        0xFF000000 | (color[0] << 16) | (color[1] << 8) | color[2];
+    return <int>[argb(primary), argb(secondary), argb(background)];
+  }
+
+  double _hue(int r, int g, int b) {
+    final double rf = r / 255;
+    final double gf = g / 255;
+    final double bf = b / 255;
+    final double max = math.max(rf, math.max(gf, bf));
+    final double min = math.min(rf, math.min(gf, bf));
+    final double delta = max - min;
+    if (delta == 0) return 0;
+    if (max == rf) return 60 * (((gf - bf) / delta) % 6);
+    if (max == gf) return 60 * (((bf - rf) / delta) + 2);
+    return 60 * (((rf - gf) / delta) + 4);
+  }
+
+  double _saturation(int r, int g, int b) {
+    final int max = math.max(r, math.max(g, b));
+    final int min = math.min(r, math.min(g, b));
+    if (max == 0) return 0;
+    return (max - min) / max;
   }
 
   /// The themes pass the icon value straight into Icon(icon: ...)
@@ -304,9 +507,9 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
       'immersive': <String, Object?>{
         'active': immersiveItem != null,
         'imageUrl': immersiveItem?.picUrl ?? '',
-        'primaryColor': 0xFF1A237E,
-        'secondaryColor': 0xFF4A148C,
-        'backgroundColor': 0xFF0B0B10,
+        'primaryColor': _immersivePrimary,
+        'secondaryColor': _immersiveSecondary,
+        'backgroundColor': _immersiveBackground,
       },
       'icons': <String, Object?>{
         'search': _iconData(Icons.search),

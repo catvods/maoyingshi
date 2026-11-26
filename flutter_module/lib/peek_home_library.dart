@@ -110,6 +110,7 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
           indicatorAlignment: ArgumentDecoders.alignment(
                   source, <Object>['indicatorAlignment']) ??
               Alignment.bottomCenter,
+          style: source.v<String>(<Object>['style']),
           stackScale: source.v<double>(<Object>['stackScale']),
           stackOpacity: source.v<double>(<Object>['stackOpacity']),
           stackOffset: source.v<double>(<Object>['stackOffset']),
@@ -169,6 +170,9 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
         final Color primary =
             ArgumentDecoders.color(source, <Object>['primaryColor']) ??
                 const Color(0xFF1A237E);
+        final Color secondary =
+            ArgumentDecoders.color(source, <Object>['secondaryColor']) ??
+                primary;
         final Color background =
             ArgumentDecoders.color(source, <Object>['backgroundColor']) ??
                 const Color(0xFF0B0B10);
@@ -210,7 +214,7 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
                       end: Alignment.bottomCenter,
                       colors: <Color>[
                         primary.withValues(alpha: 0.30),
-                        const Color(0x00000000),
+                        secondary.withValues(alpha: 0.16),
                         background.withValues(alpha: 0.92),
                       ],
                       stops: const <double>[0.0, 0.45, 1.0],
@@ -335,6 +339,7 @@ class _PeekCarousel extends StatefulWidget {
     required this.inactiveColor,
     required this.showIndicators,
     required this.indicatorAlignment,
+    required this.style,
     required this.stackScale,
     required this.stackOpacity,
     required this.stackOffset,
@@ -350,6 +355,11 @@ class _PeekCarousel extends StatefulWidget {
   final Color inactiveColor;
   final bool showIndicators;
   final AlignmentGeometry indicatorAlignment;
+
+  /// The themes' carousel mode: "stack" enables the stack*
+  /// transforms; any other value (e.g. "standard") disables
+  /// them even if stack parameters are present.
+  final String? style;
   final double? stackScale;
   final double? stackOpacity;
   final double? stackOffset;
@@ -404,12 +414,14 @@ class _PeekCarouselState extends State<_PeekCarousel> {
     super.dispose();
   }
 
-  Widget _pageChild(int index) {
+  Widget _pageChild(int index, double pageWidth) {
     final Widget child = widget.children[index];
-    final bool stacked = widget.stackScale != null ||
-        widget.stackOpacity != null ||
-        widget.stackOffset != null ||
-        widget.stackRotation != null;
+    final bool stackMode = widget.style == null || widget.style == 'stack';
+    final bool stacked = stackMode &&
+        (widget.stackScale != null ||
+            widget.stackOpacity != null ||
+            widget.stackOffset != null ||
+            widget.stackRotation != null);
     if (!stacked) return child;
     return AnimatedBuilder(
       animation: _controller,
@@ -424,7 +436,13 @@ class _PeekCarouselState extends State<_PeekCarousel> {
             1 - (1 - (widget.stackScale ?? 1)) * d;
         final double opacity =
             1 - (1 - (widget.stackOpacity ?? 1)) * d;
-        final double offsetX = (widget.stackOffset ?? 0) * delta;
+        // stackOffset is a fraction of the page width, not
+        // pixels: the themes pass 0.22/0.24, and with delta's
+        // sign the shift pulls neighbouring pages toward the
+        // centre — the layered-cards look the stack themes
+        // document. As raw pixels it would be a no-op.
+        final double offsetX =
+            (widget.stackOffset ?? 0) * delta * pageWidth;
         final double rotation = (widget.stackRotation ?? 0) * delta;
         Widget result = Opacity(opacity: opacity.clamp(0.0, 1.0), child: inner);
         result = Transform.scale(scale: scale, child: result);
@@ -439,45 +457,50 @@ class _PeekCarouselState extends State<_PeekCarousel> {
   @override
   Widget build(BuildContext context) {
     if (widget.children.isEmpty) return const SizedBox.shrink();
-    return Stack(
-      children: <Widget>[
-        PageView.builder(
-          controller: _controller,
-          itemCount: widget.children.length,
-          onPageChanged: (int index) {
-            setState(() => _page = index);
-            if (widget.syncImmersivePalette) {
-              PeekHomeHooks.onCarouselPage?.call(index);
-            }
-          },
-          itemBuilder: (BuildContext context, int index) =>
-              _pageChild(index),
-        ),
-        if (widget.showIndicators && widget.children.length > 1)
-          Align(
-            alignment: widget.indicatorAlignment,
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  for (int i = 0; i < widget.children.length; i++)
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 240),
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: i == _page ? 16 : 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color:
-                            i == _page ? widget.activeColor : widget.inactiveColor,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                ],
-              ),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        return Stack(
+          children: <Widget>[
+            PageView.builder(
+              controller: _controller,
+              itemCount: widget.children.length,
+              onPageChanged: (int index) {
+                setState(() => _page = index);
+                if (widget.syncImmersivePalette) {
+                  PeekHomeHooks.onCarouselPage?.call(index);
+                }
+              },
+              itemBuilder: (BuildContext context, int index) =>
+                  _pageChild(index, constraints.maxWidth),
             ),
-          ),
-      ],
+            if (widget.showIndicators && widget.children.length > 1)
+              Align(
+                alignment: widget.indicatorAlignment,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      for (int i = 0; i < widget.children.length; i++)
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 240),
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          width: i == _page ? 16 : 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: i == _page
+                                ? widget.activeColor
+                                : widget.inactiveColor,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

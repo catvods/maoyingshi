@@ -3041,6 +3041,8 @@
     <string name="setting_following_reminder">Airing reminder</string>
     <string name="setting_home_theme">Home theme</string>
     <string name="setting_home_theme_sub">Home layout, filters and bottom-bar style</string>
+    <string name="setting_global_theme">Global theme</string>
+    <string name="setting_global_theme_sub">App-wide colors for every screen</string>
     <string name="setting_following_reminder_sub">Remind before airing, 15/30/60 min early</string>
     <string name="setting_following_reminder_off">Off</string>
     <string name="setting_following_reminder_value">%1$d min early</string>

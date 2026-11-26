@@ -6,6 +6,8 @@ import 'ui_glass.dart';
 
 import 'b10_collect_page.dart';
 import 'b11_home_page.dart';
+import 'global_theme.dart';
+import 'global_theme_page.dart';
 import 'home_theme.dart';
 import 'home_theme_page.dart';
 import 'b14_following_page.dart';
@@ -158,6 +160,9 @@ void main() async {
   // The persisted home theme selection, so the home opens themed
   // on the first frame when one is picked.
   await loadHomeThemeId();
+  // The current global theme selection (a package id, or 'custom'
+  // when the saved profile came from the theme-color editor).
+  await loadGlobalThemeId();
   // The imported user themes, so a persisted user selection
   // resolves in the catalog from the first frame.
   await loadUserThemes();
@@ -213,6 +218,9 @@ final Map<String, WidgetBuilder> _c0Routes = {
   // The home theme library (ported PeekPro themes); opened from
   // the personal settings page.
   '/home-theme': (context) => const HomeThemePage(),
+  // The global theme library (whole-app palette packages); opened
+  // from the settings home's general group, under the home theme.
+  '/global-theme': (context) => const GlobalThemePage(),
   // B8 B3: the settings family. One literal route per member (the
   // routes table matches exact strings); '/settings' without a
   // member defaults to the first member, TMDB. B4/B5/B6/B7 add

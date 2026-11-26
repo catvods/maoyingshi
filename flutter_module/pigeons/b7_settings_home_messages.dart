@@ -85,6 +85,11 @@ abstract class B7HostApi {
   /// home-theme library — a root route the host asserts. Fire-and-forget.
   void openHomeTheme();
 
+  /// Global-theme row (second in the general group, right under the
+  /// home-theme row): opens the Flutter global-theme library — a root
+  /// route the host asserts. Fire-and-forget.
+  void openGlobalTheme();
+
   /// Module row (last in the feature group, mirroring the native
   /// SettingFragment ROW_MODULE placement): opens the native
   /// ModuleActivity (optional-module downloads / local import).

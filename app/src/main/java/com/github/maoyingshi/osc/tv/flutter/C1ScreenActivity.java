@@ -33,6 +33,7 @@ import com.github.maoyingshi.osc.tv.player.Source;
 import com.github.maoyingshi.osc.tv.server.Server;
 import com.github.maoyingshi.osc.tv.setting.AutoBackupPolicy;
 import com.github.maoyingshi.osc.tv.setting.Setting;
+import com.github.maoyingshi.osc.tv.theme.GlobalThemes;
 import com.github.maoyingshi.osc.tv.theme.ThemeController;
 import com.github.maoyingshi.osc.tv.theme.ThemeTokens;
 import com.github.maoyingshi.osc.tv.utils.CrashRestartMode;
@@ -183,6 +184,8 @@ public class C1ScreenActivity extends AppCompatActivity {
     public static final String ROUTE_FOLLOWING = "/following";
     /** Home theme library route (no parameters). */
     public static final String ROUTE_HOME_THEME = "/home-theme";
+    /** Global theme library route (no parameters). */
+    public static final String ROUTE_GLOBAL_THEME = "/global-theme";
     /** Local-file browser route; append "?selectDir=&readMode=" (both URL-encoded booleans). */
     public static final String ROUTE_LOCAL = "/local";
     /** App-branding page route (no parameters). */
@@ -892,6 +895,16 @@ public class C1ScreenActivity extends AppCompatActivity {
             else if ("setHomeThemeId".equals(call.method)) {
                 getPreferences(MODE_PRIVATE).edit().putString("home_theme_id", call.arguments == null ? "" : String.valueOf(call.arguments)).apply();
                 result.success(null);
+            }
+            else if ("getGlobalThemeId".equals(call.method)) result.success(GlobalThemes.currentId());
+            else if ("setGlobalThemeId".equals(call.method)) {
+                // Applying a global theme writes its whole ThemeProfile
+                // through ThemeProfileStore (see GlobalThemes); the next
+                // getUiConfig — and every native screen on create — then
+                // resolves the new palette from the saved profile.
+                String id = call.arguments == null ? "" : String.valueOf(call.arguments);
+                if (GlobalThemes.apply(getPreferences(MODE_PRIVATE), id)) result.success(true);
+                else result.error("apply_failed", "全局主题应用失败", null);
             }
             else if ("listUserThemes".equals(call.method)) result.success(listUserThemeMaps());
             else if ("getUserThemeText".equals(call.method)) {

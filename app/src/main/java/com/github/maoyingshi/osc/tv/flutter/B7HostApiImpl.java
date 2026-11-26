@@ -32,6 +32,9 @@ import com.github.maoyingshi.osc.tv.impl.SiteListener;
 import com.github.maoyingshi.osc.tv.setting.ConfigSyncPolicy;
 import com.github.maoyingshi.osc.tv.setting.Setting;
 import com.github.maoyingshi.osc.tv.setting.SiteHealthStore;
+import com.github.maoyingshi.osc.tv.theme.GlobalThemes;
+import com.github.maoyingshi.osc.tv.theme.ThemePresets;
+import com.github.maoyingshi.osc.tv.theme.ThemeProfileStore;
 import com.github.maoyingshi.osc.tv.theme.WebHtvAlertDialogBuilder;
 import com.github.maoyingshi.osc.tv.lab.LabActivity;
 import com.github.maoyingshi.osc.tv.module.ModuleActivity;
@@ -229,6 +232,9 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
         RowText homeTheme = safeRow(this::homeThemeName);
         rows.add(row("homeTheme", R.string.setting_home_theme, R.string.setting_home_theme_sub,
                 homeTheme.text, homeTheme.error, false, ""));
+        RowText globalTheme = safeRow(this::globalThemeName);
+        rows.add(row("globalTheme", R.string.setting_global_theme, R.string.setting_global_theme_sub,
+                globalTheme.text, globalTheme.error, false, ""));
         RowText appearance = safeRow(this::getThemeModeText);
         rows.add(row("appearance", R.string.setting_appearance, R.string.setting_appearance_sub,
                 appearance.text, appearance.error, false, ""));
@@ -666,6 +672,23 @@ public class B7HostApiImpl implements B7Messages.B7HostApi {
     @Override
     public void openHomeTheme() {
         C1ScreenActivity.start(activity, C1ScreenActivity.ROUTE_HOME_THEME);
+    }
+
+    @Override
+    public void openGlobalTheme() {
+        C1ScreenActivity.start(activity, C1ScreenActivity.ROUTE_GLOBAL_THEME);
+    }
+
+    /// The global-theme row's value text: the palette package the
+    /// saved theme profile currently is (see GlobalThemes). A profile
+    /// that came from the theme-color editor instead shows that
+    /// preset's own label, or 自定义 for hand edits.
+    private String globalThemeName() {
+        String id = GlobalThemes.currentId();
+        if (!GlobalThemes.CUSTOM_ID.equals(id)) return GlobalThemes.nameForId(id);
+        ThemePresets.Preset preset = ThemePresets.find(ThemeProfileStore.load());
+        if (preset != null) return activity.getString(preset.label);
+        return GlobalThemes.nameForId(GlobalThemes.CUSTOM_ID);
     }
 
     /// The home-theme row's value text: the persisted selection's

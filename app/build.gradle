@@ -135,6 +135,35 @@ android {
         checkReleaseBuilds = !fastRelease
     }
 
+    // 模块化（单元⑤）：5 个模块的 .so 不再打进 APK，随模块 zip 分发（VLC 不在 fork 范围内）。
+    // 只排除这 7 个文件（×2 ABI）：其余 .so（libexo_ass.so、FFmpeg、Chaquopy、Node 等）留在基础包。
+    // 安全依据（2026-11-26 对 b8-c0-40 的 mobile 两个 APK 内全部 .so 做 DT_NEEDED 全量核查）：
+    // lib/ 里的 libc++_shared.so 唯一使用方是 mpv-libs 里的 libmpv/libmvcodec/libplayer，
+    // 它们随 mpv 模块走、模块自带同名文件并按 loadOrder 先预载；ijk 三件的消费者只在模块
+    // 内部互相引用；sherpa 与 DV 两件无 DT_NEEDED 消费者（DV 靠运行时 dlopen + 按名加载，
+    // 两件同在 dovi 模块内）。assets/lab 里另有一份 libc++_shared.so 是实验室的，不在此列。
+    packaging {
+        jniLibs {
+            // addAll（而非 excludes +=）：AGP 的 excludes 只有 getter，Groovy 下 += 不可靠。
+            excludes.addAll([
+                    "lib/arm64-v8a/libsherpa-onnx-jni.so",
+                    "lib/armeabi-v7a/libsherpa-onnx-jni.so",
+                    "lib/arm64-v8a/libijkffmpeg.so",
+                    "lib/armeabi-v7a/libijkffmpeg.so",
+                    "lib/arm64-v8a/libijksdl.so",
+                    "lib/armeabi-v7a/libijksdl.so",
+                    "lib/arm64-v8a/libijkplayer.so",
+                    "lib/armeabi-v7a/libijkplayer.so",
+                    "lib/arm64-v8a/libc++_shared.so",
+                    "lib/armeabi-v7a/libc++_shared.so",
+                    "lib/arm64-v8a/libexo_dovi_renderer.so",
+                    "lib/armeabi-v7a/libexo_dovi_renderer.so",
+                    "lib/arm64-v8a/libdovi_android.so",
+                    "lib/armeabi-v7a/libdovi_android.so",
+            ])
+        }
+    }
+
     compileOptions {
         coreLibraryDesugaringEnabled = true
         sourceCompatibility JavaVersion.VERSION_21
@@ -160,6 +189,15 @@ androidComponents {
     }
 }
 
+configurations {
+    // 模块打包专用：只解析 exoplayerhdrutils 一个 AAR，从中取 libdovi_android.so 打 zip；
+    // 不参与编译与打包（该依赖仍由 implementation 引入，Java 绑定留基础包）。
+    moduleAar {
+        canBeConsumed = false
+        canBeResolved = true
+    }
+}
+
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.aar", "*.jar"])
     implementation project(':catvod')
@@ -181,6 +219,7 @@ dependencies {
     implementation libs.media
     implementation libs.bundles.media3
     implementation libs.exoplayer.hdr.utils
+    moduleAar libs.exoplayer.hdr.utils
     implementation libs.nextlib.media3ext
     implementation libs.palette
     implementation libs.recyclerview
@@ -233,4 +272,261 @@ dependencies {
     androidTestImplementation libs.androidx.test.rules
     androidTestImplementation libs.androidx.test.core
     androidTestImplementation libs.androidx.test.ext.junit
+}
+
+// ---- 模块打包（单元⑤）----
+// 把 5 个模块的 .so/资产移出 APK 后（VLC 不在 fork 范围内），按 ABI 打成 module-<id>-<abi>-<versionCode>.zip，
+// 再加一个总包 modules-all-<abi>-<versionCode>.zip（5 个分包 + total-manifest.json）。
+// 分包 zip 根目录：manifest.json + 模块文件（平铺，文件名与 ModuleDefinition.files 一致）；
+// 总包根目录：6 个分包 zip + total-manifest.json（{modules:[{file,module,size,sha256}]}，
+// 总包本身不重复放 .so，只做分包的容器；校验以总清单内各分包 sha256 为准）。
+// 确定性：ZipOutputStream 写固定时间戳（1980-01-01）+ 固定条目顺序（manifest 在首位，
+// 其余按 ModuleDefinition.files / 模块表顺序）；manifest 内容不含时间戳。
+// 产物：app/build/outputs/modules/<abi>/（CI 在此收集，随 release 一起发）。
+// 文件清单与 ModuleDefinition.files 必须保持一致（改一处就要改另一处）；
+// DV 的渲染器 .so 由 CMake 编出：mobile/leanback 两 variant 的产物可能因 DWARF 内嵌
+// 路径不同而字节不同，这里按路径排序取首个，CI 只从 mobile 任务收集，故发布物唯一。
+// 任务无 inputs/outputs 声明，每次 release assemble 都重新打（耗时数秒，可接受）。
+
+def moduleAbis = ["arm64-v8a": "arm64_v8a", "armeabi-v7a": "armeabi_v7a"]
+
+def moduleOrder = ["mpv", "sherpa", "dovi", "ijk", "lut"]
+
+def moduleUpstreamVersions = [
+        mpv   : mpvSourceRevisions,
+        sherpa: "sherpa-onnx 1.13.4",
+        dovi  : "exo-dv5-native",
+        ijk   : "ijkplayer",
+        lut   : "lut_presets",
+]
+
+// 文件名与 ModuleDefinition.files 逐项对应；顺序即 zip 内顺序。
+def moduleFiles = [
+        mpv   : ["libc++_shared.so", "libmvutil.so", "libmwresample.so", "libmwscale.so",
+                 "libmvcodec.so", "libmvformat.so", "libmvfilter.so", "libmvdevice.so",
+                 "libmpv.so", "libplayer.so"],
+        sherpa: ["libsherpa-onnx-jni.so"],
+        dovi  : ["libdovi_android.so", "libexo_dovi_renderer.so"],
+        ijk   : ["libijkffmpeg.so", "libijksdl.so", "libijkplayer.so"],
+        lut   : ["低对比.cube", "复古深棕.cube", "徕卡胶片.cube", "明亮清新.cube",
+                 "柔和中性.cube", "浪漫柔美.cube", "色彩还原.cube", "蓝绿带亮.cube",
+                 "赛博朋克.cube", "通透鲜艳.cube", "钨丝灯.cube", "高级质感.cube"],
+]
+
+def sha256Hex = { File file ->
+    def digest = java.security.MessageDigest.getInstance("SHA-256")
+    file.withInputStream { stream ->
+        byte[] buffer = new byte[65536]
+        int n
+        while ((n = stream.read(buffer)) != -1) digest.update(buffer, 0, n)
+    }
+    return digest.digest().encodeHex().toString()
+}
+
+def writeDeterministicZip = { File zipFile, List<Map> entries ->
+    // entries: [{name: "manifest.json", file: File}, ...]，按列表顺序写，固定时间戳。
+    zipFile.parentFile.mkdirs()
+    new java.util.zip.ZipOutputStream(new java.io.FileOutputStream(zipFile)).withCloseable { zip ->
+        entries.each { entry ->
+            def zipEntry = new java.util.zip.ZipEntry(entry.name as String)
+            zipEntry.time = 315532800000L // 1980-01-01T00:00:00Z（DOS 纪元）
+            zip.putNextEntry(zipEntry)
+            new java.io.FileInputStream(entry.file as File).withCloseable { input ->
+                byte[] buffer = new byte[65536]
+                int n
+                while ((n = input.read(buffer)) != -1) zip.write(buffer, 0, n)
+            }
+            zip.closeEntry()
+        }
+    }
+}
+
+def extractAarJni = { File aarFile, String abi, File destDir, List<String> names ->
+    new java.util.zip.ZipFile(aarFile).withCloseable { zip ->
+        names.each { name ->
+            def entry = zip.getEntry("jni/${abi}/${name}")
+            if (entry == null) {
+                throw new GradleException("AAR ${aarFile.name} 里没有 jni/${abi}/${name}")
+            }
+            def target = new File(destDir, name)
+            target.parentFile.mkdirs()
+            zip.getInputStream(entry).withCloseable { input ->
+                new java.io.FileOutputStream(target).withCloseable { output ->
+                    byte[] buffer = new byte[65536]
+                    int n
+                    while ((n = input.read(buffer)) != -1) output.write(buffer, 0, n)
+                }
+            }
+        }
+    }
+}
+
+def findCmakeDoviSo = { String abi, String flavor ->
+    def flavorCap = flavor == "arm64_v8a" ? "Arm64_v8a" : "Armeabi_v7a"
+    def buildDir = project.layout.buildDirectory.get().asFile
+    // 布局无关搜索：run 45629469467 实测，在 AGP 9.2.1 下 intermediates/cmake/**/obj/<abi>/
+    // 与 intermediates/merged_native_libs/**/out/lib/<abi>/ 两处都找不到该 .so——虽然它确实
+    // 在 APK 里（v…251828 的 APK 中 arm64 9,583,656 字节、armeabi 6,746,144 字节），且
+    // buildCMakeRelWithDebInfo 与 mergeNativeLibs 都在 packageModules 之前跑完。AGP 的
+    // intermediates 布局随版本变化（merged_native_libs 就有带/不带任务名目录的两种布局，
+    // 见 syafiy.dev 的 16KB 修复文：intermediates/merged_native_libs/<variant>/
+    // merge<Variant>NativeLibs/out/lib 与 .../<variant>/out/lib 两种写法都要试），
+    // 不能再按文档口径写死两条路径。改为在整个 build 树 + .cxx（CMake 构建目录）里按
+    // 文件名 + ABI 目录匹配，再按优先级排序；strip 过的产物一律排除（模块 zip 要未 strip 的）。
+    def searchRoots = []
+    if (buildDir.isDirectory()) searchRoots << buildDir
+    def cxxDir = new File(projectDir, ".cxx")
+    if (cxxDir.isDirectory()) searchRoots << cxxDir
+    def candidates = []
+    searchRoots.each { root ->
+        project.fileTree(root) {
+            include "**/${abi}/libexo_dovi_renderer.so"
+        }.files.each { f -> candidates << f }
+    }
+    // 排除 strip 产物（stripped_native_libs 里的是 strip 过的，zip 里不能用）。
+    candidates = candidates.findAll { !(it.path.contains("/stripped_native_libs/")) }
+    if (!candidates.isEmpty()) {
+        // 优先级：CMake 原始产物（未 strip）> .cxx 构建目录产物（未 strip）>
+        // merged_native_libs 合并产物（未 strip）> 其他；同级内优先 release/relWithDebInfo，
+        // 其次 mobile variant（与 CI“只从 mobile 任务收集模块 zip”口径一致）。
+        candidates.sort { a, b ->
+            def score = { File f ->
+                def p = f.path
+                def s = 0
+                if (p.contains("/intermediates/cmake/")) s += 0
+                else if (p.contains("/.cxx/")) s += 10
+                else if (p.contains("/merged_native_libs/")) s += 20
+                else s += 30
+                if (p.contains("/debug/") || p.contains("/Debug/")) s += 5
+                if (!(p.contains("/mobile${flavorCap}Release/"))) s += 1
+                return s
+            }
+            def d = score(a) <=> score(b)
+            return d != 0 ? d : (a.path <=> b.path)
+        }
+        return candidates.first()
+    }
+    // 诊断：同名文件在其他 ABI 下是否存在（用于区分“搜索本身失效”与“该 ABI 确实没产物”)。
+    def anyAbi = []
+    searchRoots.each { root ->
+        project.fileTree(root) {
+            include "**/libexo_dovi_renderer.so"
+        }.files.each { f -> anyAbi << f.path }
+    }
+    throw new GradleException(
+            "找不到 libexo_dovi_renderer.so（ABI ${abi}）：已在 ${searchRoots} 下按 **/${abi}/libexo_dovi_renderer.so 全树搜索，" +
+            "未 strip 候选 0 个；同名文件在其他 ABI 下：${anyAbi.isEmpty() ? "无" : anyAbi.join(", ")}；" +
+            "请确认 CMake 构建（buildCMakeRelWithDebInfo[${abi}]）已产出该 .so")
+}
+
+def packageModulesAction = { String abi, String flavor ->
+    def versionCode = android.defaultConfig.versionCode
+    def buildDir = project.layout.buildDirectory.get().asFile
+    def outDir = new File(buildDir, "outputs/modules/${abi}")
+    outDir.mkdirs()
+    def stageRoot = new File(buildDir, "modules-stage/${abi}")
+    project.delete(stageRoot)
+    stageRoot.mkdirs()
+
+    // AAR 依赖：exoplayerhdrutils（DV 的 libdovi_android.so 从这里抽；该 AAR 同时由
+    // implementation 引入、Java 绑定留基础包，这里只借它的 jni/ 产物打模块 zip）。
+    def aarByName = [:]
+    configurations.moduleAar.files.each { f -> aarByName[f.name] = f }
+    def hdrAar = aarByName.find { k, v -> k.startsWith("exoplayerhdrutils-") }?.value
+    if (hdrAar == null) throw new GradleException("moduleAar 里找不到 exoplayerhdrutils AAR")
+    def aarStage = new File(stageRoot, ".aar")
+    extractAarJni(hdrAar, abi, new File(aarStage, "hdr"), ["libdovi_android.so"])
+
+    def doviRenderer = findCmakeDoviSo(abi, flavor)
+
+    def subZips = []
+    moduleOrder.each { moduleId ->
+        def names = moduleFiles[moduleId]
+        def moduleStage = new File(stageRoot, moduleId)
+        moduleStage.mkdirs()
+        def fileInfos = []
+        names.each { name ->
+            File source
+            switch (moduleId) {
+                case "mpv":
+                    source = new File(projectDir, "src/${flavor}/mpv-libs/${abi}/${name}")
+                    break
+                case "sherpa":
+                case "ijk":
+                    source = new File(projectDir, "src/main/jniLibs/${abi}/${name}")
+                    break
+                case "dovi":
+                    source = name == "libexo_dovi_renderer.so"
+                            ? doviRenderer : new File(aarStage, "hdr/${name}")
+                    break
+                case "lut":
+                    source = new File(projectDir, "src/main/lut-presets/${name}")
+                    break
+                default:
+                    source = null
+            }
+            if (source == null || !source.isFile()) {
+                throw new GradleException("模块 ${moduleId} 缺少文件：${name}（ABI ${abi}）")
+            }
+            def target = new File(moduleStage, name)
+            java.nio.file.Files.copy(source.toPath(), target.toPath())
+            fileInfos << [name: name, size: target.length(), sha256: sha256Hex(target)]
+        }
+        def manifest = [
+                module           : moduleId,
+                moduleVersion    : versionCode.toString(),
+                appVersionCodeMin: versionCode,
+                appVersionCodeMax: versionCode,
+                abi              : abi,
+                upstreamVersion  : moduleUpstreamVersions[moduleId],
+                files            : fileInfos,
+        ]
+        def manifestJson = new groovy.json.JsonBuilder(manifest).toPrettyString()
+        java.nio.file.Files.write(new File(moduleStage, "manifest.json").toPath(),
+                manifestJson.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+        def zipName = "module-${moduleId}-${abi}-${versionCode}.zip"
+        def zipFile = new File(outDir, zipName)
+        def entries = [[name: "manifest.json", file: new File(moduleStage, "manifest.json")]]
+        names.each { n -> entries << [name: n, file: new File(moduleStage, n)] }
+        writeDeterministicZip(zipFile, entries)
+        subZips << [file: zipName, module: moduleId, size: zipFile.length(), sha256: sha256Hex(zipFile)]
+        logger.lifecycle("模块分包：${zipFile} (${zipFile.length()} 字节)")
+    }
+
+    // 总包：5 个分包 + total-manifest.json（只列分包，不重复放 .so）。
+    def totalManifest = [modules: subZips]
+    def totalJson = new groovy.json.JsonBuilder(totalManifest).toPrettyString()
+    def totalStage = new File(stageRoot, "all")
+    totalStage.mkdirs()
+    java.nio.file.Files.write(new File(totalStage, "total-manifest.json").toPath(),
+            totalJson.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+    def totalEntries = [[name: "total-manifest.json", file: new File(totalStage, "total-manifest.json")]]
+    subZips.each { s -> totalEntries << [name: s.file, file: new File(outDir, s.file)] }
+    def totalZip = new File(outDir, "modules-all-${abi}-${versionCode}.zip")
+    writeDeterministicZip(totalZip, totalEntries)
+    logger.lifecycle("模块总包：${totalZip} (${totalZip.length()} 字节)")
+}
+
+moduleAbis.each { abi, flavor ->
+    def flavorCap = flavor == "arm64_v8a" ? "Arm64_v8a" : "Armeabi_v7a"
+    tasks.register("packageModules${flavorCap}") {
+        group = "build"
+        description = "打包 ${abi} 的 5 个模块分包 + 总包（app/build/outputs/modules/${abi}/）"
+        // DV 的渲染器 .so 由 CMake 编出。CI 实测任务名是 buildCMakeRelWithDebInfo[arm64-v8a]
+        //（按 CMake 构建类型 + ABI 命名，不含 variant 名）。只依赖 release 的 CMake 任务：
+        // 旧的 startsWith("buildCMake") 还会匹配到 buildCMakeDebug，白白多编一次。
+        // 用精确任务名依赖：任务不存在时构建会明确报错，而不是像 matching 那样静默空操作。
+        // 另等 mobile variant 的 mergeNativeLibs 完成，保证合并产物已落盘（兜底查找用）。
+        dependsOn("buildCMakeRelWithDebInfo[${abi}]")
+        dependsOn("mergeMobile${flavorCap}ReleaseNativeLibs")
+        doLast {
+            packageModulesAction(abi, flavor)
+        }
+    }
+}
+
+// release assemble 顺带产出该 ABI 的模块 zip（只在 release 任务上挂；debug 不打）。
+tasks.matching { it.name ==~ /assemble(Mobile|Leanback)(Arm64_v8a|Armeabi_v7a)Release/ }.configureEach {
+    def flavorCap = it.name.contains("Arm64_v8a") ? "Arm64_v8a" : "Armeabi_v7a"
+    dependsOn("packageModules${flavorCap}")
 }

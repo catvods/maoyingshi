@@ -4,14 +4,17 @@ import 'package:flutter/services.dart' show PlatformException;
 import 'package:material_ui/material_ui.dart';
 
 import 'home_theme.dart';
+import 'home_theme_editor_page.dart';
 import 'pigeon/c1_messages.g.dart';
 import 'ui_glass.dart';
 
 /// The home theme library (route /home-theme), modeled on the Lee
 /// library: the active theme on top, filter chips （全部 / 内置 /
 /// 我的） over one card grid, an import menu in the app bar (local
-/// .lzt / .txt file, or pasted theme source) and a per-card menu
-/// with export (and delete for imported themes). Tapping a card
+/// .lzt / .txt file, or pasted theme source — which now opens the
+/// source editor) and a per-card menu with edit （编辑 on imported
+/// themes, 编辑副本 on built-ins; the editor always saves into
+/// 我的）, export, and delete for imported themes. Tapping a card
 /// applies the theme immediately; the selection persists through
 /// the host and the B11 home swaps its body live.
 class HomeThemePage extends StatefulWidget {
@@ -59,56 +62,44 @@ class _HomeThemePageState extends State<HomeThemePage> {
     }
   }
 
+  /// Paste-import goes through the source editor now: the big
+  /// monospace box is a better paste surface than the old dialog,
+  /// and the pasted source gets the same name field and parse
+  /// check as an edit before it is saved as a user theme.
   Future<void> _importPaste() async {
-    final TextEditingController controller = TextEditingController();
-    final String? text = await showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: glassButtonColor(
-            context,
-            Theme.of(context).colorScheme.surfaceContainerHigh,
-          ),
-          title: const Text('粘贴主题源码'),
-          content: TextField(
-            controller: controller,
-            minLines: 6,
-            maxLines: 12,
-            decoration: const InputDecoration(
-              hintText: '粘贴 .lzt / .rfwtxt 主题源码',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: glassButtonColor(
-                  context,
-                  Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              onPressed: () => Navigator.of(context).pop(controller.text),
-              child: const Text('导入'),
-            ),
-          ],
-        );
-      },
+    final HomeThemeEntry? entry =
+        await Navigator.of(context).push<HomeThemeEntry>(
+      MaterialPageRoute<HomeThemeEntry>(
+        builder: (BuildContext context) => const HomeThemeEditorPage(
+          title: '粘贴主题源码',
+          startEmpty: true,
+        ),
+      ),
     );
-    if (text == null || text.trim().isEmpty) return;
-    try {
-      final HomeThemeEntry? entry = await importUserThemeText(text);
-      if (entry != null) {
-        setState(() => _filter = 2);
-        _toast('已导入「${entry.name}」，点选即可应用');
-      }
-    } on PlatformException catch (e) {
-      _toast(e.message ?? '导入失败');
-    } catch (_) {
-      _toast('导入失败');
+    if (entry != null) {
+      setState(() => _filter = 2);
+      _toast('已保存「${entry.name}」，点选即可应用');
+    }
+  }
+
+  /// 编辑 on an imported theme reopens its source; on a built-in
+  /// it edits a copy — the save always lands in 我的， built-ins
+  /// are never overwritten.
+  Future<void> _edit(HomeThemeEntry entry) async {
+    final bool mine = isUserThemeId(entry.id);
+    final HomeThemeEntry? saved =
+        await Navigator.of(context).push<HomeThemeEntry>(
+      MaterialPageRoute<HomeThemeEntry>(
+        builder: (BuildContext context) => HomeThemeEditorPage(
+          title: mine ? '编辑主题' : '编辑副本',
+          entry: entry,
+          editingId: mine ? entry.id : null,
+        ),
+      ),
+    );
+    if (saved != null) {
+      setState(() => _filter = 2);
+      _toast('已保存「${saved.name}」，点选即可应用');
     }
   }
 
@@ -162,6 +153,7 @@ class _HomeThemePageState extends State<HomeThemePage> {
   }
 
   void _onCardMenu(HomeThemeEntry entry, String action) {
+    if (action == 'edit') unawaited(_edit(entry));
     if (action == 'export') unawaited(_export(entry));
     if (action == 'delete') unawaited(_delete(entry));
   }
@@ -281,7 +273,7 @@ class _HomeThemePageState extends State<HomeThemePage> {
                     ),
                   const SizedBox(height: 16),
                   Text(
-                    '点选即应用，返回首页查看效果。主题只改变首页的样子，不影响站源与播放。卡片右上角菜单可导出主题文件，我的主题还可以删除。',
+                    '点选即应用，返回首页查看效果。主题只改变首页的样子，不影响站源与播放。卡片右上角菜单可导出主题文件，也可编辑源码（内置主题是编辑副本，永远另存为我的主题），我的主题还可以删除。',
                     style: TextStyle(
                       fontSize: 12,
                       color: scheme.onSurfaceVariant,
@@ -426,6 +418,11 @@ class _ThemeCard extends StatelessWidget {
                         onSelected: onMenu,
                         itemBuilder: (BuildContext context) =>
                             <PopupMenuEntry<String>>[
+                          PopupMenuItem<String>(
+                            value: 'edit',
+                            child: Text(
+                                isUserThemeId(entry.id) ? '编辑' : '编辑副本'),
+                          ),
                           const PopupMenuItem<String>(
                             value: 'export',
                             child: Text('导出'),

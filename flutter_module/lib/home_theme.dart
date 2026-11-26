@@ -548,3 +548,41 @@ Future<bool> exportThemeText(String fileName, String text) async {
       'exportThemeText', <String, String>{'name': fileName, 'text': text});
   return ok ?? false;
 }
+
+// ---------------------------------------------------------------------------
+// Theme editor support
+//
+// The editor saves through the very same import path as a picked or
+// pasted file (host validation, md5 id, files/home_themes storage);
+// the only editor-specific step is writing the display name the
+// user typed into the source, in exactly the place the host's
+// display-name parser reads it: the leecat meta header's "name"
+// when the source carries one, else the leading // comment line
+// (prepended when the source has neither).
+// ---------------------------------------------------------------------------
+
+/// Returns [text] with its reported display name rewritten to
+/// [name]. A name that sanitizes to empty leaves the source alone
+/// (the host then derives the name as it does for imports).
+String rewriteThemeDisplayName(String text, String name) {
+  String clean =
+      name.replaceAll(RegExp(r'[\n\r"\\$]'), ' ').trim();
+  if (clean.length > 40) clean = clean.substring(0, 40);
+  if (clean.isEmpty) return text;
+  final int nl = text.indexOf('\n');
+  final String first = (nl >= 0 ? text.substring(0, nl) : text).trim();
+  final String rest = nl >= 0 ? text.substring(nl) : '';
+  if (first.contains('leecat-theme:') && first.contains('{')) {
+    final RegExp nameKey = RegExp(r'"name"\s*:\s*"[^"]*"');
+    if (nameKey.hasMatch(first)) {
+      return first.replaceFirst(nameKey, '"name": "$clean"') + rest;
+    }
+    final int brace = first.indexOf('{');
+    final String tail = first.substring(brace + 1);
+    final String injected =
+        tail.trimLeft().startsWith('}') ? '"name": "$clean" ' : '"name": "$clean", ';
+    return first.substring(0, brace + 1) + injected + tail + rest;
+  }
+  if (first.startsWith('//')) return '// $clean$rest';
+  return '// $clean\n$text';
+}

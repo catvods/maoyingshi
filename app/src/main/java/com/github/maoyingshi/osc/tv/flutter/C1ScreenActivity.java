@@ -969,9 +969,13 @@ public class C1ScreenActivity extends AppCompatActivity {
      */
     private Map<String, Object> saveUserGlobalTheme(Map<?, ?> args) throws Exception {
         if (args == null) throw new IllegalArgumentException("参数不正确");
-        String editId = String.valueOf(args.getOrDefault("id", ""));
-        String baseId = String.valueOf(args.getOrDefault("baseId", ""));
-        String name = String.valueOf(args.getOrDefault("name", "")).trim();
+        Map<String, Object> typed = new HashMap<>();
+        for (Map.Entry<?, ?> entry : args.entrySet()) {
+            typed.put(String.valueOf(entry.getKey()), entry.getValue());
+        }
+        String editId = String.valueOf(typed.getOrDefault("id", ""));
+        String baseId = String.valueOf(typed.getOrDefault("baseId", ""));
+        String name = String.valueOf(typed.getOrDefault("name", "")).trim();
         if (name.isEmpty()) throw new IllegalArgumentException("请填写主题名");
         if (name.length() > 64) throw new IllegalArgumentException("主题名太长（最多 64 字）");
         ThemeProfile profile;
@@ -982,8 +986,8 @@ public class C1ScreenActivity extends AppCompatActivity {
             profile = GlobalThemes.profileFor(baseId);
             if (profile == null) profile = GlobalThemes.profileFor("");
         }
-        applyGlobalThemeSlots(profile.slots(false), args.get("light"));
-        applyGlobalThemeSlots(profile.slots(true), args.get("dark"));
+        applyGlobalThemeSlots(profile.slots(false), typed.get("light"));
+        applyGlobalThemeSlots(profile.slots(true), typed.get("dark"));
         String userId = UserGlobalThemes.isUserId(editId) ? editId : UserGlobalThemes.newId(name);
         profile.id = UserGlobalThemes.profileIdFor(userId);
         profile.name = name;

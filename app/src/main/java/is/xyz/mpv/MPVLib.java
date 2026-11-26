@@ -11,6 +11,9 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.Surface;
 
+import com.github.maoyingshi.osc.tv.module.ModuleDefinition;
+import com.github.maoyingshi.osc.tv.module.ModuleManager;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,6 +30,7 @@ public final class MPVLib {
     private static final String TAG = "mpv";
     private static final String ASSET_ROOT = "mpv-libs";
     private static final String BUNDLE_MARKER = ".bundle-last-update";
+    // 过渡期 assets 回落路径的预载顺序（与 ModuleDefinition.MPV.loadOrder 同顺序）。
     private static final String[] LOAD_ORDER = {
             "c++_shared",
             "mvutil",
@@ -46,6 +50,7 @@ public final class MPVLib {
     private static Throwable loadError;
     private static String loadedAbi;
     private static Boolean bundledVulkanEnabled;
+    private static long bundledVulkanStamp;
     private static Boolean deviceVulkan13Capable;
     private static final long CONTEXT_RECREATE_COOLDOWN_MS = 350;
     private static final long CONTEXT_SHUTDOWN_TIMEOUT_MS = 2000;
@@ -57,17 +62,50 @@ public final class MPVLib {
     private MPVLib() {
     }
 
+    /**
+     * 优先从 mpv 模块（已下载的 zip 安装到私有目录）加载原生库。
+     * 模块未安装/损坏时返回 false（不抛），MpvPlayer 走现有播放错误链；
+     * 不缓存失败：模块装好或重装后下一次调用会重新尝试加载（旧代码
+     * {@code loadError != null} 直接返回的粘滞分支已删，否则用户装完模块仍播不了）。
+     * <p>fork 过渡期适配（上游无此回落）：P4 把 mpv-libs 移出 assets 之前，模块
+     * 未安装时包内仍有 bundle，此时回落到旧 assets 拷贝路径（{@link #loadBundledAssets}），
+     * 保证接线先行不让 MPV 倒退；P4 之后 assets 里没有 mpv-libs，回落路径里
+     * chooseAbi 返回 null 自然失败，最终行为与上游一致（loadError 为模块侧错误）。
+     */
     public static synchronized boolean ensureLoaded(Context context) {
         if (loaded) return true;
-        if (loadError != null) {
-            com.github.maoyingshi.osc.tv.player.NativeLibraryDiagnostics.failure("mpv-bundle", loadError);
-            return false;
+        Context app = context.getApplicationContext();
+        ModuleManager modules = ModuleManager.getInstance(app);
+        if (modules.ensureLoaded(ModuleDefinition.MPV)) {
+            loadError = null;
+            loadedAbi = modules.abi();
+            loaded = true;
+            com.github.maoyingshi.osc.tv.player.NativeLibraryDiagnostics.request();
+            return true;
         }
+        if (loadBundledAssets(app)) return true;
+        Throwable error = modules.getLoadError(ModuleDefinition.MPV.id);
+        if (error != null) {
+            // 模块已安装但加载失败：以模块侧错误为准（回落侧的旧错误可能已过期）。
+            loadError = error;
+            com.github.maoyingshi.osc.tv.player.NativeLibraryDiagnostics.failure("mpv-bundle", loadError);
+            Log.e(TAG, "Unable to load MPV native libraries from module", loadError);
+        } else if (loadError == null) {
+            // 模块未安装且 assets 也没有 bundle（P4 之后）：记未安装错误。
+            loadError = new IOException("MPV 模块未安装，请到模块里面下载 MPV");
+            com.github.maoyingshi.osc.tv.player.NativeLibraryDiagnostics.failure("mpv-bundle", loadError);
+            Log.e(TAG, "Unable to load MPV native libraries from module", loadError);
+        }
+        return false;
+    }
+
+    /** 过渡期回落：从 assets 拷贝 bundle 再按 LOAD_ORDER 加载（模块化之前的老路径）。 */
+    private static synchronized boolean loadBundledAssets(Context app) {
         String loadingLibrary = "mpv-bundle";
         try {
-            Context app = context.getApplicationContext();
             String abi = chooseAbi(app.getAssets());
-            if (abi == null) throw new UnsatisfiedLinkError("No bundled MPV native libraries for " + String.join(",", Build.SUPPORTED_ABIS));
+            // assets 里没有 bundle（P4 之后）不当作错误：返回 false，错误文案由模块侧给出。
+            if (abi == null) return false;
             File root = app.getDir("mpv-libs", Context.MODE_PRIVATE);
             File dir = new File(root, abi);
             if (!dir.exists() && !dir.mkdirs()) throw new IOException("Unable to create " + dir);
@@ -105,9 +143,28 @@ public final class MPVLib {
     }
 
     public static synchronized boolean isBundledVulkanEnabled(Context context) {
+        Context app = context.getApplicationContext();
+        ModuleManager modules = ModuleManager.getInstance(app);
+        File libmpv = modules.moduleFile(ModuleDefinition.MPV.id, "libmpv.so");
+        if (libmpv.isFile()) {
+            // 模块已安装：读模块目录的 libmpv.so；缓存按模块安装戳失效——
+            // 模块装好/重装后 libmpv.so 换了，Vulkan 能力要重测。
+            long stamp = libmpv.lastModified();
+            if (bundledVulkanEnabled != null && stamp == bundledVulkanStamp) {
+                return bundledVulkanEnabled;
+            }
+            try {
+                bundledVulkanEnabled = stamp != 0 && hasBundledFeature(libmpv, "vulkan");
+            } catch (Throwable e) {
+                bundledVulkanEnabled = false;
+                Log.w(TAG, "Unable to detect bundled MPV Vulkan support", e);
+            }
+            bundledVulkanStamp = stamp;
+            return bundledVulkanEnabled;
+        }
+        // 过渡期回落：模块未安装时 libmpv.so 还在 assets 里，沿用旧扫描（结果缓存）。
         if (bundledVulkanEnabled != null) return bundledVulkanEnabled;
         try {
-            Context app = context.getApplicationContext();
             String abi = chooseAbi(app.getAssets());
             bundledVulkanEnabled = abi != null && hasBundledFeature(app.getAssets(), abi, "vulkan");
         } catch (Throwable e) {
@@ -214,6 +271,22 @@ public final class MPVLib {
 
     private static boolean hasBundledFeature(AssetManager assets, String abi, String feature) throws IOException {
         try (InputStream in = assets.open(assetPath(abi, "mpv"), AssetManager.ACCESS_STREAMING)) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[64 * 1024];
+            int read;
+            while ((read = in.read(buffer)) != -1) out.write(buffer, 0, read);
+            String text = out.toString(StandardCharsets.ISO_8859_1.name());
+            int start = text.indexOf("List of enabled features:");
+            if (start < 0) return false;
+            int end = text.indexOf('\0', start);
+            String features = text.substring(start, end > start ? end : Math.min(text.length(), start + 2048));
+            for (String token : features.split("\\s+")) if (feature.equals(token)) return true;
+            return false;
+        }
+    }
+
+    private static boolean hasBundledFeature(File library, String feature) throws IOException {
+        try (InputStream in = new FileInputStream(library)) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             byte[] buffer = new byte[64 * 1024];
             int read;

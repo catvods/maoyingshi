@@ -1,14 +1,21 @@
 package com.github.maoyingshi.osc.tv.setting;
 
 import android.content.Intent;
+import android.content.res.AssetManager;
+import android.os.Build;
 import android.provider.Settings;
 
 import com.github.maoyingshi.osc.tv.App;
 import com.github.maoyingshi.osc.tv.R;
+import com.github.maoyingshi.osc.tv.module.ModuleDefinition;
+import com.github.maoyingshi.osc.tv.module.ModuleManager;
 import com.github.maoyingshi.osc.tv.player.VideoAspectMode;
 import com.github.maoyingshi.osc.tv.utils.BrightnessPolicy;
 import com.github.maoyingshi.osc.tv.utils.Util;
 import com.github.catvod.utils.Prefers;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 public class PlayerSetting {
 
@@ -193,12 +200,76 @@ public class PlayerSetting {
         return isPlayer(player) ? player : getPlayer();
     }
 
+    /**
+     * 内核是否可用：EXO/系统内核随包走恒可用；IJK/MPV 是否装了对应模块。
+     * 模块未安装时切到该内核会走回落（resolveAvailablePlayer/resolveManualPlayer），
+     * 设置页与播放器内切内核的“请到模块里面下载”提示也在调用处判断它。
+     * 注意：sanitizePlayer 只校验常量合法性，不查模块——设置页对话框要如实显示
+     * 用户已存的选择，模块缺失的回落由播放侧负责。
+     * <p>fork 过渡期适配（上游无此项）：P4 把 .so 移出 APK 之前，ijk 的 .so 还在
+     * jniLibs、mpv 的 .so 还在 assets，模块未安装时按“包内副本可用”判可用，
+     * 避免接线先行把现内核误判不可用；P4 之后包内副本不存在，探测自然为
+     * false，回到纯模块判定。fork 无 VLC 内核，上游的 VLC 分支不落。
+     */
     public static boolean isPlayerAvailable(int player) {
-        return player != IJK || isIjkAvailable();
+        return switch (player) {
+            case IJK -> isIjkAvailable();
+            case MPV -> isMpvAvailable();
+            default -> true;
+        };
     }
 
     public static boolean isIjkAvailable() {
-        return true;
+        return isModuleInstalled(ModuleDefinition.IJK.id) || isBundledIjkLoadable();
+    }
+
+    public static boolean isMpvAvailable() {
+        return isModuleInstalled(ModuleDefinition.MPV.id) || isBundledMpvPresent();
+    }
+
+    private static boolean isModuleInstalled(String moduleId) {
+        App app = App.get();
+        if (app == null) return false;
+        return ModuleManager.getInstance(app).isInstalled(moduleId);
+    }
+
+    private static Boolean bundledIjkLoadable;
+
+    /** 过渡期探测：ijk 的 .so 还在包内（jniLibs）时，按老路能加载即视为可用。 */
+    private static boolean isBundledIjkLoadable() {
+        if (bundledIjkLoadable != null) return bundledIjkLoadable;
+        boolean loadable;
+        try {
+            System.loadLibrary("ijkffmpeg");
+            System.loadLibrary("ijksdl");
+            System.loadLibrary("ijkplayer");
+            loadable = true;
+        } catch (Throwable error) {
+            loadable = false;
+        }
+        bundledIjkLoadable = loadable;
+        return loadable;
+    }
+
+    private static Boolean bundledMpvPresent;
+
+    /** 过渡期探测：mpv 的 .so 还在 assets（mpv-libs）里时视为可用。 */
+    private static boolean isBundledMpvPresent() {
+        if (bundledMpvPresent != null) return bundledMpvPresent;
+        boolean present = false;
+        App app = App.get();
+        if (app != null) {
+            for (String abi : Build.SUPPORTED_ABIS) {
+                try (InputStream ignored = app.getAssets().open(
+                        "mpv-libs/" + abi + "/libmpv.so", AssetManager.ACCESS_STREAMING)) {
+                    present = true;
+                    break;
+                } catch (IOException ignored) {
+                }
+            }
+        }
+        bundledMpvPresent = present;
+        return present;
     }
 
     public static int kernelCount() {

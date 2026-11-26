@@ -15,6 +15,8 @@ import androidx.media3.ui.PlayerView;
 import com.github.maoyingshi.osc.tv.App;
 import com.github.maoyingshi.osc.tv.R;
 import com.github.maoyingshi.osc.tv.bean.AiConfig;
+import com.github.maoyingshi.osc.tv.module.ModuleDefinition;
+import com.github.maoyingshi.osc.tv.module.ModuleManager;
 import com.github.maoyingshi.osc.tv.player.PlayerManager;
 import com.github.maoyingshi.osc.tv.player.audio.PlaybackMediaAudioProcessor;
 import com.github.maoyingshi.osc.tv.player.audio.PlaybackMediaClock;
@@ -62,6 +64,7 @@ public final class RealtimeSubtitleController {
     private static final long STORAGE_RESERVE_BYTES = 64L * 1024L * 1024L;
     private static final String DOWNLOAD_CANCELLED = "download_cancelled";
     private static final RealtimeSubtitleController INSTANCE = new RealtimeSubtitleController();
+    private static Boolean bundledSherpaLoadable;
 
     private final ArrayBlockingQueue<AudioChunk> audioQueue = new ArrayBlockingQueue<>(AUDIO_QUEUE_CAPACITY);
     private final ArrayList<ScheduledCue> pendingCues = new ArrayList<>();
@@ -266,10 +269,33 @@ public final class RealtimeSubtitleController {
         worker.execute(() -> prepareModel(request, spec, true));
     }
 
+    /** 过渡期探测：Sherpa 原生库还在包内（jniLibs）时，按老路能加载即视为可用。 */
+    private static boolean isBundledSherpaLoadable() {
+        if (bundledSherpaLoadable != null) return bundledSherpaLoadable;
+        boolean loadable;
+        try {
+            System.loadLibrary("sherpa-onnx-jni");
+            loadable = true;
+        } catch (Throwable error) {
+            loadable = false;
+        }
+        bundledSherpaLoadable = loadable;
+        return loadable;
+    }
+
     private void prepareModel(int request, ModelSpec spec, boolean replacing) {
         RealtimeSubtitleRecognizer previousRecognizer = replacing ? recognizer : null;
         RealtimeSubtitleTranslator previousTranslator = replacing ? translator : null;
         try {
+            // Sherpa 原生库随模块走：先验模块，未安装时直接失败（走现有 catch → failRecognizer →
+            // 状态 ERROR + 提示），不要先下载模型文件。模块装好后下一次开启重新尝试。
+            // fork 过渡期适配（上游无此项）：P4 把 libsherpa-onnx-jni.so 移出 jniLibs
+            // 之前，包内副本仍可按老路加载，此时不拦；P4 之后包内副本不存在，
+            // 探测失败，回到纯模块判定。
+            if (!ModuleManager.getInstance(App.get()).ensureLoaded(ModuleDefinition.SHERPA)
+                    && !isBundledSherpaLoadable()) {
+                throw new IllegalStateException("实时字幕模块未安装，请到模块里面下载实时字幕");
+            }
             if (replacing) resetRecognizer(previousRecognizer, previousTranslator);
             ensureModel(spec, (percent, fileName) -> notifyState(request, State.PREPARING, String.valueOf(percent)), () -> request != generation);
             if (request != generation) return;

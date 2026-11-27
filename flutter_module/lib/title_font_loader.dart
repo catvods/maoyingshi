@@ -1,8 +1,6 @@
 import 'dart:io' show File;
 import 'dart:typed_data' show ByteData, Uint8List;
-import 'dart:ui' show FontLoader;
-
-import 'package:flutter/services.dart' show MethodChannel;
+import 'package:flutter/services.dart' show FontLoader, MethodChannel;
 
 /// 标题字体（衬线/文楷）的按需加载：两款字体不再随包内置，改走「标题字体」模块。
 ///

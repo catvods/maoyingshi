@@ -104,8 +104,6 @@ public class B5HostApiImpl implements B5Messages.B5HostApi {
         rows.add(row("appBranding", R.string.setting_app_branding, () -> AppBranding.getSummary(activity)));
         rows.add(row("touchOptimization", R.string.setting_touch_optimization, () ->
                 getSwitch(Setting.isTouchOptimized())));
-        rows.add(row("liquidGlass", R.string.setting_liquid_glass, () ->
-                getSwitch(Setting.isLiquidGlass())));
         rows.add(row("glassGlobal", R.string.setting_glass_global, () ->
                 getSwitch(Setting.isGlassGlobal())));
         rows.add(row("glassGlobalBlur", R.string.setting_glass_global_blur, () ->
@@ -114,6 +112,8 @@ public class B5HostApiImpl implements B5Messages.B5HostApi {
                 Setting.getGlassGlobalTranslucency() + "%"));
         rows.add(row("dramaCollected", R.string.setting_short_drama_collected, () ->
                 getSwitch(Setting.isShortDramaCollected())));
+        rows.add(row("liquidGlass", R.string.setting_liquid_glass, () ->
+                getSwitch(Setting.isLiquidGlass())));
         rows.add(row("glassBlur", R.string.setting_glass_blur, () ->
                 String.valueOf(Setting.getGlassBlur())));
         rows.add(row("glassDistortion", R.string.setting_glass_distortion, () ->

@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:material_ui/material_ui.dart';
 import 'package:rfw/rfw.dart';
 
+import 'theme_design.dart';
+
 /// The `peek.home` local widget library: the six custom widgets the
 /// ported PeekPro home themes import next to `core.widgets`. The
 /// themes are declarative RFW text (assets/peek_home); everything
@@ -22,11 +24,17 @@ class PeekHomeHooks {
   /// PeekStickyGrid reports scrolling near the end of the grid.
   static VoidCallback? onGridEndReached;
 
-  /// The active parametric theme's title font family ('serif' /
-  /// 'monospace'; null for the default sans). The bridge sets it
-  /// from the theme's meta while the themed home is mounted; the
-  /// caption widgets below render item titles with it.
+  /// The active theme's title font family (a bundled family name
+  /// — 'NotoSerifSC' / 'LXGWWenKaiLite' — 'monospace', or null
+  /// for the default sans). The bridge sets it from the theme's
+  /// meta while the themed home is mounted; the caption widgets
+  /// below render item titles with it.
   static String? titleFontFamily;
+
+  /// The active theme's design-layer parameters (theme_design.
+  /// dart), set by the bridge alongside [titleFontFamily]. The
+  /// carousel reads the design style's poster treatment from it.
+  static ThemeDesignParams? designParams;
 }
 
 BoxFit _fit(Object? value, BoxFit fallback) {
@@ -422,8 +430,59 @@ class _PeekCarouselState extends State<_PeekCarousel> {
     super.dispose();
   }
 
+  /// The design layer's disc treatment: the slide is presented
+  /// as a record — circular cover, accent ring, spindle dot —
+  /// centred in the carousel page. The slide's own caption bar
+  /// survives inside the circle's lower arc.
+  Widget _discFrame(Widget child, Color accent) {
+    return Center(
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: accent, width: 2),
+                boxShadow: const <BoxShadow>[
+                  BoxShadow(
+                    color: Color(0x55000000),
+                    blurRadius: 18,
+                    offset: Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: ClipOval(child: child),
+            ),
+            Center(
+              child: Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: accent,
+                  border:
+                      Border.all(color: const Color(0x66000000), width: 2),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _pageChild(int index, double pageWidth) {
-    final Widget child = widget.children[index];
+    Widget child = widget.children[index];
+    // Design-style poster treatment (theme_design.dart): vinyl's
+    // recommend slides are record discs, not wide rectangles.
+    // Keyed on the theme's declared designStyle through the
+    // design parameters — never on a theme id.
+    final ThemeDesignParams? design = PeekHomeHooks.designParams;
+    if (design != null && design.posterShape == 'disc') {
+      child = _discFrame(child, design.accent ?? const Color(0xFFFFBD70));
+    }
     final bool stackMode = widget.style == null || widget.style == 'stack';
     final bool stacked = stackMode &&
         (widget.stackScale != null ||

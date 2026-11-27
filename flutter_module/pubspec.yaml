@@ -35,6 +35,20 @@ flutter:
   uses-material-design: true
   assets:
     - assets/peek_home/
+  # Title fonts for the ported themes' titleFont design parameter
+  # (serif / wenkai). These are the same two font files LeeCat
+  # bundles, registered under the same family names its
+  # FontManifest uses; both are SIL Open Font License 1.1 — see
+  # assets/fonts/FONTS_LICENSE.md. Bundling them is what makes a
+  # theme's title font a real font change instead of a platform
+  # generic-family hint.
+  fonts:
+    - family: NotoSerifSC
+      fonts:
+        - asset: assets/fonts/NotoSerifSC.ttf
+    - family: LXGWWenKaiLite
+      fonts:
+        - asset: assets/fonts/LXGWWenKaiLite-Regular.ttf
   module:
     androidX: true
     androidPackage: com.github.maoyingshi.osc.tv.flutter

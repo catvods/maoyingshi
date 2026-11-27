@@ -315,13 +315,45 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
     return '$header\n$source';
   }
 
+  /// Bakes the form's card radius into the materialized source.
+  /// The templates draw their cards, tabs and chips with one
+  /// dominant borderRadius literal — in the Lee templates it is
+  /// the meta cardRadius itself, repeated verbatim — so rewriting
+  /// the dominant literal to the chosen value is what makes the
+  /// radius parameter real at render time (the meta copy alone
+  /// only ever reached this page's preview). Literals that differ
+  /// from the dominant one (a PeekPro structure's hero radius,
+  /// say) keep their authored values. A source with no such
+  /// literal is left alone.
+  String _bakeCardRadius(String source, double radius) {
+    final RegExp pattern =
+        RegExp(r'borderRadius:\s*\[\s*\{\s*x:\s*([0-9]+(?:\.[0-9]+)?)\s*\}');
+    final Map<String, int> counts = <String, int>{};
+    for (final RegExpMatch match in pattern.allMatches(source)) {
+      final String value = match.group(1)!;
+      counts[value] = (counts[value] ?? 0) + 1;
+    }
+    if (counts.isEmpty) return source;
+    String dominant = counts.keys.first;
+    for (final String key in counts.keys) {
+      if (counts[key]! > counts[dominant]!) dominant = key;
+    }
+    final String baked = radius.toStringAsFixed(1);
+    if (dominant == baked) return source;
+    return source.replaceAllMapped(pattern, (Match match) {
+      if (match.group(1) != dominant) return match.group(0)!;
+      return match.group(0)!.replaceFirst(dominant, baked);
+    });
+  }
+
   Future<void> _save() async {
     final MergedThemeParams? params = _collect();
     if (params == null || _saving) return;
     setState(() => _saving = true);
     try {
       final String source = await loadThemeText(params.structureId);
-      final String text = _withMeta(source, params);
+      final String text =
+          _bakeCardRadius(_withMeta(source, params), params.cardRadius);
       try {
         parseLibraryFile(text);
       } catch (_) {
@@ -556,7 +588,8 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
     final bool dark = bg.computeLuminance() < 0.35;
     final Color onBg = dark ? Colors.white : const Color(0xFF1B1B1F);
     final String? fontFamily = switch (_titleFont) {
-      'serif' => 'serif',
+      'serif' => 'NotoSerifSC',
+      'wenkai' => 'LXGWWenKaiLite',
       'mono' => 'monospace',
       _ => null,
     };
@@ -705,6 +738,7 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
               const <(String, String)>[
                 ('sans', '默认'),
                 ('serif', '衬线'),
+                ('wenkai', '文楷'),
                 ('mono', '等宽'),
               ],
               _titleFont,
@@ -714,6 +748,7 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
               const <(String, String)>[
                 ('sans', '默认'),
                 ('serif', '衬线'),
+                ('wenkai', '文楷'),
                 ('mono', '等宽'),
               ],
               _titleFont,

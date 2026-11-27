@@ -9,6 +9,7 @@ import 'package:rfw/rfw.dart';
 
 import 'home_theme.dart';
 import 'peek_home_library.dart';
+import 'theme_design.dart';
 import 'pigeon/b11_home_messages.g.dart';
 import 'pigeon/b12_home_a_messages.g.dart';
 import 'pigeon/b8_category_messages.g.dart';
@@ -89,11 +90,19 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
   int _nextPage = 1;
   String _displayStyle = 'grid';
 
-  /// Component parameters of a parametric-editor theme, read from
-  /// its leecat meta header in _loadThemeLibrary and fed into the
-  /// data below. Built-in and plain imported themes carry no
-  /// parametric marker, so every value stays at the bridge's
-  /// long-standing defaults for them.
+  /// The active theme's design-layer parameters, parsed from its
+  /// leecat meta header in _loadThemeLibrary (theme_design.dart).
+  /// Null for themes without a meta header (the PeekPro themes,
+  /// whose sources are self-contained). The rendering consumption
+  /// lives in build() (page background, title font) and in the
+  /// peek library through PeekHomeHooks.designParams (the design
+  /// style's poster treatment).
+  ThemeDesignParams? _designParams;
+
+  /// Component parameters of a parametric-editor theme, fed into
+  /// the data below from its meta. Built-in and plain imported
+  /// themes carry no parametric marker, so the data values stay
+  /// at the bridge's long-standing defaults for them.
   bool _paramHero = true;
   double? _paramHeroHeight;
   int? _paramGridColumns;
@@ -150,13 +159,14 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     }
     PeekHomeHooks.onCarouselPage = null;
     PeekHomeHooks.titleFontFamily = null;
+    PeekHomeHooks.designParams = null;
     super.dispose();
   }
 
   Future<void> _loadThemeLibrary() async {
     try {
       final String text = await loadThemeText(homeThemeId.value);
-      _readEditorParams(text);
+      _readDesignParams(text);
       _runtime.update(_themeName, parseLibraryFile(text));
       if (mounted) setState(() => _themeReady = true);
     } catch (_) {
@@ -164,29 +174,23 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     }
   }
 
-  /// Reads the parametric editor's component parameters out of a
-  /// materialized theme's leecat meta header (the bridge's data
-  /// fields are the injection points the RFW sources branch on:
-  /// layout -> displayStyle, hero -> hasRecommend, heroHeight and
-  /// gridColumns verbatim). The title font goes through the peek
-  /// library's hook: its caption widgets render the item titles.
-  void _readEditorParams(String text) {
-    final int nl = text.indexOf('\n');
-    final String first = nl >= 0 ? text.substring(0, nl) : text;
-    if (!first.contains('leecat-theme:')) return;
-    if (!first.contains('"parametric":true') &&
-        !first.contains('"parametric": true')) {
-      return;
-    }
-    String? metaString(String key) =>
-        RegExp('"$key"\\s*:\\s*"([^"]*)"').firstMatch(first)?.group(1);
-    double? metaNumber(String key) {
-      final RegExpMatch? m =
-          RegExp('"$key"\\s*:\\s*([0-9.]+)').firstMatch(first);
-      return m == null ? null : double.tryParse(m.group(1)!);
-    }
-
-    final String? layout = metaString('layout');
+  /// Reads the theme's design-layer parameters out of its leecat
+  /// meta header. Every meta-carrying theme contributes its
+  /// design style, title font and hero switch (the design layer's
+  /// own consumption); the data-field injections stay exclusive
+  /// to parametric editor themes, whose materialized sources are
+  /// generic templates that branch on the data (layout ->
+  /// displayStyle, heroHeight and gridColumns verbatim) — the
+  /// built-in templates embody their layout in their source.
+  void _readDesignParams(String text) {
+    final ThemeDesignParams? params = ThemeDesignParams.fromSource(text);
+    _designParams = params;
+    PeekHomeHooks.designParams = params;
+    PeekHomeHooks.titleFontFamily = params?.titleFontFamily;
+    if (params == null) return;
+    if (params.hero != null) _paramHero = params.hero!;
+    if (!params.parametric) return;
+    final String? layout = params.layout;
     if (layout != null) {
       _displayStyle = switch (layout) {
         'landscape' => 'banner',
@@ -194,17 +198,10 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
         _ => 'grid',
       };
     }
-    if (first.contains('"hero":false') || first.contains('"hero": false')) {
-      _paramHero = false;
+    _paramHeroHeight = params.heroHeight;
+    if (params.gridColumns != null) {
+      _paramGridColumns = params.gridColumns!.clamp(2, 4);
     }
-    _paramHeroHeight = metaNumber('heroHeight');
-    final double? columns = metaNumber('gridColumns');
-    if (columns != null) _paramGridColumns = columns.round().clamp(2, 4);
-    PeekHomeHooks.titleFontFamily = switch (metaString('titleFont')) {
-      'serif' => 'serif',
-      'mono' => 'monospace',
-      _ => null,
-    };
   }
 
   Future<void> _loadAll() async {
@@ -784,11 +781,38 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     if (!_themeReady) {
       return const Center(child: CircularProgressIndicator());
     }
-    return RemoteWidget(
+    Widget view = RemoteWidget(
       runtime: _runtime,
       data: _data,
       widget: const FullyQualifiedWidgetName(_themeName, 'root'),
       onEvent: _onEvent,
     );
+    final ThemeDesignParams? params = _designParams;
+    if (params != null) {
+      // The design layer's page base: the meta's background pair
+      // painted behind the whole themed home. The RFW templates
+      // never paint a page background — their surfaces are
+      // translucent tints written against this base; without it
+      // they floated on the app's light surface and washed out
+      // (a dark theme's cream text on light-grey chips).
+      final BoxDecoration? background = params.backgroundDecoration;
+      if (background != null) {
+        view = DecoratedBox(decoration: background, child: view);
+      }
+      // The title font as the themed subtree's ambient font:
+      // template texts specify colour/size/weight but no family,
+      // so they inherit this; the library's caption widgets set
+      // the same family explicitly through the hook.
+      final String? fontFamily = params.titleFontFamily;
+      if (fontFamily != null) {
+        view = DefaultTextStyle(
+          style: DefaultTextStyle.of(context)
+              .style
+              .copyWith(fontFamily: fontFamily),
+          child: view,
+        );
+      }
+    }
+    return view;
   }
 }

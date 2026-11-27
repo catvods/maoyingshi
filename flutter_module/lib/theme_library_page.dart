@@ -327,64 +327,6 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
     }
   }
 
-/// One parsed global-theme JSON file: v1 carries the four palette
-/// colours, v2 the complete light/dark slot sets.
-class _ParsedGlobalTheme {
-  const _ParsedGlobalTheme({
-    required this.version,
-    required this.name,
-    this.accent,
-    this.background,
-    this.gradient,
-    this.surface,
-    this.seedColor,
-    this.light,
-    this.dark,
-  });
-
-  final int version;
-  final String name;
-  final String? accent;
-  final String? background;
-  final String? gradient;
-  final String? surface;
-  final String? seedColor;
-  final Map<String, Object>? light;
-  final Map<String, Object>? dark;
-}
-
-/// The 16 colour slots of one v2 mode; every one is required.
-const List<String> _globalThemeV2ColorSlots = <String>[
-  'primary',
-  'primaryContainer',
-  'secondaryContainer',
-  'focus',
-  'playerCurrent',
-  'surface',
-  'surfaceContainer',
-  'surfaceContainerHigh',
-  'onSurface',
-  'onSurfaceVariant',
-  'outline',
-  'error',
-  'success',
-  'warning',
-  'itemOverlay',
-  'onItemOverlay',
-];
-
-/// The 6 opacity slots of one v2 mode, with the host validator's
-/// range for each; an absent one stays unset.
-const Map<String, List<double>> _globalThemeV2OpacityRanges =
-    <String, List<double>>{
-  'scrimOpacity': <double>[0, 0.85],
-  'dialogOpacity': <double>[0.70, 1],
-  'overlayOpacity': <double>[0.05, 0.60],
-  'playerScrimOpacity': <double>[0.20, 1],
-  'liveListScrimOpacity': <double>[0.20, 1],
-  'itemOverlayOpacity': <double>[0.05, 1],
-};
-
   /// Parses one global-theme JSON file ({type: 'moao-global-theme',
   /// version: 1, name, accent, background, gradient, surface,
   /// description?} or version: 2, name, seedColor, light, dark}).
@@ -898,6 +840,64 @@ const Map<String, List<double>> _globalThemeV2OpacityRanges =
 /// The pre-merge state header: no merged theme has been applied
 /// yet, so the current structure and palette are reported apart
 /// (they were picked independently and both still hold).
+/// One parsed global-theme JSON file: v1 carries the four palette
+/// colours, v2 the complete light/dark slot sets.
+class _ParsedGlobalTheme {
+  const _ParsedGlobalTheme({
+    required this.version,
+    required this.name,
+    this.accent,
+    this.background,
+    this.gradient,
+    this.surface,
+    this.seedColor,
+    this.light,
+    this.dark,
+  });
+
+  final int version;
+  final String name;
+  final String? accent;
+  final String? background;
+  final String? gradient;
+  final String? surface;
+  final String? seedColor;
+  final Map<String, Object>? light;
+  final Map<String, Object>? dark;
+}
+
+/// The 16 colour slots of one v2 mode; every one is required.
+const List<String> _globalThemeV2ColorSlots = <String>[
+  'primary',
+  'primaryContainer',
+  'secondaryContainer',
+  'focus',
+  'playerCurrent',
+  'surface',
+  'surfaceContainer',
+  'surfaceContainerHigh',
+  'onSurface',
+  'onSurfaceVariant',
+  'outline',
+  'error',
+  'success',
+  'warning',
+  'itemOverlay',
+  'onItemOverlay',
+];
+
+/// The 6 opacity slots of one v2 mode, with the host validator's
+/// range for each; an absent one stays unset.
+const Map<String, List<double>> _globalThemeV2OpacityRanges =
+    <String, List<double>>{
+  'scrimOpacity': <double>[0, 0.85],
+  'dialogOpacity': <double>[0.70, 1],
+  'overlayOpacity': <double>[0.05, 0.60],
+  'playerScrimOpacity': <double>[0.20, 1],
+  'liveListScrimOpacity': <double>[0.20, 1],
+  'itemOverlayOpacity': <double>[0.05, 1],
+};
+
 class _CurrentSummaryCard extends StatelessWidget {
   const _CurrentSummaryCard({required this.scheme});
 

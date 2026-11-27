@@ -97,6 +97,7 @@ class _GlobalThemePageState extends State<GlobalThemePage> {
             ),
             FilledButton(
               style: FilledButton.styleFrom(
+                side: glassFrameSide(context),
                 backgroundColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,

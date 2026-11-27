@@ -663,6 +663,7 @@ class _LoadErrorView extends StatelessWidget {
           FilledButton(
             onPressed: onRetry,
             style: FilledButton.styleFrom(
+              side: glassFrameSide(context),
               backgroundColor: glassButtonColor(
                 context,
                 Theme.of(context).colorScheme.primary,

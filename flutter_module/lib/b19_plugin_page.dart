@@ -278,6 +278,7 @@ class _B19PluginPageState extends State<B19PluginPage>
                 ),
                 FilledButton(
                   style: FilledButton.styleFrom(
+                    side: glassFrameSide(context),
                     backgroundColor: glassButtonColor(
                       context,
                       Theme.of(context).colorScheme.primary,
@@ -433,6 +434,7 @@ class _B19PluginPageState extends State<B19PluginPage>
                 ),
                 FilledButton(
                   style: FilledButton.styleFrom(
+                    side: glassFrameSide(context),
                     backgroundColor: glassButtonColor(
                       context,
                       Theme.of(context).colorScheme.primary,
@@ -496,6 +498,7 @@ class _B19PluginPageState extends State<B19PluginPage>
             ),
             FilledButton(
               style: FilledButton.styleFrom(
+                side: glassFrameSide(context),
                 backgroundColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,
@@ -590,6 +593,7 @@ class _B19PluginPageState extends State<B19PluginPage>
                 ),
                 FilledButton(
                   style: FilledButton.styleFrom(
+                    side: glassFrameSide(context),
                     backgroundColor: glassButtonColor(
                       context,
                       Theme.of(context).colorScheme.primary,
@@ -651,6 +655,7 @@ class _B19PluginPageState extends State<B19PluginPage>
             ),
             FilledButton(
               style: FilledButton.styleFrom(
+                side: glassFrameSide(context),
                 backgroundColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,
@@ -729,6 +734,7 @@ class _B19PluginPageState extends State<B19PluginPage>
                 Expanded(
                   child: FilledButton(
                     style: FilledButton.styleFrom(
+                      side: glassFrameSide(context),
                       backgroundColor: glassButtonColor(
                         context,
                         Theme.of(context).colorScheme.primary,
@@ -777,6 +783,7 @@ class _B19PluginPageState extends State<B19PluginPage>
               const SizedBox(height: 16),
               FilledButton(
                 style: FilledButton.styleFrom(
+                  side: glassFrameSide(context),
                   backgroundColor: glassButtonColor(
                     context,
                     Theme.of(context).colorScheme.primary,
@@ -801,6 +808,7 @@ class _B19PluginPageState extends State<B19PluginPage>
               const SizedBox(height: 16),
               FilledButton(
                 style: FilledButton.styleFrom(
+                  side: glassFrameSide(context),
                   backgroundColor: glassButtonColor(
                     context,
                     Theme.of(context).colorScheme.primary,
@@ -833,6 +841,9 @@ class _B19PluginPageState extends State<B19PluginPage>
                 activeTrackColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,
+                ),
+                trackOutlineColor: WidgetStatePropertyAll<Color?>(
+                  glassFrameSide(context)?.color,
                 ),
                 onChanged: _busy
                     ? null

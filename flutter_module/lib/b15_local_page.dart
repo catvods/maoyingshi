@@ -379,6 +379,7 @@ class _B15BrandingPageState extends State<B15BrandingPage>
               const SizedBox(width: 8),
               FilledButton(
                 style: FilledButton.styleFrom(
+                  side: glassFrameSide(context),
                   backgroundColor: glassButtonColor(
                     context,
                     Theme.of(context).colorScheme.primary,
@@ -476,6 +477,7 @@ class _CenterMessage extends StatelessWidget {
             const SizedBox(height: 16),
             FilledButton(
               style: FilledButton.styleFrom(
+                side: glassFrameSide(context),
                 backgroundColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,

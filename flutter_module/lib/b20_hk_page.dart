@@ -318,6 +318,7 @@ class _B20HkPageState extends State<B20HkPage> with WidgetsBindingObserver {
                 ),
                 FilledButton(
                   style: FilledButton.styleFrom(
+                    side: glassFrameSide(context),
                     backgroundColor: glassButtonColor(
                       context,
                       Theme.of(context).colorScheme.primary,
@@ -408,6 +409,7 @@ class _B20HkPageState extends State<B20HkPage> with WidgetsBindingObserver {
                 ),
                 FilledButton(
                   style: FilledButton.styleFrom(
+                    side: glassFrameSide(context),
                     backgroundColor: glassButtonColor(
                       context,
                       Theme.of(context).colorScheme.primary,
@@ -549,6 +551,7 @@ class _B20HkPageState extends State<B20HkPage> with WidgetsBindingObserver {
               const SizedBox(height: 16),
               FilledButton(
                 style: FilledButton.styleFrom(
+                  side: glassFrameSide(context),
                   backgroundColor: glassButtonColor(
                     context,
                     Theme.of(context).colorScheme.primary,

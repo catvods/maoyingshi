@@ -85,6 +85,7 @@ class _C1SubtitlePageState extends State<C1SubtitlePage>
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: glassFrameSide(context) ?? BorderSide.none,
       ),
       elevation: 0,
       child: InkWell(

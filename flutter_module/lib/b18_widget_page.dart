@@ -288,6 +288,7 @@ class _B18BrowsePageState extends State<B18BrowsePage>
               ),
               FilledButton(
                 style: FilledButton.styleFrom(
+                  side: glassFrameSide(context),
                   backgroundColor: glassButtonColor(
                     context,
                     Theme.of(context).colorScheme.primary,
@@ -387,6 +388,7 @@ class _B18BrowsePageState extends State<B18BrowsePage>
               const SizedBox(height: 16),
               FilledButton(
                 style: FilledButton.styleFrom(
+                  side: glassFrameSide(context),
                   backgroundColor: glassButtonColor(
                     context,
                     Theme.of(context).colorScheme.primary,

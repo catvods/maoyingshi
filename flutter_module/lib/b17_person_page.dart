@@ -564,6 +564,7 @@ class _B17PersonPageState extends State<B17PersonPage>
           const SizedBox(height: 12),
           FilledButton(
             style: FilledButton.styleFrom(
+              side: glassFrameSide(context),
               backgroundColor: glassButtonColor(
                 context,
                 Theme.of(context).colorScheme.primary,

@@ -144,6 +144,7 @@ class _B16ReportPageState extends State<B16ReportPage>
                 ),
                 FilledButton(
                   style: FilledButton.styleFrom(
+                    side: glassFrameSide(context),
                     backgroundColor: glassButtonColor(
                       context,
                       Theme.of(context).colorScheme.primary,
@@ -407,6 +408,7 @@ class _ReportCard extends StatelessWidget {
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: glassFrameSide(context) ?? BorderSide.none,
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -443,6 +445,7 @@ class _CenterMessage extends StatelessWidget {
             const SizedBox(height: 16),
             FilledButton(
               style: FilledButton.styleFrom(
+                side: glassFrameSide(context),
                 backgroundColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,

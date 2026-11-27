@@ -988,6 +988,7 @@ class _B11HomePageState extends State<B11HomePage>
               ),
               selected: selected,
               selectedColor: glassButtonColor(context, accent),
+              side: glassFrameSide(context),
               labelStyle: TextStyle(
                 color: selected
                     ? Colors.white

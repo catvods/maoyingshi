@@ -232,10 +232,10 @@ class _GlobalThemeEditorPageState extends State<GlobalThemeEditorPage> {
             child: TextField(
               controller: controller,
               style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: '#RRGGBB',
                 isDense: true,
-                border: OutlineInputBorder(),
+                border: glassInputBorder(context),
               ),
             ),
           ),
@@ -336,10 +336,10 @@ class _GlobalThemeEditorPageState extends State<GlobalThemeEditorPage> {
               children: <Widget>[
                 TextField(
                   controller: _nameController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: '主题名',
                     hintText: '保存后显示在全局主题库的「我的」里',
-                    border: OutlineInputBorder(),
+                    border: glassInputBorder(context),
                   ),
                 ),
                 const SizedBox(height: 16),

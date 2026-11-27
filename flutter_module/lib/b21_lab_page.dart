@@ -593,6 +593,7 @@ class _B21LabListViewState extends State<_B21LabListView>
                 ),
                 FilledButton(
                   style: FilledButton.styleFrom(
+                    side: glassFrameSide(context),
                     backgroundColor: glassButtonColor(
                       context,
                       Theme.of(context).colorScheme.primary,
@@ -804,6 +805,7 @@ class _B21LabListViewState extends State<_B21LabListView>
                 ),
                 FilledButton(
                   style: FilledButton.styleFrom(
+                    side: glassFrameSide(context),
                     backgroundColor: glassButtonColor(
                       context,
                       Theme.of(context).colorScheme.primary,
@@ -978,6 +980,7 @@ class _B21LabListViewState extends State<_B21LabListView>
             const SizedBox(height: 12),
             FilledButton(
               style: FilledButton.styleFrom(
+                side: glassFrameSide(context),
                 backgroundColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,
@@ -1050,6 +1053,7 @@ class _B21LabListViewState extends State<_B21LabListView>
                     context,
                     Theme.of(context).colorScheme.surfaceContainerLow,
                   ),
+                  shape: glassFrameShape(context, 12),
                   child: ListTile(
                     leading: _packageIcon(package.iconUrl),
                     title: Text(package.titleText),
@@ -1071,6 +1075,7 @@ class _B21LabListViewState extends State<_B21LabListView>
                                 context,
                                 _statusColor(package.statusKind),
                               ),
+                              side: glassFrameSide(context),
                             ),
                             if (package.hasUpdate)
                               const Padding(
@@ -1560,6 +1565,7 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
                 ),
                 FilledButton(
                   style: FilledButton.styleFrom(
+                    side: glassFrameSide(context),
                     backgroundColor: glassButtonColor(
                       context,
                       Theme.of(context).colorScheme.primary,
@@ -1654,6 +1660,7 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
             const SizedBox(height: 12),
             FilledButton(
               style: FilledButton.styleFrom(
+                side: glassFrameSide(context),
                 backgroundColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,
@@ -1698,6 +1705,7 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
                           context,
                           _statusColor(detail.statusKind),
                         ),
+                        side: glassFrameSide(context),
                       ),
                     ],
                   ),
@@ -1710,6 +1718,7 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
                 width: double.infinity,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
+                    side: glassFrameSide(context),
                     backgroundColor: glassButtonColor(
                       context,
                       Theme.of(context).colorScheme.primary,
@@ -1774,6 +1783,7 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
                     context,
                     Theme.of(context).colorScheme.surfaceContainerLow,
                   ),
+                  shape: glassFrameShape(context, 12),
                   child: ListTile(
                     leading: Container(
                       width: 10,
@@ -1791,6 +1801,7 @@ class _B21LabDetailViewState extends State<_B21LabDetailView>
                         : null,
                     trailing: FilledButton.tonal(
                       style: FilledButton.styleFrom(
+                        side: glassFrameSide(context),
                         backgroundColor: glassButtonColor(
                           context,
                           Theme.of(context).colorScheme.secondaryContainer,

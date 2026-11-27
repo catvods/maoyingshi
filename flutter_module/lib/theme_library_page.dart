@@ -197,6 +197,7 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
             ),
             FilledButton(
               style: FilledButton.styleFrom(
+                side: glassFrameSide(context),
                 backgroundColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,
@@ -435,6 +436,7 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
         const SizedBox(height: 16),
         FilledButton(
           style: FilledButton.styleFrom(
+            side: glassFrameSide(context),
             backgroundColor: glassButtonColor(context, scheme.primaryContainer),
             foregroundColor: scheme.onPrimaryContainer,
             padding: const EdgeInsets.symmetric(vertical: 12),

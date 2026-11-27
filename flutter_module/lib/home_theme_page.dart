@@ -131,6 +131,7 @@ class _HomeThemePageState extends State<HomeThemePage> {
             ),
             FilledButton(
               style: FilledButton.styleFrom(
+                side: glassFrameSide(context),
                 backgroundColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,

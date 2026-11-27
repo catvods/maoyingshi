@@ -377,8 +377,9 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
         child: InputDecorator(
           decoration: InputDecoration(
             labelText: label,
-            border: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(28)),
+            border: glassInputBorder(
+              context,
+              borderRadius: const BorderRadius.all(Radius.circular(28)),
             ),
             suffixIcon: const Icon(Icons.arrow_drop_down),
           ),
@@ -419,8 +420,9 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
         child: InputDecorator(
           decoration: InputDecoration(
             labelText: label,
-            border: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(28)),
+            border: glassInputBorder(
+              context,
+              borderRadius: const BorderRadius.all(Radius.circular(28)),
             ),
             prefixIcon: Padding(
               padding: const EdgeInsets.all(12),
@@ -640,10 +642,11 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
           TextField(
             controller: _name,
             maxLength: 30,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: '主题名称',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(28)),
+              border: glassInputBorder(
+                context,
+                borderRadius: const BorderRadius.all(Radius.circular(28)),
               ),
             ),
           ),
@@ -651,10 +654,11 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
           TextField(
             controller: _description,
             maxLength: 100,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: '描述（可选）',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(28)),
+              border: glassInputBorder(
+                context,
+                borderRadius: const BorderRadius.all(Radius.circular(28)),
               ),
             ),
           ),
@@ -822,6 +826,7 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
           const SizedBox(height: 20),
           FilledButton(
             style: FilledButton.styleFrom(
+              side: glassFrameSide(context),
               backgroundColor:
                   glassButtonColor(context, scheme.primary),
               padding: const EdgeInsets.symmetric(vertical: 14),

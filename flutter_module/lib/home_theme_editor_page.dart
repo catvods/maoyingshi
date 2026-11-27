@@ -165,10 +165,10 @@ class _HomeThemeEditorPageState extends State<HomeThemeEditorPage> {
                 children: <Widget>[
                   TextField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: '主题名',
                       hintText: '保存后显示在主题库里',
-                      border: OutlineInputBorder(),
+                      border: glassInputBorder(context),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -184,10 +184,10 @@ class _HomeThemeEditorPageState extends State<HomeThemeEditorPage> {
                         fontSize: 12.5,
                         height: 1.45,
                       ),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: '粘贴或编辑 .lzt / .rfwtxt 主题源码（RFW 文本）',
                         alignLabelWithHint: true,
-                        border: OutlineInputBorder(),
+                        border: glassInputBorder(context),
                       ),
                     ),
                   ),

@@ -602,6 +602,7 @@ class _B14FollowingPageState extends State<B14FollowingPage>
           FilledButton(
             onPressed: () => Navigator.of(context).pop('import'),
             style: FilledButton.styleFrom(
+              side: glassFrameSide(context),
               backgroundColor: glassButtonColor(
                 context,
                 Theme.of(context).colorScheme.primary,
@@ -661,6 +662,7 @@ class _B14FollowingPageState extends State<B14FollowingPage>
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: FilledButton.styleFrom(
+                side: glassFrameSide(context),
                 backgroundColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,
@@ -833,6 +835,7 @@ class _ChannelErrorView extends StatelessWidget {
               FilledButton(
                 onPressed: onRetry,
                 style: FilledButton.styleFrom(
+                  side: glassFrameSide(context),
                   backgroundColor: glassButtonColor(
                     context,
                     Theme.of(context).colorScheme.primary,
@@ -873,6 +876,7 @@ class _ErrorView extends StatelessWidget {
             FilledButton(
               onPressed: onRetry,
               style: FilledButton.styleFrom(
+                side: glassFrameSide(context),
                 backgroundColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,
@@ -993,6 +997,7 @@ class _FollowingCard extends StatelessWidget {
         context,
         Theme.of(context).colorScheme.surfaceContainerLow,
       ),
+      shape: glassFrameShape(context, 12),
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -1169,6 +1174,7 @@ Widget _actionButton(
     child: FilledButton.tonal(
       onPressed: busy ? null : onPressed,
       style: FilledButton.styleFrom(
+        side: glassFrameSide(context),
         backgroundColor: glassButtonColor(
           context,
           Theme.of(context).colorScheme.secondaryContainer,

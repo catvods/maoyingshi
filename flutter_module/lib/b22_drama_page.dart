@@ -200,6 +200,7 @@ class _B22TheaterPageState extends State<B22TheaterPage>
               const SizedBox(height: 16),
               FilledButton(
                 style: FilledButton.styleFrom(
+                  side: glassFrameSide(context),
                   backgroundColor: glassButtonColor(
                     context,
                     Theme.of(context).colorScheme.primary,

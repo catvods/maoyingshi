@@ -356,15 +356,9 @@ class _GlassSurfaceState extends State<GlassSurface> {
                       ),
                       border: Border.all(
                         // The frame: a flat 1px hairline, no
-                        // gradient. Dark mode takes white at
-                        // alpha 72 (the home bar's alpha-36 rim,
-                        // doubled, so it clearly reads); light
-                        // mode takes black at alpha 36, because
-                        // a white frame on light glass stays
-                        // invisible no matter the alpha.
-                        color: cfg.darkMode
-                            ? Colors.white.withAlpha(72)
-                            : Colors.black.withAlpha(36),
+                        // gradient, in the shared frame color
+                        // (see _glassFrameColor).
+                        color: _glassFrameColor(cfg.darkMode),
                         width: 1,
                       ),
                       // Deliberately no highlight gradient here:
@@ -422,6 +416,67 @@ Color glassButtonColor(BuildContext context, Color base) {
   final UiConfig cfg = uiConfig.value;
   if (!cfg.globalGlassActive) return base;
   return base.withAlpha((cfg.globalTintAlpha * 255).round());
+}
+
+/// The one frame color shared by [GlassSurface]'s rim and every
+/// framed control below: white at alpha 72 in dark mode (the home
+/// bar's alpha-36 rim, doubled, so it clearly reads), black at
+/// alpha 36 in light mode — a white frame on light glass stays
+/// invisible no matter the alpha, and a flat 1px hairline reads
+/// as an edge, never as a band.
+Color _glassFrameColor(bool darkMode) =>
+    darkMode ? Colors.white.withAlpha(72) : Colors.black.withAlpha(36);
+
+/// The frame as a [BorderSide] for tint-only controls that have a
+/// border slot (a button's `styleFrom(side:)`, a chip's `side`):
+/// the [GlassSurface] frame while the global glass switch is on,
+/// null while it is off, so an inactive control keeps exactly the
+/// border (or lack of one) it had before.
+BorderSide? glassFrameSide(BuildContext context) {
+  final UiConfig cfg = uiConfig.value;
+  if (!cfg.globalGlassActive) return null;
+  return BorderSide(color: _glassFrameColor(cfg.darkMode), width: 1);
+}
+
+/// The frame as an [OutlineInputBorder] for text fields that
+/// already draw an outline border: identical to a default
+/// `OutlineInputBorder()` while the global glass is off (same
+/// default side, same default 4dp radius unless [borderRadius]
+/// is given), the glass frame while it is on.
+OutlineInputBorder glassInputBorder(
+  BuildContext context, {
+  BorderRadius? borderRadius,
+}) {
+  final BorderSide? side = glassFrameSide(context);
+  return OutlineInputBorder(
+    borderRadius:
+        borderRadius ?? const BorderRadius.all(Radius.circular(4)),
+    borderSide: side ?? const BorderSide(),
+  );
+}
+
+/// The frame as a [Border] for a [BoxDecoration] that has no
+/// border yet: null while the global glass is off.
+Border? glassFrameBoxBorder(BuildContext context) {
+  final BorderSide? side = glassFrameSide(context);
+  if (side == null) return null;
+  return Border.all(color: side.color, width: side.width);
+}
+
+/// The frame as a rounded-rectangle shape for a [Card] that does
+/// not set its own shape: null while the global glass is off (the
+/// card keeps its theme shape), a framed shape with the given
+/// corner radius while it is on.
+RoundedRectangleBorder? glassFrameShape(
+  BuildContext context,
+  double radius,
+) {
+  final BorderSide? side = glassFrameSide(context);
+  if (side == null) return null;
+  return RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(radius),
+    side: side,
+  );
 }
 
 /// Wraps dialog content in a [GlassSurface]-backed transparent

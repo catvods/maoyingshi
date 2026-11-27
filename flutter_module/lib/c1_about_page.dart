@@ -158,6 +158,7 @@ class _C1AboutPageState extends State<C1AboutPage> {
                               height: 44,
                               child: FilledButton.tonal(
                                 style: FilledButton.styleFrom(
+                                  side: glassFrameSide(context),
                                   backgroundColor: glassButtonColor(
                                     context,
                                     Theme.of(context).colorScheme.secondaryContainer,
@@ -174,6 +175,7 @@ class _C1AboutPageState extends State<C1AboutPage> {
                               height: 44,
                               child: FilledButton.tonal(
                                 style: FilledButton.styleFrom(
+                                  side: glassFrameSide(context),
                                   backgroundColor: glassButtonColor(
                                     context,
                                     Theme.of(context).colorScheme.secondaryContainer,
@@ -192,6 +194,7 @@ class _C1AboutPageState extends State<C1AboutPage> {
                         height: 44,
                         child: FilledButton(
                           style: FilledButton.styleFrom(
+                            side: glassFrameSide(context),
                             backgroundColor: glassButtonColor(
                               context,
                               Theme.of(context).colorScheme.primary,

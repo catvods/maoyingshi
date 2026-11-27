@@ -213,6 +213,7 @@ class _EmptyView extends StatelessWidget {
             FilledButton(
               onPressed: () => C2HostApi().goHome(),
               style: FilledButton.styleFrom(
+                side: glassFrameSide(context),
                 backgroundColor: glassButtonColor(
                   context,
                   Theme.of(context).colorScheme.primary,

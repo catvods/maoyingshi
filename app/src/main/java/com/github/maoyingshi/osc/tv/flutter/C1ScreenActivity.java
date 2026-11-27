@@ -37,6 +37,7 @@ import com.github.maoyingshi.osc.tv.setting.Setting;
 import com.github.maoyingshi.osc.tv.theme.GlobalThemes;
 import com.github.maoyingshi.osc.tv.theme.ThemeController;
 import com.github.maoyingshi.osc.tv.theme.ThemeEditor;
+import com.github.maoyingshi.osc.tv.theme.ThemePaletteStyle;
 import com.github.maoyingshi.osc.tv.theme.ThemeProfile;
 import com.github.maoyingshi.osc.tv.theme.ThemeProfileStore;
 import com.github.maoyingshi.osc.tv.theme.ThemeProfileValidator;
@@ -77,6 +78,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -1116,6 +1118,10 @@ public class C1ScreenActivity extends AppCompatActivity {
         name = name == null ? "" : name.trim();
         if (name.isEmpty()) throw new IllegalArgumentException("请填写主题名");
         if (name.length() > 64) throw new IllegalArgumentException("主题名太长（最多 64 字）");
+        Object version = args.get("version");
+        if (version instanceof Number && ((Number) version).intValue() == 2) {
+            return importGlobalThemeV2(args, name);
+        }
         String accent = validGlobalThemeHex(mergedArg(args, "accent"));
         String background = validGlobalThemeHex(mergedArg(args, "background"));
         String gradient = validGlobalThemeHex(mergedArg(args, "gradient"));
@@ -1141,6 +1147,97 @@ public class C1ScreenActivity extends AppCompatActivity {
         out.put("name", saved.name);
         out.put("existed", false);
         return out;
+    }
+
+    /**
+     * Imports one global theme from its v2 JSON form: {name, seedColor,
+     * light: {…22 slots…}, dark: {…22 slots…}}. The slots are stored
+     * as-is as a user package (UserGlobalThemes.save, the same store
+     * the editor writes) after ThemeProfileValidator validation —
+     * nothing is generated here, the file already carries every slot
+     * (v1's four colours build the profile through
+     * GlobalThemes.buildPaletteProfile instead). A package with the
+     * same name already stored is reported as existed, not duplicated.
+     */
+    private Map<String, Object> importGlobalThemeV2(Map<?, ?> args, String name) throws Exception {
+        String seedColor = globalThemeSlotHex(mergedArg(args, "seedColor"), "seedColor");
+        for (UserGlobalThemes.Entry entry : UserGlobalThemes.list()) {
+            if (entry.name.equals(name)) {
+                Map<String, Object> out = new HashMap<>();
+                out.put("id", entry.id);
+                out.put("name", entry.name);
+                out.put("existed", true);
+                return out;
+            }
+        }
+        String userId = UserGlobalThemes.newId(name);
+        ThemeProfile profile = new ThemeProfile();
+        profile.id = UserGlobalThemes.profileIdFor(userId);
+        profile.name = name;
+        profile.mode = ThemeProfile.MODE_SYSTEM;
+        profile.paletteStyle = ThemePaletteStyle.TONAL_SPOT.id();
+        profile.seedSource = ThemeProfile.SEED_CUSTOM;
+        profile.seedColor = seedColor;
+        profile.light = globalThemeSlotSet(args.get("light"), "light");
+        profile.dark = globalThemeSlotSet(args.get("dark"), "dark");
+        ThemeProfileValidator.Result validated = ThemeProfileValidator.validate(profile);
+        if (!validated.valid()) throw new IllegalArgumentException("配色不合法：" + validated.message());
+        UserGlobalThemes.Entry saved = UserGlobalThemes.save(userId, validated.profile());
+        Map<String, Object> out = new HashMap<>();
+        out.put("id", saved.id);
+        out.put("name", saved.name);
+        out.put("existed", false);
+        return out;
+    }
+
+    /** One mode's slots from a v2 import: all 16 colours required as strict hex, opacities optional. */
+    private static ThemeProfile.SlotSet globalThemeSlotSet(Object raw, String mode) {
+        if (!(raw instanceof Map)) {
+            throw new IllegalArgumentException(mode + " 配色缺失");
+        }
+        Map<?, ?> map = (Map<?, ?>) raw;
+        ThemeProfile.SlotSet slots = new ThemeProfile.SlotSet();
+        slots.primary = globalThemeSlotHex(mergedArg(map, "primary"), mode + ".primary");
+        slots.primaryContainer = globalThemeSlotHex(mergedArg(map, "primaryContainer"), mode + ".primaryContainer");
+        slots.secondaryContainer = globalThemeSlotHex(mergedArg(map, "secondaryContainer"), mode + ".secondaryContainer");
+        slots.focus = globalThemeSlotHex(mergedArg(map, "focus"), mode + ".focus");
+        slots.playerCurrent = globalThemeSlotHex(mergedArg(map, "playerCurrent"), mode + ".playerCurrent");
+        slots.surface = globalThemeSlotHex(mergedArg(map, "surface"), mode + ".surface");
+        slots.surfaceContainer = globalThemeSlotHex(mergedArg(map, "surfaceContainer"), mode + ".surfaceContainer");
+        slots.surfaceContainerHigh = globalThemeSlotHex(mergedArg(map, "surfaceContainerHigh"), mode + ".surfaceContainerHigh");
+        slots.onSurface = globalThemeSlotHex(mergedArg(map, "onSurface"), mode + ".onSurface");
+        slots.onSurfaceVariant = globalThemeSlotHex(mergedArg(map, "onSurfaceVariant"), mode + ".onSurfaceVariant");
+        slots.outline = globalThemeSlotHex(mergedArg(map, "outline"), mode + ".outline");
+        slots.error = globalThemeSlotHex(mergedArg(map, "error"), mode + ".error");
+        slots.success = globalThemeSlotHex(mergedArg(map, "success"), mode + ".success");
+        slots.warning = globalThemeSlotHex(mergedArg(map, "warning"), mode + ".warning");
+        slots.itemOverlay = globalThemeSlotHex(mergedArg(map, "itemOverlay"), mode + ".itemOverlay");
+        slots.onItemOverlay = globalThemeSlotHex(mergedArg(map, "onItemOverlay"), mode + ".onItemOverlay");
+        slots.scrimOpacity = globalThemeSlotOpacity(map, "scrimOpacity", mode);
+        slots.dialogOpacity = globalThemeSlotOpacity(map, "dialogOpacity", mode);
+        slots.overlayOpacity = globalThemeSlotOpacity(map, "overlayOpacity", mode);
+        slots.playerScrimOpacity = globalThemeSlotOpacity(map, "playerScrimOpacity", mode);
+        slots.liveListScrimOpacity = globalThemeSlotOpacity(map, "liveListScrimOpacity", mode);
+        slots.itemOverlayOpacity = globalThemeSlotOpacity(map, "itemOverlayOpacity", mode);
+        return slots;
+    }
+
+    /** A strict opaque "#RRGGBB" colour for a v2 slot; the validator normalizes it. */
+    private static String globalThemeSlotHex(String text, String slot) {
+        String value = text == null ? "" : text.trim();
+        if (!value.matches("#?[0-9a-fA-F]{6}")) {
+            throw new IllegalArgumentException(slot + " 颜色格式不正确（要用 6 位十六进制，如 #c3d7b5）");
+        }
+        if (!value.startsWith("#")) value = "#" + value;
+        return value.toUpperCase(Locale.ROOT);
+    }
+
+    /** An optional opacity slot: absent stays unset, a present one must be a number (the validator range-checks it). */
+    private static Float globalThemeSlotOpacity(Map<?, ?> map, String slot, String mode) {
+        Object value = map.get(slot);
+        if (value == null) return null;
+        if (value instanceof Number) return ((Number) value).floatValue();
+        throw new IllegalArgumentException(mode + "." + slot + " 不透明度格式不正确");
     }
 
     /**

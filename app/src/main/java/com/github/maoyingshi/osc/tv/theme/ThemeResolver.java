@@ -308,8 +308,13 @@ public final class ThemeResolver {
     }
     private static int enforceBase(int foreground, int surface, int container, int containerHigh) {
         int result = ensureContrast(foreground, surface, 4.5);
-        if (container >= 0) result = ensureContrast(result, container, 4.5);
-        if (containerHigh >= 0) result = ensureContrast(result, containerHigh, 4.5);
+        // The "absent" sentinel is -1 (0xFFFFFFFF), not "negative": every opaque
+        // ARGB colour is negative as a signed int, so `>= 0` never fired and the
+        // container clamps below were dead code — a profile whose onSurface failed
+        // on a container fell back to the frozen palette wholesale instead of
+        // clamping the text to black/white as documented. Compare against -1.
+        if (container != -1) result = ensureContrast(result, container, 4.5);
+        if (containerHigh != -1) result = ensureContrast(result, containerHigh, 4.5);
         return result;
     }
 

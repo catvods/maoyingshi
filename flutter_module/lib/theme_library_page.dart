@@ -254,18 +254,29 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
         continue;
       }
       if (zipEntry.name.toLowerCase().endsWith('.json')) {
-        // A global-theme file: name + four palette colours, saved
-        // through the same host store as the editor's user packages.
+        // A global-theme file: v1 is name + four palette colours, v2
+        // is the complete light/dark slot sets; both save through the
+        // same host store as the editor's user packages.
         try {
-          final Map<String, String> palette =
+          final _ParsedGlobalTheme parsed =
               _parseGlobalThemeJson(zipEntry.text!);
-          final ImportedGlobalTheme saved = await importGlobalTheme(
-            name: palette['name']!,
-            accent: palette['accent']!,
-            background: palette['background']!,
-            gradient: palette['gradient']!,
-            surface: palette['surface']!,
-          );
+          final ImportedGlobalTheme saved;
+          if (parsed.version == 2) {
+            saved = await importGlobalThemeV2(
+              name: parsed.name,
+              seedColor: parsed.seedColor!,
+              light: parsed.light!,
+              dark: parsed.dark!,
+            );
+          } else {
+            saved = await importGlobalTheme(
+              name: parsed.name,
+              accent: parsed.accent!,
+              background: parsed.background!,
+              gradient: parsed.gradient!,
+              surface: parsed.surface!,
+            );
+          }
           if (saved.existed) {
             existedGlobal.add(saved.name);
           } else {
@@ -316,11 +327,69 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
     }
   }
 
+/// One parsed global-theme JSON file: v1 carries the four palette
+/// colours, v2 the complete light/dark slot sets.
+class _ParsedGlobalTheme {
+  const _ParsedGlobalTheme({
+    required this.version,
+    required this.name,
+    this.accent,
+    this.background,
+    this.gradient,
+    this.surface,
+    this.seedColor,
+    this.light,
+    this.dark,
+  });
+
+  final int version;
+  final String name;
+  final String? accent;
+  final String? background;
+  final String? gradient;
+  final String? surface;
+  final String? seedColor;
+  final Map<String, Object>? light;
+  final Map<String, Object>? dark;
+}
+
+/// The 16 colour slots of one v2 mode; every one is required.
+const List<String> _globalThemeV2ColorSlots = <String>[
+  'primary',
+  'primaryContainer',
+  'secondaryContainer',
+  'focus',
+  'playerCurrent',
+  'surface',
+  'surfaceContainer',
+  'surfaceContainerHigh',
+  'onSurface',
+  'onSurfaceVariant',
+  'outline',
+  'error',
+  'success',
+  'warning',
+  'itemOverlay',
+  'onItemOverlay',
+];
+
+/// The 6 opacity slots of one v2 mode, with the host validator's
+/// range for each; an absent one stays unset.
+const Map<String, List<double>> _globalThemeV2OpacityRanges =
+    <String, List<double>>{
+  'scrimOpacity': <double>[0, 0.85],
+  'dialogOpacity': <double>[0.70, 1],
+  'overlayOpacity': <double>[0.05, 0.60],
+  'playerScrimOpacity': <double>[0.20, 1],
+  'liveListScrimOpacity': <double>[0.20, 1],
+  'itemOverlayOpacity': <double>[0.05, 1],
+};
+
   /// Parses one global-theme JSON file ({type: 'moao-global-theme',
   /// version: 1, name, accent, background, gradient, surface,
-  /// description?}) into the fields importGlobalTheme takes.
+  /// description?} or version: 2, name, seedColor, light, dark}).
   /// Throws [FormatException] on anything else.
-  Map<String, String> _parseGlobalThemeJson(String text) {
+  _ParsedGlobalTheme _parseGlobalThemeJson(String text) {
     final Object? decoded = jsonDecode(text);
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException('not a global theme file');
@@ -329,10 +398,11 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
       throw const FormatException('not a global theme file');
     }
     final Object? version = decoded['version'];
+    if (version == 2) return _parseGlobalThemeJsonV2(decoded);
     if (version != null && version != 1) {
       throw const FormatException('unsupported global theme version');
     }
-    final Map<String, String> out = <String, String>{};
+    final Map<String, String> v1 = <String, String>{};
     for (final String key in <String>[
       'name',
       'accent',
@@ -344,7 +414,7 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
       if (value is! String || value.trim().isEmpty) {
         throw const FormatException('missing field');
       }
-      out[key] = value.trim();
+      v1[key] = value.trim();
     }
     final RegExp hex = RegExp(r'^#?[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$');
     for (final String key in <String>[
@@ -353,9 +423,63 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
       'gradient',
       'surface',
     ]) {
-      if (!hex.hasMatch(out[key]!)) {
+      if (!hex.hasMatch(v1[key]!)) {
         throw const FormatException('bad colour');
       }
+    }
+    return _ParsedGlobalTheme(
+      version: 1,
+      name: v1['name']!,
+      accent: v1['accent'],
+      background: v1['background'],
+      gradient: v1['gradient'],
+      surface: v1['surface'],
+    );
+  }
+
+  _ParsedGlobalTheme _parseGlobalThemeJsonV2(Map<String, dynamic> decoded) {
+    final Object? name = decoded['name'];
+    if (name is! String || name.trim().isEmpty) {
+      throw const FormatException('missing field');
+    }
+    final Object? seedColor = decoded['seedColor'];
+    if (seedColor is! String ||
+        !RegExp(r'^#?[0-9A-Fa-f]{6}$').hasMatch(seedColor.trim())) {
+      throw const FormatException('bad colour');
+    }
+    return _ParsedGlobalTheme(
+      version: 2,
+      name: name.trim(),
+      seedColor: seedColor.trim(),
+      light: _parseGlobalThemeSlotSet(decoded['light']),
+      dark: _parseGlobalThemeSlotSet(decoded['dark']),
+    );
+  }
+
+  /// One v2 mode's slots: all 16 colours required as #RRGGBB; an
+  /// opacity slot is optional and, when present, must be a number inside
+  /// the host validator's range. Absent opacities are left out (unset).
+  Map<String, Object> _parseGlobalThemeSlotSet(Object? raw) {
+    if (raw is! Map<String, dynamic>) {
+      throw const FormatException('missing slot set');
+    }
+    final Map<String, Object> out = <String, Object>{};
+    final RegExp hex = RegExp(r'^#?[0-9A-Fa-f]{6}$');
+    for (final String slot in _globalThemeV2ColorSlots) {
+      final Object? value = raw[slot];
+      if (value is! String || !hex.hasMatch(value.trim())) {
+        throw const FormatException('bad colour');
+      }
+      out[slot] = value.trim();
+    }
+    for (final MapEntry<String, List<double>> range
+        in _globalThemeV2OpacityRanges.entries) {
+      final Object? value = raw[range.key];
+      if (value == null) continue;
+      if (value is! num || value < range.value[0] || value > range.value[1]) {
+        throw const FormatException('bad opacity');
+      }
+      out[range.key] = value.toDouble();
     }
     return out;
   }

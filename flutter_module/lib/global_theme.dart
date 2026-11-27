@@ -367,6 +367,39 @@ Future<ImportedGlobalTheme> importGlobalTheme({
   );
 }
 
+/// Imports one global theme from its v2 JSON form (name + seedColor +
+/// the complete light/dark slot sets) through the host: the host saves
+/// the slots as-is as a user package (UserGlobalThemes, the same store
+/// the editor writes) after the same validation the editor's saves go
+/// through. Unlike the v1 four-colour form, nothing is generated here —
+/// the file already carries every slot. Returns the saved entry after
+/// refreshing the list. Throws on host errors.
+Future<ImportedGlobalTheme> importGlobalThemeV2({
+  required String name,
+  required String seedColor,
+  required Map<String, Object> light,
+  required Map<String, Object> dark,
+}) async {
+  final Map<dynamic, dynamic>? map =
+      await _globalThemeChannel.invokeMethod<Map<dynamic, dynamic>>(
+    'importGlobalTheme',
+    <String, Object>{
+      'version': 2,
+      'name': name,
+      'seedColor': seedColor,
+      'light': light,
+      'dark': dark,
+    },
+  );
+  if (map == null) throw StateError('global theme import failed');
+  await loadUserGlobalThemes();
+  return ImportedGlobalTheme(
+    id: '${map['id'] ?? ''}',
+    name: '${map['name'] ?? name}',
+    existed: map['existed'] == true,
+  );
+}
+
 /// Deletes a user package. The applied profile is data of its own,
 /// so deleting the package that is currently applied leaves the
 /// colors in place; the selection then reads as 自定义， exactly

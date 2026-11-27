@@ -337,6 +337,18 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     barFloating: false,
   ),
   HomeThemeEntry(
+    id: 'design-newspaper',
+    name: '复古报纸',
+    tag: '报纸刊头 · 头条片单',
+    description: '像一份影讯报纸：报纸刊头、头条片单、细线分隔，标题是粗黑衬线字。',
+    colors: <Color>[Color(0xFFF5EFE0), Color(0xFFE6DCC3), Color(0xFF9E2B25)],
+    dark: false,
+    barTint: Color(0xFFF5EFE0),
+    barAccent: Color(0xFF9E2B25),
+    barOpacity: 0.28,
+    barFloating: false,
+  ),
+  HomeThemeEntry(
     id: 'design-vinyl',
     name: '落日唱片',
     tag: '唱片式推荐 · 圆盘封面',

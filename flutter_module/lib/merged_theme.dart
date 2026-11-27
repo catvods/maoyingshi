@@ -101,6 +101,8 @@ const Map<String, MergedPalette> _leePalettes = <String, MergedPalette>{
       accent: '#89f6cb', background: '#102d2b', gradient: '#1c4b43', surface: '#1a3b36'),
   'design-paper': MergedPalette(
       accent: '#705666', background: '#eee4cf', gradient: '#d7c3bd', surface: '#faf5e7'),
+  'design-newspaper': MergedPalette(
+      accent: '#9e2b25', background: '#f5efe0', gradient: '#e6dcc3', surface: '#fdfaf3'),
   'design-vinyl': MergedPalette(
       accent: '#ffbd70', background: '#302019', gradient: '#593829', surface: '#443024'),
   'design-matrix': MergedPalette(
@@ -238,6 +240,8 @@ const Map<String, MergedComponentDefaults> _leeComponentDefaults =
       layout: 'compact', cardRadius: 18, floatingNavigation: false, navigationOpacity: 0.28),
   'design-paper': MergedComponentDefaults(
       layout: 'compact', cardRadius: 8, floatingNavigation: false, navigationOpacity: 0.28, titleFont: 'serif'),
+  'design-newspaper': MergedComponentDefaults(
+      layout: 'compact', cardRadius: 2, floatingNavigation: false, navigationOpacity: 0.28, titleFont: 'serif'),
   'design-vinyl': MergedComponentDefaults(
       layout: 'posters', cardRadius: 28, navigationOpacity: 0.28, titleFont: 'serif'),
   'design-matrix': MergedComponentDefaults(

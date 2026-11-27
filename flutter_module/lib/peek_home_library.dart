@@ -4765,8 +4765,7 @@ class _GoldFrame extends StatelessWidget {
 
 /// The fallback recommend poster for styles without a native
 /// shape: the template's own Poster look (rounded rect,
-/// cardRadius, 1px accent border). `glow` adds the soft accent
-/// shadow the wide/capsule styles carry.
+/// cardRadius, 1px accent border).
 class _RectPoster extends StatelessWidget {
   const _RectPoster({
     required this.pic,
@@ -4775,7 +4774,6 @@ class _RectPoster extends StatelessWidget {
     required this.width,
     required this.height,
     required this.placeholder,
-    this.glow = false,
   });
 
   final String pic;
@@ -4784,7 +4782,6 @@ class _RectPoster extends StatelessWidget {
   final double width;
   final double height;
   final Color placeholder;
-  final bool glow;
 
   @override
   Widget build(BuildContext context) {
@@ -4794,15 +4791,6 @@ class _RectPoster extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(color: accent, width: 1),
-        boxShadow: glow
-            ? <BoxShadow>[
-                BoxShadow(
-                  color: accent.withValues(alpha: 0.35),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ]
-            : null,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),

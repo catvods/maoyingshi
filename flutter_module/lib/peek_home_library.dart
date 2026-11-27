@@ -6,7 +6,7 @@ import 'package:rfw/rfw.dart';
 
 import 'theme_design.dart';
 
-/// The `peek.home` local widget library: the six custom widgets the
+/// The `peek.home` local widget library: the nine custom widgets the
 /// ported PeekPro home themes import next to `core.widgets`. The
 /// themes are declarative RFW text (assets/peek_home); everything
 /// stateful or platform-bound lives here, implemented against the
@@ -325,6 +325,57 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
               ],
             );
           },
+        );
+      },
+      'PeekImmersiveScaffold': (BuildContext context, DataSource source) {
+        // The immersive root PeekPro's polaroid-style themes use:
+        // a full-screen immersive backdrop (poster image + primary /
+        // secondary wash fading into the background colour) with the
+        // page body on top. Same background treatment as
+        // PeekImmersiveHero (same gradient stops and alphas); the
+        // Scaffold call carries no fit/alignment arguments, so there
+        // is no orientation branch here. Only one of the 50 pack
+        // themes uses it (拍立得）; RFW core has no such widget.
+        final String url = source.v<String>(<Object>['imageUrl']) ?? '';
+        final Color primary =
+            ArgumentDecoders.color(source, <Object>['primaryColor']) ??
+                const Color(0xFF1A237E);
+        final Color secondary =
+            ArgumentDecoders.color(source, <Object>['secondaryColor']) ??
+                primary;
+        final Color background =
+            ArgumentDecoders.color(source, <Object>['backgroundColor']) ??
+                const Color(0xFF0B0B10);
+        final Widget? child = source.optionalChild(<Object>['child']);
+        return Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            ColoredBox(color: background),
+            if (url.isNotEmpty)
+              Image.network(
+                url,
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+                errorBuilder: (BuildContext context, Object error,
+                        StackTrace? stackTrace) =>
+                    const SizedBox.shrink(),
+              ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: <Color>[
+                    primary.withValues(alpha: 0.30),
+                    secondary.withValues(alpha: 0.16),
+                    background.withValues(alpha: 0.92),
+                  ],
+                  stops: const <double>[0.0, 0.45, 1.0],
+                ),
+              ),
+            ),
+            if (child != null) child,
+          ],
         );
       },
       'PosterCaption': (BuildContext context, DataSource source) {

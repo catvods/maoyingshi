@@ -588,6 +588,27 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     final B12BannerItem? immersiveItem = _recommend.isEmpty
         ? null
         : _recommend[_immersiveIndex.clamp(0, _recommend.length - 1)];
+    // The filter groups are fed twice: 'filters' (every group) and
+    // 'visibleFilters' (the groups currently shown — empty while
+    // the panel is collapsed). One list, built once.
+    final List<Map<String, Object?>> filterGroups =
+        <Map<String, Object?>>[
+      for (final B11FilterGroup group in _filterGroups)
+        <String, Object?>{
+          'key': group.key,
+          'name': group.name,
+          'canExpand': false,
+          'options': <Map<String, Object?>>[
+            for (final B11FilterOption option in group.options)
+              <String, Object?>{
+                'name': option.name,
+                'value': option.value,
+                'filterKey': group.key,
+                'selected': option.selected,
+              },
+          ],
+        },
+    ];
     _data.update('home', <String, Object?>{
       'home': <String, Object?>{
         'recommend': <Map<String, Object?>>[
@@ -598,6 +619,11 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
               'pic': _recommend[i].picUrl,
               'remarks': _recommend[i].remarks,
               'titleLogo': '',
+              // PeekPro item badges the host model does not carry:
+              // an empty style type / vodTag takes the themes'
+              // "" branch (badge hidden) instead of a null.
+              'style': <String, Object?>{'type': ''},
+              'vodTag': '',
             },
         ],
       },
@@ -612,6 +638,10 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
             'rankLabel': '${i + 1}',
             'indexLabel': (i + 1).toString().padLeft(2, '0'),
             'selected': false,
+            // PeekPro item badges the host model does not carry;
+            // empty values take the themes' "" branch (badge hidden).
+            'style': <String, Object?>{'type': ''},
+            'vodTag': '',
           },
       ],
       'classes': <Map<String, Object?>>[
@@ -622,29 +652,23 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
             'selected': i == _tabIndex,
           },
       ],
-      'filters': <Map<String, Object?>>[
-        for (final B11FilterGroup group in _filterGroups)
-          <String, Object?>{
-            'key': group.key,
-            'name': group.name,
-            'canExpand': false,
-            'options': <Map<String, Object?>>[
-              for (final B11FilterOption option in group.options)
-                <String, Object?>{
-                  'name': option.name,
-                  'value': option.value,
-                  'filterKey': group.key,
-                  'selected': option.selected,
-                },
-            ],
-          },
-      ],
+      'filters': filterGroups,
+      'visibleFilters':
+          _showFilters ? filterGroups : <Map<String, Object?>>[],
       'hasFilters': _filterGroups.isNotEmpty,
       'showFilters': _showFilters,
       'filterPanelHeight': _filterGroups.length * 39.0 + 10.0,
       'immersiveFilterPanelHeight': _filterGroups.length * 39.0 + 10.0,
       'source': <String, Object?>{'name': screen.title},
       'totalLabel': '${_items.length}',
+      // The themed home is the root page: there is no drill-in
+      // state to navigate back from, so the back affordance the
+      // pack themes gate on this flag never shows.
+      'canNavigateBack': false,
+      // PeekPro numbers the paged grid ("第 X 页"); the bridge
+      // pages incrementally and keeps no page counter, so the
+      // label stays on the first page.
+      'pageLabel': '1',
       // The native Feature replaces the template hero for every
       // native-design style with a recovered fragment (see
       // _syncRecommendSection): the template hero is suppressed
@@ -708,6 +732,13 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
         'open': _iconData(Icons.open_in_new),
         'push': _iconData(Icons.send),
         'source': _iconData(Icons.swap_horiz),
+        // The back affordance (gated on canNavigateBack, always
+        // false on the root home page) and the native-app-bar
+        // button (its showNativeAppBar event has no bridge
+        // counterpart and is ignored). Both keys exist so Icon()
+        // never reads a missing data field.
+        'back': _iconData(Icons.arrow_back),
+        'topBar': _iconData(Icons.more_vert),
         // The native Feature fragments reference these three
         // (capsule's moon chip, bubble's sparkle button, the
         // generic style's play button).

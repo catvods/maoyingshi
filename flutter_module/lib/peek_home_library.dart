@@ -1111,16 +1111,16 @@ class _NativeFeatureState extends State<_NativeFeature> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Color(0xDDCD7461),
+                        color: const Color(0xDDCD7461),
                         borderRadius: BorderRadius.circular(18),
                       ),
-                      child: Text(
+                      child: const Text(
                         'SOFT SCREEN / 陶灰放映',
-                        style: TextStyle(
-                          color: Color(0xFF252A30),
+                        style: const TextStyle(
+                          color: const Color(0xFF252A30),
                           fontSize: 10,
                           letterSpacing: 1,
                         ),
@@ -1162,9 +1162,9 @@ class _NativeFeatureState extends State<_NativeFeature> {
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Color(0xCCF0F5F6),
+          color: const Color(0xCCF0F5F6),
           borderRadius: BorderRadius.circular(26),
-          border: Border.all(color: Color(0xAA86BBBA), width: 1),
+          border: Border.all(color: const Color(0xAA86BBBA), width: 1),
         ),
         child: Column(
           children: <Widget>[
@@ -1190,17 +1190,17 @@ class _NativeFeatureState extends State<_NativeFeature> {
                     Align(
                       alignment: Alignment.topLeft,
                       child: Container(
-                        margin: EdgeInsets.all(12),
-                        padding: EdgeInsets.symmetric(
+                        margin: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: Color(0xEEDBB6BE),
+                          color: const Color(0xEEDBB6BE),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Text(
+                        child: const Text(
                           'MIST WINDOW',
-                          style: TextStyle(
-                            color: Color(0xFF252A30),
+                          style: const TextStyle(
+                            color: const Color(0xFF252A30),
                             fontSize: 10,
                             letterSpacing: 1,
                           ),
@@ -1246,9 +1246,9 @@ class _NativeFeatureState extends State<_NativeFeature> {
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Color(0xAA7180A6),
+          color: const Color(0xAA7180A6),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Color(0x99BB939D), width: 1),
+          border: Border.all(color: const Color(0x99BB939D), width: 1),
         ),
         child: Stack(
           fit: StackFit.expand,
@@ -1260,13 +1260,13 @@ class _NativeFeatureState extends State<_NativeFeature> {
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: <Color>[
-                    Color(0x337F7DA3),
-                    Color(0xDD7180A6),
-                    Color(0xCC809DBD),
+                    const Color(0x337F7DA3),
+                    const Color(0xDD7180A6),
+                    const Color(0xCC809DBD),
                   ],
                 ),
               ),
@@ -1342,17 +1342,17 @@ class _NativeFeatureState extends State<_NativeFeature> {
                     Align(
                       alignment: Alignment.bottomCenter,
                       child: Container(
-                        margin: EdgeInsets.all(10),
-                        padding: EdgeInsets.symmetric(
+                        margin: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Color(0xDDFFF1F3),
+                          color: const Color(0xDDFFF1F3),
                           borderRadius: BorderRadius.circular(22),
                         ),
-                        child: Text(
+                        child: const Text(
                           'ROSE ARCADE',
-                          style: TextStyle(
-                            color: Color(0xFF252A30),
+                          style: const TextStyle(
+                            color: const Color(0xFF252A30),
                             fontSize: 11,
                             letterSpacing: 1,
                           ),
@@ -1522,9 +1522,9 @@ class _NativeFeatureState extends State<_NativeFeature> {
   Widget _premiereCard(PeekRecommendItem item) => Container(
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         decoration: BoxDecoration(
-          color: Color(0x992C101D),
+          color: const Color(0x992C101D),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Color(0x77FF647B), width: 1),
+          border: Border.all(color: const Color(0x77FF647B), width: 1),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
@@ -1543,17 +1543,17 @@ class _NativeFeatureState extends State<_NativeFeature> {
               Align(
                 alignment: Alignment.topCenter,
                 child: Container(
-                  margin: EdgeInsets.symmetric(vertical: 12),
-                  padding: EdgeInsets.symmetric(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Color(0xBB2C101D),
+                    color: const Color(0xBB2C101D),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text(
+                  child: const Text(
                     'PREMIERE / 今夜首映',
-                    style: TextStyle(
-                      color: Color(0xFFFFCCD3),
+                    style: const TextStyle(
+                      color: const Color(0xFFFFCCD3),
                       fontSize: 11,
                       letterSpacing: 1,
                     ),
@@ -1586,21 +1586,21 @@ class _NativeFeatureState extends State<_NativeFeature> {
   Widget _prismCard(PeekRecommendItem item) => Container(
         margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: <Color>[
-              Color(0xAA16495A),
-              Color(0xAA59328C),
+              const Color(0xAA16495A),
+              const Color(0xAA59328C),
             ],
           ),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(28),
-            topRight: Radius.circular(8),
-            bottomRight: Radius.circular(28),
-            bottomLeft: Radius.circular(8),
+          borderRadius: const BorderRadius.only(
+            topLeft: const Radius.circular(28),
+            topRight: const Radius.circular(8),
+            bottomRight: const Radius.circular(28),
+            bottomLeft: const Radius.circular(8),
           ),
-          border: Border.all(color: Color(0xAA63EBFF), width: 1),
+          border: Border.all(color: const Color(0xAA63EBFF), width: 1),
         ),
         child: ClipRRect(
           borderRadius: const BorderRadius.only(
@@ -1655,15 +1655,15 @@ class _NativeFeatureState extends State<_NativeFeature> {
                           height: 34,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: Color(0x4463EBFF),
+                            color: const Color(0x4463EBFF),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                                color: Color(0xFF63EBFF), width: 1),
+                                color: const Color(0xFF63EBFF), width: 1),
                           ),
-                          child: Text(
+                          child: const Text(
                             '↗',
-                            style: TextStyle(
-                              color: Color(0xFFB5F6FF),
+                            style: const TextStyle(
+                              color: const Color(0xFFB5F6FF),
                               fontSize: 20,
                             ),
                           ),
@@ -1827,28 +1827,28 @@ class _NativeFeatureState extends State<_NativeFeature> {
                       Row(
                         children: <Widget>[
                           Container(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
-                              color: Color(0xFFF1F1E4),
+                              color: const Color(0xFFF1F1E4),
                               borderRadius: BorderRadius.circular(9),
                             ),
-                            child: Row(
+                            child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
-                                Icon(
+                                const Icon(
                                   Icons.play_arrow,
-                                  color: Color(0xFF253D32),
+                                  color: const Color(0xFF253D32),
                                   size: 18,
                                 ),
-                                SizedBox(width: 5),
+                                const SizedBox(width: 5),
                                 // The pool dump cuts off here, mid-string,
                                 // at this text's colour: it is inferred to
                                 // match the play icon (推定）.
-                                Text(
+                                const Text(
                                   '观看影片',
-                                  style: TextStyle(
-                                    color: Color(0xFF253D32),
+                                  style: const TextStyle(
+                                    color: const Color(0xFF253D32),
                                     fontSize: 13,
                                   ),
                                 ),
@@ -1872,11 +1872,11 @@ class _NativeFeatureState extends State<_NativeFeature> {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Color(0x88111724),
-          border: Border.all(color: Color(0xFFCAFF42), width: 1.5),
+          color: const Color(0x88111724),
+          border: Border.all(color: const Color(0xFFCAFF42), width: 1.5),
           boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: Color(0x334AFFCB),
+            const BoxShadow(
+              color: const Color(0x334AFFCB),
               blurRadius: 18,
             ),
           ],
@@ -1998,9 +1998,9 @@ class _NativeFeatureState extends State<_NativeFeature> {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
-          color: Color(0xCCEBE0C1),
+          color: const Color(0xCCEBE0C1),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Color(0x887A5D77), width: 1),
+          border: Border.all(color: const Color(0x887A5D77), width: 1),
         ),
         child: Row(
           children: <Widget>[
@@ -2050,16 +2050,16 @@ class _NativeFeatureState extends State<_NativeFeature> {
                 height: 74,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: Color(0x88C19E98),
+                  color: const Color(0x88C19E98),
                   borderRadius: BorderRadius.circular(22),
                   border:
-                      Border.all(color: Color(0x996D536A), width: 1),
+                      Border.all(color: const Color(0x996D536A), width: 1),
                 ),
-                child: Text(
+                child: const Text(
                   'MY\nSHELF',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Color(0xFF252A30),
+                  style: const TextStyle(
+                    color: const Color(0xFF252A30),
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -2074,9 +2074,9 @@ class _NativeFeatureState extends State<_NativeFeature> {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Color(0xAACFB7BD),
+          color: const Color(0xAACFB7BD),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Color(0x88D3A5AA), width: 1),
+          border: Border.all(color: const Color(0x88D3A5AA), width: 1),
         ),
         child: Row(
           children: <Widget>[
@@ -2085,13 +2085,13 @@ class _NativeFeatureState extends State<_NativeFeature> {
               height: 96,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Color(0x88AFC5D2),
+                color: const Color(0x88AFC5D2),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(
+              child: const Text(
                 'LIST',
-                style: TextStyle(
-                  color: Color(0xFF252A30),
+                style: const TextStyle(
+                  color: const Color(0xFF252A30),
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                 ),
@@ -2147,9 +2147,9 @@ class _NativeFeatureState extends State<_NativeFeature> {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
-          color: Color(0xCCF4CBC8),
+          color: const Color(0xCCF4CBC8),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Color(0xAAD0BC2C), width: 1),
+          border: Border.all(color: const Color(0xAAD0BC2C), width: 1),
         ),
         child: Row(
           children: <Widget>[
@@ -2197,13 +2197,13 @@ class _NativeFeatureState extends State<_NativeFeature> {
                   height: 44,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: Color(0xFFD0BC2C),
+                    color: const Color(0xFFD0BC2C),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(
+                  child: const Text(
                     '8',
-                    style: TextStyle(
-                      color: Color(0xFF252A30),
+                    style: const TextStyle(
+                      color: const Color(0xFF252A30),
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
                     ),
@@ -2233,9 +2233,9 @@ class _NativeFeatureState extends State<_NativeFeature> {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Color(0x99B7B0AE),
+          color: const Color(0x99B7B0AE),
           borderRadius: BorderRadius.circular(26),
-          border: Border.all(color: Color(0x88F5BAC9), width: 1),
+          border: Border.all(color: const Color(0x88F5BAC9), width: 1),
         ),
         child: Row(
           children: <Widget>[
@@ -2282,15 +2282,15 @@ class _NativeFeatureState extends State<_NativeFeature> {
               width: 68,
               height: 86,
               decoration: BoxDecoration(
-                color: Color(0x668AA6B8),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(22),
-                  topRight: Radius.circular(8),
-                  bottomRight: Radius.circular(22),
-                  bottomLeft: Radius.circular(8),
+                color: const Color(0x668AA6B8),
+                borderRadius: const BorderRadius.only(
+                  topLeft: const Radius.circular(22),
+                  topRight: const Radius.circular(8),
+                  bottomRight: const Radius.circular(22),
+                  bottomLeft: const Radius.circular(8),
                 ),
                 border:
-                    Border.all(color: Color(0xAAF5BAC9), width: 1),
+                    Border.all(color: const Color(0xAAF5BAC9), width: 1),
               ),
             ),
           ],
@@ -2439,10 +2439,10 @@ class _NativeFeatureState extends State<_NativeFeature> {
                 height: 72,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: Color(0x3394E7E0),
+                  color: const Color(0x3394E7E0),
                   borderRadius: BorderRadius.circular(24),
                   border:
-                      Border.all(color: Color(0x8894E7E0), width: 1),
+                      Border.all(color: const Color(0x8894E7E0), width: 1),
                 ),
                 child: Text(
                   '＋\n找一部',
@@ -2503,26 +2503,26 @@ class _NativeFeatureState extends State<_NativeFeature> {
                     'openSearch',
                     Container(
                       alignment: Alignment.center,
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
-                        color: Color(0x44FFB4D8),
+                        color: const Color(0x44FFB4D8),
                         borderRadius: BorderRadius.circular(28),
                       ),
-                      child: Row(
+                      child: const Row(
                         children: <Widget>[
-                          Icon(
+                          const Icon(
                             Icons.auto_awesome,
-                            color: Color(0xFFFFEAF5),
+                            color: const Color(0xFFFFEAF5),
                             size: 14,
                           ),
-                          Expanded(
-                            child: Text(
+                          const Expanded(
+                            child: const Text(
                               '  发现新片',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: Color(0xFFFFEAF5),
+                              style: const TextStyle(
+                                color: const Color(0xFFFFEAF5),
                                 fontSize: 12,
                               ),
                             ),
@@ -2538,16 +2538,16 @@ class _NativeFeatureState extends State<_NativeFeature> {
                     'openHistory',
                     Container(
                       alignment: Alignment.center,
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
-                        color: Color(0x44BBA8FF),
+                        color: const Color(0x44BBA8FF),
                         borderRadius: BorderRadius.circular(28),
                       ),
-                      child: Text(
+                      child: const Text(
                         '↗  继续追剧',
-                        style: TextStyle(
-                          color: Color(0xFFF0EAFF),
+                        style: const TextStyle(
+                          color: const Color(0xFFF0EAFF),
                           fontSize: 12,
                         ),
                       ),
@@ -2563,9 +2563,9 @@ class _NativeFeatureState extends State<_NativeFeature> {
   Widget _celluloidPanel() => Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Color(0x9925231F),
+          color: const Color(0x9925231F),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Color(0x77F1CE98), width: 1),
+          border: Border.all(color: const Color(0x77F1CE98), width: 1),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(18),
@@ -2624,17 +2624,17 @@ class _NativeFeatureState extends State<_NativeFeature> {
                           _action(
                             'openHistory',
                             Container(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: Color(0x77F1CE98), width: 1),
+                                    color: const Color(0x77F1CE98), width: 1),
                               ),
-                              child: Text(
+                              child: const Text(
                                 '观看记录 →',
-                                style: TextStyle(
-                                  color: Color(0xFFF1CE98),
+                                style: const TextStyle(
+                                  color: const Color(0xFFF1CE98),
                                   fontSize: 11,
                                 ),
                               ),
@@ -2792,17 +2792,17 @@ class _NativeFeatureState extends State<_NativeFeature> {
                           child: _action(
                             'openHistory',
                             Container(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 9),
                               decoration: BoxDecoration(
-                                color: Color(0x336BF5DA),
+                                color: const Color(0x336BF5DA),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Text(
+                              child: const Text(
                                 '02 / 记录',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Color(0xFFBCFFED),
+                                style: const TextStyle(
+                                  color: const Color(0xFFBCFFED),
                                   fontSize: 12,
                                 ),
                               ),
@@ -3340,13 +3340,13 @@ class _NativeShowcase extends StatelessWidget {
   Widget _polaroidCell() => Container(
         padding: const EdgeInsets.fromLTRB(9, 9, 9, 4),
         decoration: BoxDecoration(
-          color: Color(0xBBE8FFF8),
+          color: const Color(0xBBE8FFF8),
           borderRadius: BorderRadius.circular(24),
           boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: Color(0x33102025),
+            const BoxShadow(
+              color: const Color(0x33102025),
               blurRadius: 12,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -3555,7 +3555,7 @@ class _NativeShowcase extends StatelessWidget {
                       width: 5,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: Color(0xFF6BF5DA),
+                        color: const Color(0xFF6BF5DA),
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
@@ -3564,7 +3564,7 @@ class _NativeShowcase extends StatelessWidget {
                       width: 5,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: Color(0xFFC9A0FF),
+                        color: const Color(0xFFC9A0FF),
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
@@ -3582,12 +3582,12 @@ class _NativeShowcase extends StatelessWidget {
               ),
               Container(
                 height: 3,
-                margin: EdgeInsets.fromLTRB(12, 8, 12, 0),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                decoration: const BoxDecoration(
+                  gradient: const LinearGradient(
                     colors: <Color>[
-                      Color(0xFFC9A0FF),
-                      Color(0xFF6BF5DA),
+                      const Color(0xFFC9A0FF),
+                      const Color(0xFF6BF5DA),
                     ],
                   ),
                 ),
@@ -3667,7 +3667,7 @@ class _NativeShowcase extends StatelessWidget {
   Widget _journalCell() => Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Color(0x66122336),
+          color: const Color(0x66122336),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
@@ -3800,7 +3800,7 @@ class _NativeShowcase extends StatelessWidget {
           color: const Color(0x992C101D),
           child: Column(
             children: <Widget>[
-              Container(height: 5, color: Color(0xFFFF647B)),
+              Container(height: 5, color: const Color(0xFFFF647B)),
               Expanded(
                 child: Stack(
                   fit: StackFit.expand,
@@ -3904,17 +3904,17 @@ class _NativeShowcase extends StatelessWidget {
   Widget _prismCell() => Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Color(0x6615233C),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(8),
-            bottomRight: Radius.circular(24),
-            bottomLeft: Radius.circular(8),
+          color: const Color(0x6615233C),
+          borderRadius: const BorderRadius.only(
+            topLeft: const Radius.circular(24),
+            topRight: const Radius.circular(8),
+            bottomRight: const Radius.circular(24),
+            bottomLeft: const Radius.circular(8),
           ),
-          border: Border.all(color: Color(0x8863EBFF), width: 1),
+          border: Border.all(color: const Color(0x8863EBFF), width: 1),
           boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: Color(0x224CE5FF),
+            const BoxShadow(
+              color: const Color(0x224CE5FF),
               blurRadius: 10,
             ),
           ],
@@ -4048,9 +4048,9 @@ class _NativeShowcase extends StatelessWidget {
   Widget _roseCell() => Container(
         padding: const EdgeInsets.all(9),
         decoration: BoxDecoration(
-          color: Color(0xDDEBD9AF),
+          color: const Color(0xDDEBD9AF),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Color(0x66A893A3), width: 1),
+          border: Border.all(color: const Color(0x66A893A3), width: 1),
         ),
         child: Column(
           children: <Widget>[
@@ -4065,7 +4065,7 @@ class _NativeShowcase extends StatelessWidget {
               child: Row(
                 children: <Widget>[
                   Container(
-                      width: 28, height: 2, color: Color(0xFF6D536A)),
+                      width: 28, height: 2, color: const Color(0xFF6D536A)),
                   const Expanded(child: SizedBox.shrink()),
                   Text(
                     item.rankLabel,
@@ -4093,9 +4093,9 @@ class _NativeShowcase extends StatelessWidget {
   Widget _mistCell() => Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Color(0xDDEAF1F4),
+          color: const Color(0xDDEAF1F4),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Color(0x6686BBBA), width: 1),
+          border: Border.all(color: const Color(0x6686BBBA), width: 1),
         ),
         child: Column(
           children: <Widget>[
@@ -4119,7 +4119,7 @@ class _NativeShowcase extends StatelessWidget {
                 width: 42,
                 height: 3,
                 decoration: BoxDecoration(
-                  color: Color(0xFF86BBBA),
+                  color: const Color(0xFF86BBBA),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -4132,9 +4132,9 @@ class _NativeShowcase extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         child: Container(
           decoration: BoxDecoration(
-            color: Color(0xDDC3B8BE),
+            color: const Color(0xDDC3B8BE),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Color(0x66D3A5AA), width: 1),
+            border: Border.all(color: const Color(0x66D3A5AA), width: 1),
           ),
           child: Row(
             children: <Widget>[
@@ -4143,7 +4143,7 @@ class _NativeShowcase extends StatelessWidget {
                 height: double.infinity,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: Color(0x77D3A5AA),
+                  color: const Color(0x77D3A5AA),
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Text(
@@ -4208,9 +4208,9 @@ class _NativeShowcase extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         child: Container(
           decoration: BoxDecoration(
-            color: Color(0xDDAAB0BD),
+            color: const Color(0xDDAAB0BD),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Color(0x88D0BC2C), width: 1),
+            border: Border.all(color: const Color(0x88D0BC2C), width: 1),
           ),
           child: Row(
             children: <Widget>[
@@ -4348,14 +4348,14 @@ class _NativeShowcase extends StatelessWidget {
   Widget _albumCell() => Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Color(0xDDB7B0AE),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(26),
-            topRight: Radius.circular(10),
-            bottomRight: Radius.circular(26),
-            bottomLeft: Radius.circular(10),
+          color: const Color(0xDDB7B0AE),
+          borderRadius: const BorderRadius.only(
+            topLeft: const Radius.circular(26),
+            topRight: const Radius.circular(10),
+            bottomRight: const Radius.circular(26),
+            bottomLeft: const Radius.circular(10),
           ),
-          border: Border.all(color: Color(0x77F5BAC9), width: 1),
+          border: Border.all(color: const Color(0x77F5BAC9), width: 1),
         ),
         child: Column(
           children: <Widget>[
@@ -4458,8 +4458,8 @@ class _NativeShowcase extends StatelessWidget {
   Widget _arcadeCell() => Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: Color(0x88111724),
-          border: Border.all(color: Color(0x997A8AFF), width: 1),
+          color: const Color(0x88111724),
+          border: Border.all(color: const Color(0x997A8AFF), width: 1),
         ),
         child: Column(
           children: <Widget>[

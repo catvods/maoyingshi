@@ -1,4 +1,5 @@
 import 'dart:async' show unawaited;
+import 'dart:convert' show jsonDecode;
 
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:material_ui/material_ui.dart';
@@ -244,10 +245,39 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
     };
     final List<String> imported = <String>[];
     final List<String> existed = <String>[];
+    final List<String> importedGlobal = <String>[];
+    final List<String> existedGlobal = <String>[];
     final List<String> failures = <String>[];
     for (final ThemeZipEntry zipEntry in entries) {
       if (zipEntry.text == null) {
         failures.add('${zipEntry.name}：${zipEntry.error ?? '无法读取'}');
+        continue;
+      }
+      if (zipEntry.name.toLowerCase().endsWith('.json')) {
+        // A global-theme file: name + four palette colours, saved
+        // through the same host store as the editor's user packages.
+        try {
+          final Map<String, String> palette =
+              _parseGlobalThemeJson(zipEntry.text!);
+          final ImportedGlobalTheme saved = await importGlobalTheme(
+            name: palette['name']!,
+            accent: palette['accent']!,
+            background: palette['background']!,
+            gradient: palette['gradient']!,
+            surface: palette['surface']!,
+          );
+          if (saved.existed) {
+            existedGlobal.add(saved.name);
+          } else {
+            importedGlobal.add(saved.name);
+          }
+        } on PlatformException catch (e) {
+          failures.add('${zipEntry.name}：${e.message ?? '不是有效的全局主题文件'}');
+        } on FormatException {
+          failures.add('${zipEntry.name}：不是有效的全局主题文件');
+        } catch (_) {
+          failures.add('${zipEntry.name}：导入失败');
+        }
         continue;
       }
       try {
@@ -267,19 +297,67 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
       }
     }
     if (mounted) setState(() => _filter = 2);
+    final int totalImported = imported.length + importedGlobal.length;
+    final int totalExisted = existed.length + existedGlobal.length;
+    final String globalNote =
+        importedGlobal.isEmpty ? '' : '（其中全局 ${importedGlobal.length} 个）';
     if (failures.isEmpty) {
-      _toast(existed.isEmpty
-          ? '已导入 ${imported.length} 个主题'
-          : '已导入 ${imported.length} 个主题，${existed.length} 个已存在');
+      _toast(totalExisted == 0
+          ? '已导入 $totalImported 个主题$globalNote'
+          : '已导入 $totalImported 个主题$globalNote，$totalExisted 个已存在');
     } else {
       await _showBatchResult(
         '批量导入结果',
-        '已导入 ${imported.length} 个'
-            '${existed.isEmpty ? '' : '，${existed.length} 个已存在'}，'
+        '已导入 $totalImported 个$globalNote'
+            '${totalExisted == 0 ? '' : '，$totalExisted 个已存在'}，'
             '${failures.length} 个失败：',
         failures,
       );
     }
+  }
+
+  /// Parses one global-theme JSON file ({type: 'moao-global-theme',
+  /// version: 1, name, accent, background, gradient, surface,
+  /// description?}) into the fields importGlobalTheme takes.
+  /// Throws [FormatException] on anything else.
+  Map<String, String> _parseGlobalThemeJson(String text) {
+    final Object? decoded = jsonDecode(text);
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('not a global theme file');
+    }
+    if (decoded['type'] != 'moao-global-theme') {
+      throw const FormatException('not a global theme file');
+    }
+    final Object? version = decoded['version'];
+    if (version != null && version != 1) {
+      throw const FormatException('unsupported global theme version');
+    }
+    final Map<String, String> out = <String, String>{};
+    for (final String key in <String>[
+      'name',
+      'accent',
+      'background',
+      'gradient',
+      'surface',
+    ]) {
+      final Object? value = decoded[key];
+      if (value is! String || value.trim().isEmpty) {
+        throw const FormatException('missing field');
+      }
+      out[key] = value.trim();
+    }
+    final RegExp hex = RegExp(r'^#?[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$');
+    for (final String key in <String>[
+      'accent',
+      'background',
+      'gradient',
+      'surface',
+    ]) {
+      if (!hex.hasMatch(out[key]!)) {
+        throw const FormatException('bad colour');
+      }
+    }
+    return out;
   }
 
   Future<void> _exportBatch() async {

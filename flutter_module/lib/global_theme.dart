@@ -317,6 +317,56 @@ Future<GlobalThemeEntry?> saveUserGlobalTheme({
   return null;
 }
 
+/// One imported global-theme JSON file.
+class ImportedGlobalTheme {
+  const ImportedGlobalTheme({
+    required this.id,
+    required this.name,
+    required this.existed,
+  });
+
+  final String id;
+  final String name;
+
+  /// True when a package with this name was already stored (the
+  /// import reported it as already there instead of duplicating it).
+  final bool existed;
+}
+
+/// Imports one global theme from its JSON form (name + the four
+/// palette colours) through the host: the host builds the full
+/// light+dark profile from the colours with the same builder the
+/// merged editor uses (GlobalThemes.buildPaletteProfile) and stores
+/// and stores it as a user package (UserGlobalThemes, the same store
+/// the editor writes). Returns the saved entry after refreshing the
+/// list. Throws on host errors.
+Future<ImportedGlobalTheme> importGlobalTheme({
+  required String name,
+  required String accent,
+  required String background,
+  required String gradient,
+  required String surface,
+}) async {
+  final Map<dynamic, dynamic>? map =
+      await _globalThemeChannel.invokeMethod<Map<dynamic, dynamic>>(
+    'importGlobalTheme',
+    <String, Object>{
+      'name': name,
+      'accent': accent,
+      'background': background,
+      'gradient': gradient,
+      'surface': surface,
+    },
+  );
+  if (map == null) throw StateError('global theme import failed');
+  await loadUserGlobalThemes();
+  return ImportedGlobalTheme(
+    id: '${map['id'] ?? ''}',
+    name: '${map['name'] ?? name}',
+    existed: map['existed'] == true,
+  );
+}
+
 /// Deletes a user package. The applied profile is data of its own,
 /// so deleting the package that is currently applied leaves the
 /// colors in place; the selection then reads as 自定义， exactly

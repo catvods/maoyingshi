@@ -1099,6 +1099,64 @@ public class C1ScreenActivity extends AppCompatActivity {
         return map;
     }
 
+    /**
+     * Imports one global theme from its JSON form: {name, accent,
+     * background, gradient, surface}. The four colours build the full
+     * light+dark profile through GlobalThemes.buildPaletteProfile —
+     * the same builder the merged editor uses — and the result is
+     * stored as a user package (UserGlobalThemes.save, the same store
+     * the editor writes), so the imported theme shows in the library
+     * under 我的 / 仅配色 like any hand-built package. A package with
+     * the same name already stored is reported as existed, not
+     * duplicated, so re-importing the same pack stays clean.
+     */
+    private Map<String, Object> importGlobalTheme(Map<?, ?> args) throws Exception {
+        if (args == null) throw new IllegalArgumentException("参数不正确");
+        String name = mergedArg(args, "name");
+        name = name == null ? "" : name.trim();
+        if (name.isEmpty()) throw new IllegalArgumentException("请填写主题名");
+        if (name.length() > 64) throw new IllegalArgumentException("主题名太长（最多 64 字）");
+        String accent = validGlobalThemeHex(mergedArg(args, "accent"));
+        String background = validGlobalThemeHex(mergedArg(args, "background"));
+        String gradient = validGlobalThemeHex(mergedArg(args, "gradient"));
+        String surface = validGlobalThemeHex(mergedArg(args, "surface"));
+        for (UserGlobalThemes.Entry entry : UserGlobalThemes.list()) {
+            if (entry.name.equals(name)) {
+                Map<String, Object> out = new HashMap<>();
+                out.put("id", entry.id);
+                out.put("name", entry.name);
+                out.put("existed", true);
+                return out;
+            }
+        }
+        String userId = UserGlobalThemes.newId(name);
+        ThemeProfile profile = GlobalThemes.buildPaletteProfile(
+                UserGlobalThemes.profileIdFor(userId), name,
+                accent, background, gradient, surface);
+        ThemeProfileValidator.Result validated = ThemeProfileValidator.validate(profile);
+        if (!validated.valid()) throw new IllegalArgumentException("配色不合法：" + validated.message());
+        UserGlobalThemes.Entry saved = UserGlobalThemes.save(userId, validated.profile());
+        Map<String, Object> out = new HashMap<>();
+        out.put("id", saved.id);
+        out.put("name", saved.name);
+        out.put("existed", false);
+        return out;
+    }
+
+    /**
+     * A strict "#RRGGBB" (or 8-digit) hex colour. Unlike parseColor
+     * this rejects bad input instead of silently substituting the
+     * fallback, so a bad file is reported rather than imported with
+     * the wrong colours.
+     */
+    private static String validGlobalThemeHex(String text) {
+        String value = text == null ? "" : text.trim();
+        if (!value.matches("#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})?")) {
+            throw new IllegalArgumentException("颜色格式不正确（要用 6 位十六进制，如 #c3d7b5）");
+        }
+        return value;
+    }
+
     // ------------------------------------------------------------------
     // Merged themes (theme library merge)
     //
@@ -1303,6 +1361,13 @@ public class C1ScreenActivity extends AppCompatActivity {
             else if ("saveUserGlobalTheme".equals(call.method)) {
                 try {
                     result.success(saveUserGlobalTheme(call.arguments instanceof Map ? (Map<?, ?>) call.arguments : null));
+                } catch (Exception e) {
+                    result.error("invalid_theme", e.getMessage(), null);
+                }
+            }
+            else if ("importGlobalTheme".equals(call.method)) {
+                try {
+                    result.success(importGlobalTheme(call.arguments instanceof Map ? (Map<?, ?>) call.arguments : null));
                 } catch (Exception e) {
                     result.error("invalid_theme", e.getMessage(), null);
                 }

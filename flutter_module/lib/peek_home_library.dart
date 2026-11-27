@@ -1110,7 +1110,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const Container(
+                    Container(
                       padding: EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
@@ -1161,7 +1161,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
   Widget _mistCard(PeekRecommendItem item) => Container(
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         padding: const EdgeInsets.all(12),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xCCF0F5F6),
           borderRadius: BorderRadius.circular(26),
           border: Border.all(color: Color(0xAA86BBBA), width: 1),
@@ -1187,9 +1187,9 @@ class _NativeFeatureState extends State<_NativeFeature> {
                         ),
                       ),
                     ),
-                    const Align(
+                    Align(
                       alignment: Alignment.topLeft,
-                      child: const Container(
+                      child: Container(
                         margin: EdgeInsets.all(12),
                         padding: EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
@@ -1245,7 +1245,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
   Widget _violetCard(PeekRecommendItem item) => Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         padding: const EdgeInsets.all(14),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xAA7180A6),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: Color(0x99BB939D), width: 1),
@@ -1257,7 +1257,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
               borderRadius: BorderRadius.circular(18),
               child: _sectionImage(item.pic, _placeholder),
             ),
-            const Container(
+            Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
                 gradient: LinearGradient(
@@ -1339,9 +1339,9 @@ class _NativeFeatureState extends State<_NativeFeature> {
                         ),
                       ),
                     ),
-                    const Align(
+                    Align(
                       alignment: Alignment.bottomCenter,
-                      child: const Container(
+                      child: Container(
                         margin: EdgeInsets.all(10),
                         padding: EdgeInsets.symmetric(
                             horizontal: 14, vertical: 6),
@@ -1521,7 +1521,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
 
   Widget _premiereCard(PeekRecommendItem item) => Container(
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0x992C101D),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: Color(0x77FF647B), width: 1),
@@ -1540,9 +1540,9 @@ class _NativeFeatureState extends State<_NativeFeature> {
               ),
               const _ThemePattern(
                   kind: 'curtain', color: Color(0xBBDE345E)),
-              const Align(
+              Align(
                 alignment: Alignment.topCenter,
-                child: const Container(
+                child: Container(
                   margin: EdgeInsets.symmetric(vertical: 12),
                   padding: EdgeInsets.symmetric(
                       horizontal: 16, vertical: 5),
@@ -1585,7 +1585,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
 
   Widget _prismCard(PeekRecommendItem item) => Container(
         margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -1650,7 +1650,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
                             ),
                           ),
                         ),
-                        const Container(
+                        Container(
                           width: 34,
                           height: 34,
                           alignment: Alignment.center,
@@ -1824,7 +1824,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
                         ),
                       ),
                       const SizedBox(height: 14),
-                      const Row(
+                      Row(
                         children: <Widget>[
                           Container(
                             padding: EdgeInsets.symmetric(
@@ -1871,7 +1871,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
   Widget _arcadePanel() => Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0x88111724),
           border: Border.all(color: Color(0xFFCAFF42), width: 1.5),
           boxShadow: <BoxShadow>[
@@ -1997,7 +1997,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
   Widget _rosePanel() => Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xCCEBE0C1),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: Color(0x887A5D77), width: 1),
@@ -2045,7 +2045,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
             ),
             _action(
               'openFavorite',
-              const Container(
+              Container(
                 width: 74,
                 height: 74,
                 alignment: Alignment.center,
@@ -2073,14 +2073,14 @@ class _NativeFeatureState extends State<_NativeFeature> {
   Widget _waxPanel() => Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xAACFB7BD),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Color(0x88D3A5AA), width: 1),
         ),
         child: Row(
           children: <Widget>[
-            const Container(
+            Container(
               width: 56,
               height: 96,
               alignment: Alignment.center,
@@ -2146,7 +2146,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
   Widget _ochrePanel() => Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xCCF4CBC8),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Color(0xAAD0BC2C), width: 1),
@@ -2192,7 +2192,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                const Container(
+                Container(
                   width: 44,
                   height: 44,
                   alignment: Alignment.center,
@@ -2232,7 +2232,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
   Widget _albumPanel() => Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0x99B7B0AE),
           borderRadius: BorderRadius.circular(26),
           border: Border.all(color: Color(0x88F5BAC9), width: 1),
@@ -2278,7 +2278,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
                 ],
               ),
             ),
-            const Container(
+            Container(
               width: 68,
               height: 86,
               decoration: BoxDecoration(
@@ -2438,7 +2438,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
                 width: 72,
                 height: 72,
                 alignment: Alignment.center,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0x3394E7E0),
                   borderRadius: BorderRadius.circular(24),
                   border:
@@ -2501,7 +2501,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
                 Expanded(
                   child: _action(
                     'openSearch',
-                    const Container(
+                    Container(
                       alignment: Alignment.center,
                       padding: EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
@@ -2536,7 +2536,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
                 Expanded(
                   child: _action(
                     'openHistory',
-                    const Container(
+                    Container(
                       alignment: Alignment.center,
                       padding: EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
@@ -2562,7 +2562,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
 
   Widget _celluloidPanel() => Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0x9925231F),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Color(0x77F1CE98), width: 1),
@@ -2623,7 +2623,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
                           ),
                           _action(
                             'openHistory',
-                            const Container(
+                            Container(
                               padding: EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
@@ -2791,7 +2791,7 @@ class _NativeFeatureState extends State<_NativeFeature> {
                         Expanded(
                           child: _action(
                             'openHistory',
-                            const Container(
+                            Container(
                               padding: EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 9),
                               decoration: BoxDecoration(
@@ -3339,7 +3339,7 @@ class _NativeShowcase extends StatelessWidget {
 
   Widget _polaroidCell() => Container(
         padding: const EdgeInsets.fromLTRB(9, 9, 9, 4),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xBBE8FFF8),
           borderRadius: BorderRadius.circular(24),
           boxShadow: <BoxShadow>[
@@ -3551,7 +3551,7 @@ class _NativeShowcase extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Container(
+                    Container(
                       width: 5,
                       height: 5,
                       decoration: BoxDecoration(
@@ -3560,7 +3560,7 @@ class _NativeShowcase extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Container(
+                    Container(
                       width: 5,
                       height: 5,
                       decoration: BoxDecoration(
@@ -3580,7 +3580,7 @@ class _NativeShowcase extends StatelessWidget {
                   ),
                 ),
               ),
-              const Container(
+              Container(
                 height: 3,
                 margin: EdgeInsets.fromLTRB(12, 8, 12, 0),
                 decoration: BoxDecoration(
@@ -3666,7 +3666,7 @@ class _NativeShowcase extends StatelessWidget {
 
   Widget _journalCell() => Container(
         padding: const EdgeInsets.all(10),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0x66122336),
           borderRadius: BorderRadius.circular(14),
         ),
@@ -3800,7 +3800,7 @@ class _NativeShowcase extends StatelessWidget {
           color: const Color(0x992C101D),
           child: Column(
             children: <Widget>[
-              const Container(height: 5, color: Color(0xFFFF647B)),
+              Container(height: 5, color: Color(0xFFFF647B)),
               Expanded(
                 child: Stack(
                   fit: StackFit.expand,
@@ -3903,7 +3903,7 @@ class _NativeShowcase extends StatelessWidget {
 
   Widget _prismCell() => Container(
         padding: const EdgeInsets.all(6),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0x6615233C),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(24),
@@ -4047,7 +4047,7 @@ class _NativeShowcase extends StatelessWidget {
 
   Widget _roseCell() => Container(
         padding: const EdgeInsets.all(9),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xDDEBD9AF),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: Color(0x66A893A3), width: 1),
@@ -4064,7 +4064,7 @@ class _NativeShowcase extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(0, 8, 0, 2),
               child: Row(
                 children: <Widget>[
-                  const Container(
+                  Container(
                       width: 28, height: 2, color: Color(0xFF6D536A)),
                   const Expanded(child: SizedBox.shrink()),
                   Text(
@@ -4092,7 +4092,7 @@ class _NativeShowcase extends StatelessWidget {
 
   Widget _mistCell() => Container(
         padding: const EdgeInsets.all(8),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xDDEAF1F4),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: Color(0x6686BBBA), width: 1),
@@ -4113,9 +4113,9 @@ class _NativeShowcase extends StatelessWidget {
                 color: const Color(0xFF252A30),
               ),
             ),
-            const Padding(
+            Padding(
               padding: const EdgeInsets.fromLTRB(0, 6, 0, 4),
-              child: const Container(
+              child: Container(
                 width: 42,
                 height: 3,
                 decoration: BoxDecoration(
@@ -4131,7 +4131,7 @@ class _NativeShowcase extends StatelessWidget {
   Widget _waxCell() => ClipRRect(
         borderRadius: BorderRadius.circular(18),
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xDDC3B8BE),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: Color(0x66D3A5AA), width: 1),
@@ -4142,7 +4142,7 @@ class _NativeShowcase extends StatelessWidget {
                 width: 54,
                 height: double.infinity,
                 alignment: Alignment.center,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0x77D3A5AA),
                   borderRadius: BorderRadius.circular(18),
                 ),
@@ -4207,7 +4207,7 @@ class _NativeShowcase extends StatelessWidget {
   Widget _ochreCell() => ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xDDAAB0BD),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Color(0x88D0BC2C), width: 1),
@@ -4347,7 +4347,7 @@ class _NativeShowcase extends StatelessWidget {
 
   Widget _albumCell() => Container(
         padding: const EdgeInsets.all(8),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xDDB7B0AE),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(26),
@@ -4457,7 +4457,7 @@ class _NativeShowcase extends StatelessWidget {
 
   Widget _arcadeCell() => Container(
         padding: const EdgeInsets.all(4),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0x88111724),
           border: Border.all(color: Color(0x997A8AFF), width: 1),
         ),

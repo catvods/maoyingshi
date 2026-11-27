@@ -132,6 +132,21 @@ const Map<String, MergedPalette> _leePalettes = <String, MergedPalette>{
       accent: '#afc5d2', background: '#cfa7bd', gradient: '#cfa7bd', surface: '#cfa7bd'),
   'design-arch': MergedPalette(
       accent: '#cbb9ff', background: '#221d36', gradient: '#403357', surface: '#342d49'),
+  // Six new merged pairings (2026-11-27): the four-colour seeds
+  // are the v1 inputs of the six new global themes, verbatim
+  // (lowercase hex, same order accent/background/gradient/surface).
+  'design-moon': MergedPalette(
+      accent: '#5b8c6b', background: '#e8efe6', gradient: '#b9cdb4', surface: '#f4f7f2'),
+  'design-sunset': MergedPalette(
+      accent: '#ff9e4f', background: '#2a1608', gradient: '#7a3e12', surface: '#3a2110'),
+  'design-obsidian': MergedPalette(
+      accent: '#d4af37', background: '#121212', gradient: '#2a2a1e', surface: '#1e1e1a'),
+  'design-petal': MergedPalette(
+      accent: '#e88aa0', background: '#fdf0f2', gradient: '#f5c6d0', surface: '#fff8fa'),
+  'design-starfield': MergedPalette(
+      accent: '#e86aa8', background: '#22101c', gradient: '#5e2347', surface: '#2e1626'),
+  'design-wheat': MergedPalette(
+      accent: '#c99a2e', background: '#faf3df', gradient: '#e8d5a0', surface: '#fffbef'),
 };
 
 /// Palettes for the PeekPro structures, derived from each catalog
@@ -292,6 +307,23 @@ const Map<String, MergedComponentDefaults> _leeComponentDefaults =
       layout: 'posters', cardRadius: 20, navigationOpacity: 0.28),
   'design-arch': MergedComponentDefaults(
       layout: 'posters', cardRadius: 20, navigationOpacity: 0.28),
+  // Six new merged pairings (2026-11-27): layout/cardRadius/
+  // titleFont/navigation match each new template's own meta; the
+  // grid column counts live in the templates (2 for moon/sunset/
+  // starfield, 3 for obsidian/petal/wheat) — the bridge only
+  // injects meta gridColumns for parametric editor themes.
+  'design-moon': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 12, navigationOpacity: 0.28, titleFont: 'serif'),
+  'design-sunset': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 120, navigationOpacity: 0.28, titleFont: 'serif'),
+  'design-obsidian': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 6, floatingNavigation: false, navigationOpacity: 0.28, titleFont: 'serif'),
+  'design-petal': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 16, navigationOpacity: 0.28),
+  'design-starfield': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 40, navigationOpacity: 0.28),
+  'design-wheat': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 10, navigationOpacity: 0.28, titleFont: 'serif'),
 };
 
 MergedComponentDefaults componentDefaultsFor(String structureId) =>

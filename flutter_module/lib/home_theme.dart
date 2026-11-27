@@ -506,6 +506,87 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     barOpacity: 0.28,
     barFloating: true,
   ),
+  // Six new merged pairings (2026-11-27): a fresh home structure
+  // per global palette — new RFW templates, not a reuse of the
+  // 38 existing structures. Each pairs with the v2 global theme
+  // of the same name (see _leePalettes); the merged card carries
+  // the layout suffix so it never collides with the palette-only
+  // card of the same name. All six are pure-template designs
+  // (nativeDesign: false in their meta): the new designStyle
+  // names have no native Feature/Showcase fragment, so the hero
+  // and grid come from the template itself.
+  HomeThemeEntry(
+    id: 'design-moon',
+    name: '青瓷映月 · 刊头',
+    tag: '月洞门刊头 · 拱形海报',
+    description: '青瓷釉色的淡绿底配月白面板，月洞门拱形海报衬着 hero 里的大月盘。',
+    colors: <Color>[Color(0xFFE8EFE6), Color(0xFFB9CDB4), Color(0xFF5B8C6B)],
+    dark: false,
+    barTint: Color(0xFFE8EFE6),
+    barAccent: Color(0xFF5B8C6B),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
+  HomeThemeEntry(
+    id: 'design-sunset',
+    name: '熔金落日 · 唱片',
+    tag: '落日圆盘 · 发光日盘',
+    description: '熔化的金色落日：hero 里一轮落日，网格是两列发光日盘，没有唱片孔。',
+    colors: <Color>[Color(0xFF2A1608), Color(0xFF7A3E12), Color(0xFFFF9E4F)],
+    dark: true,
+    barTint: Color(0xFF2A1608),
+    barAccent: Color(0xFFFF9E4F),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
+  HomeThemeEntry(
+    id: 'design-obsidian',
+    name: '曜石鎏金 · 暗夜',
+    tag: '曜石独石板 · 金线黑卡',
+    description: '黑曜石底配鎏金点缀：hero 是一块高瘦黑板，网格是三列金线黑石板卡。',
+    colors: <Color>[Color(0xFF121212), Color(0xFF2A2A1E), Color(0xFFD4AF37)],
+    dark: true,
+    barTint: Color(0xFF121212),
+    barAccent: Color(0xFFD4AF37),
+    barOpacity: 0.28,
+    barFloating: false,
+  ),
+  HomeThemeEntry(
+    id: 'design-petal',
+    name: '樱落春晓 · 玫瑰',
+    tag: '樱花横幅 · 花瓣形卡',
+    description: '樱花粉淡底：hero 是轻盈的樱花横幅，海报是不对称圆角的花瓣形卡。',
+    colors: <Color>[Color(0xFFFDF0F2), Color(0xFFF5C6D0), Color(0xFFE88AA0)],
+    dark: false,
+    barTint: Color(0xFFFDF0F2),
+    barAccent: Color(0xFFE88AA0),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
+  HomeThemeEntry(
+    id: 'design-starfield',
+    name: '星野蔷薇 · 极光',
+    tag: '星野横幅 · 玫瑰辉光胶囊',
+    description: '深夜星野下的玫红蔷薇：hero 是缀着星点的深底，网格是两列玫瑰辉光胶囊。',
+    colors: <Color>[Color(0xFF22101C), Color(0xFF5E2347), Color(0xFFE86AA8)],
+    dark: true,
+    barTint: Color(0xFF22101C),
+    barAccent: Color(0xFFE86AA8),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
+  HomeThemeEntry(
+    id: 'design-wheat',
+    name: '秋日麦田 · 相册',
+    tag: '麦田金色横幅 · 高竖卡',
+    description: '麦金浅底：hero 是暖金的高横幅，海报是比常规更竖的麦金框高竖卡。',
+    colors: <Color>[Color(0xFFFAF3DF), Color(0xFFE8D5A0), Color(0xFFC99A2E)],
+    dark: false,
+    barTint: Color(0xFFFAF3DF),
+    barAccent: Color(0xFFC99A2E),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
 ];
 
 HomeThemeEntry homeThemeEntry(String id) {

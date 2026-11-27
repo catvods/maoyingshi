@@ -1,0 +1,54 @@
+// leecat-theme: {"id":"builtin-design-starfield","name":"星野蔷薇 · 极光","description":"星野横幅 · 玫瑰辉光胶囊 · 深紫底","accent":"#e86aa8","backgroundColors":["#22101c","#5e2347"],"cardRadius":40.0,"layout":"posters","hero":true,"floatingNavigation":true,"glassNavigation":false,"cinema":false,"liquidGlass":false,"designStyle":"starfield","titleFont":"sans","surfaceColor":"#2e1626","backgroundOpacity":0.06,"panelOpacity":0.72,"navigationOpacity":0.28,"nativeDesign":false}
+// 星野蔷薇 · 极光 · 可编辑主题源码。颜色为 0xAARRGGBB，AA 控制透明度。
+import core.widgets;
+import peek.home;
+widget Poster = GestureDetector(
+ onTap: event "openItem" { index: args.item.index },
+ child: Container(decoration: { type: "box", color: 0x6622101c,
+   borderRadius: [{ x: 40.0 }], border: [ { color: 0xffe86aa8, width: 1.0 } ] },
+   child: ClipRRect(borderRadius: [{ x: 40.0 }], child: Stack(fit: "expand", children: [
+     T4Image(url: args.item.pic),
+     Align(alignment: {x: 0.0, y: 1.0}, child: PosterCaption(name: args.item.name, remarks: args.item.remarks))
+   ]))
+ ));
+widget RowItem = GestureDetector(onTap: event "openItem" { index: args.item.index },
+ child: Container(decoration: { type: "box", color: 0x6622101c, borderRadius: [{ x: 40.0 }] },
+ child: Row(children: [Container(width: 90.0, child: T4Image(url: args.item.pic)), Expanded(child: Padding(padding: [12.0], child: Column(mainAxisAlignment: "center", crossAxisAlignment: "start", children: [
+ Text(text: args.item.name, maxLines: 1, overflow: "ellipsis", style: {color: 0xfffdf0f5, fontSize: 16.0, fontWeight: "w700"}),
+ Text(text: args.item.remarks, maxLines: 1, overflow: "ellipsis", style: {color: 0xfffdf0f5, fontSize: 12.0})]))) ])));
+widget TextItem = GestureDetector(onTap: event "openItem" {index: args.item.index}, child: Container(padding: [12.0, 8.0], color: 0x6622101c, child: Row(children: [Expanded(child: Text(text: args.item.name, maxLines: 1, overflow: "ellipsis", style: {color: 0xfffdf0f5, fontSize: 14.0})), Text(text: args.item.remarks, maxLines: 1, style: {color: 0xfffdf0f5, fontSize: 11.0})])));
+widget Item = switch data.home.displayStyle { "textList": TextItem(item: args.item), "list": RowItem(item: args.item), default: Poster(item: args.item) };
+widget FilterGroup = Container(height: 39.0, child: Row(children: [
+ Container(width: 58.0, alignment: {x: -1.0, y: 0.0}, padding: [8.0, 0.0], child: Text(text: args.group.name, maxLines: 1, overflow: "ellipsis", style: {color: 0xfffdf0f5, fontSize: 12.0})),
+ Expanded(child: ListView(scrollDirection: "horizontal", children: [
+ ...for option in args.group.options: GestureDetector(onTap: event "selectFilter" {key: option.filterKey, value: option.value}, child: Container(alignment: {x: 0.0, y: 0.0}, margin: [4.0], padding: [10.0, 4.0],
+ decoration: {type: "box", color: switch option.selected {true: 0x55e86aa8, false: 0x3322101c}, borderRadius: [{ x: 40.0 }]}, child: Text(text: option.name, textAlign: "center", maxLines: 1, style: {color: 0xfffdf0f5, fontSize: 12.0})))
+]))]));
+widget Header = Column(children: [
+ Container(height: 54.0, child: ListView(scrollDirection: "horizontal", children: [...for item in data.home.classes: Tab(item: item)])),
+ switch data.home.hasFilters {true: switch data.home.showFilters {true: Container(height: data.home.filterPanelHeight, margin: [0.0, 4.0, 0.0, 6.0], child: ListView(children: [...for group in data.home.filters: FilterGroup(group: group)])), false: SizedBoxShrink()}, false: SizedBoxShrink()}
+]);
+widget Tab = GestureDetector(onTap: event "selectType" { typeId: args.item.typeId },
+ child: Container(alignment: {x: 0.0, y: 0.0}, margin: [ 4.0 ], padding: [ 12.0, 8.0 ], decoration: { type: "box",
+ color: switch args.item.selected { true: 0x55e86aa8, false: 0x3322101c }, borderRadius: [{ x: 40.0 }] },
+ child: Text(text: args.item.typeName, textAlign: "center", maxLines: 1, style: { color: 0xfffdf0f5, fontSize: 14.0 })));
+widget root = PeekStickyGrid(
+ heroHeight: switch data.home.hasRecommend { true: data.home.heroHeight, false: 0.0 },
+ pinnedHeight: data.home.stickyHeaderHeight, sectionHeight: 0.0,
+ crossAxisCount: switch data.home.displayStyle {"textList": 1, "list": 1, "largeGrid": data.home.largeGridColumns, "banner": data.home.bannerColumns, default: 2}, childAspectRatio: switch data.home.displayStyle {"textList": data.home.textListRatio, "list": data.home.wideListRatio, "banner": 1.5, default: 0.62},
+ horizontalPadding: 12.0, mainAxisSpacing: 14.0, crossAxisSpacing: 12.0, bottomPadding: 24.0,
+ hero: PeekCarousel(autoPlay: true, interval: 5000, viewportFraction: 0.94,
+ children: [...for item in data.home.home.recommend: GestureDetector(
+ onTap: event "openRecommend" { index: item.index }, child: Stack(fit: "expand", children: [
+ T4Image(url: item.pic),     Align(alignment: {x: -0.7, y: -0.8}, child: Container(width: 5.0, height: 5.0, decoration: { type: "box", color: 0xFFFFFFFF, borderRadius: [ { x: 2.5 } ] })),
+     Align(alignment: {x: 0.3, y: -0.6}, child: Container(width: 4.0, height: 4.0, decoration: { type: "box", color: 0xCCFFFFFF, borderRadius: [ { x: 2.0 } ] })),
+     Align(alignment: {x: 0.75, y: -0.75}, child: Container(width: 6.0, height: 6.0, decoration: { type: "box", color: 0xFFE86AA8, borderRadius: [ { x: 3.0 } ] })),
+     Align(alignment: {x: -0.2, y: -0.85}, child: Container(width: 3.0, height: 3.0, decoration: { type: "box", color: 0xFFFFFFFF, borderRadius: [ { x: 1.5 } ] })),
+     Align(alignment: {x: 0.55, y: -0.35}, child: Container(width: 4.0, height: 4.0, decoration: { type: "box", color: 0xB3FFFFFF, borderRadius: [ { x: 2.0 } ] })),
+ Align(alignment: { x: 0.0, y: 1.0 }, child: Container(color: 0x99000000,
+ padding: [ 16.0 ], child: Row(children: [Expanded(child: Text(text: item.name, maxLines: 1, overflow: "ellipsis", style: { color: 0xFFFFFFFF, fontSize: 20.0 }))])))
+ ]))]),
+ pinnedHeader: Header(),
+ sectionHeader: SizedBoxShrink(), empty: Center(child: Text(text: "暂无内容", style: { color: 0xfffdf0f5 })),
+ children: [...for item in data.home.items: Item(item: item)]
+);

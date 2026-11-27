@@ -109,6 +109,29 @@ const Map<String, MergedPalette> _leePalettes = <String, MergedPalette>{
       accent: '#c9a0ff', background: '#211831', gradient: '#36254b', surface: '#30223f'),
   'design-noir': MergedPalette(
       accent: '#e8c680', background: '#18130e', gradient: '#322617', surface: '#292117'),
+  // Morandi eight + arch (2026-11-27 adaptivity round): colours are
+  // the pool table records verbatim. Morandi pages are flat (one
+  // background int per style), so gradient/surface are the
+  // background itself; the arch theme keeps its own two-colour
+  // background pair + surface from its Rkb meta.
+  'morandi-ash': MergedPalette(
+      accent: '#cd7461', background: '#a19ca2', gradient: '#a19ca2', surface: '#a19ca2'),
+  'morandi-rose': MergedPalette(
+      accent: '#6d536a', background: '#ebd9af', gradient: '#ebd9af', surface: '#ebd9af'),
+  'morandi-mist': MergedPalette(
+      accent: '#86bbba', background: '#bcceda', gradient: '#bcceda', surface: '#bcceda'),
+  'morandi-wax': MergedPalette(
+      accent: '#d3a5aa', background: '#cfb7bd', gradient: '#cfb7bd', surface: '#cfb7bd'),
+  'morandi-ochre': MergedPalette(
+      accent: '#d0bc2c', background: '#aab0bd', gradient: '#aab0bd', surface: '#aab0bd'),
+  'morandi-violet': MergedPalette(
+      accent: '#bb939d', background: '#7180a6', gradient: '#7180a6', surface: '#7180a6'),
+  'morandi-album': MergedPalette(
+      accent: '#f5bac9', background: '#7595a3', gradient: '#7595a3', surface: '#7595a3'),
+  'morandi-arch': MergedPalette(
+      accent: '#afc5d2', background: '#cfa7bd', gradient: '#cfa7bd', surface: '#cfa7bd'),
+  'design-arch': MergedPalette(
+      accent: '#cbb9ff', background: '#221d36', gradient: '#403357', surface: '#342d49'),
 };
 
 /// Palettes for the PeekPro structures, derived from each catalog
@@ -248,6 +271,27 @@ const Map<String, MergedComponentDefaults> _leeComponentDefaults =
       layout: 'posters', cardRadius: 4, floatingNavigation: false, navigationOpacity: 0.28, titleFont: 'mono'),
   'design-noir': MergedComponentDefaults(
       layout: 'posters', cardRadius: 6, floatingNavigation: false, navigationOpacity: 0.28, titleFont: 'serif'),
+  // Morandi eight + arch: cardRadius is each style's Showcase outer
+  // radius from its recovered fragment; the rest are the Lee
+  // native defaults (posters / floating / 0.28 / sans).
+  'morandi-ash': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 18, navigationOpacity: 0.28),
+  'morandi-rose': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 22, navigationOpacity: 0.28),
+  'morandi-mist': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 22, navigationOpacity: 0.28),
+  'morandi-wax': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 18, navigationOpacity: 0.28),
+  'morandi-ochre': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 8, navigationOpacity: 0.28),
+  'morandi-violet': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 20, navigationOpacity: 0.28),
+  'morandi-album': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 26, navigationOpacity: 0.28),
+  'morandi-arch': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 20, navigationOpacity: 0.28),
+  'design-arch': MergedComponentDefaults(
+      layout: 'posters', cardRadius: 20, navigationOpacity: 0.28),
 };
 
 MergedComponentDefaults componentDefaultsFor(String structureId) =>

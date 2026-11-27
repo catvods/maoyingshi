@@ -197,6 +197,16 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     _designParams = params;
     PeekHomeHooks.designParams = params;
     PeekHomeHooks.titleFontFamily = params?.titleFontFamily;
+    // Reset the per-theme data-field injections before reading the
+    // new theme: a previous theme's parametric values (an editor
+    // theme's gridColumns/heroHeight, a cycled displayStyle, a
+    // hero:false) must not leak into the next theme. Every theme
+    // starts in its own native layout; the parametric block below
+    // re-applies whatever the new theme actually declares.
+    _paramHero = true;
+    _paramHeroHeight = null;
+    _paramGridColumns = null;
+    _displayStyle = 'grid';
     if (params == null) return;
     if (params.hero != null) _paramHero = params.hero!;
     if (!params.parametric) return;
@@ -647,7 +657,16 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
           !PeekHomeHooks.nativeFeature,
       'hasManyClasses': screen.tabs.length > 5,
       'displayStyle': _displayStyle,
-      'gridColumns': _paramGridColumns ?? 3,
+      // The grid column key resolves through this data field (every
+      // native root template's crossAxisCount default branch reads
+      // data.home.gridColumns; the pool carries the key, never the
+      // number). LeeCat's native grids are two-column — the user's
+      // side-by-side shows two large discs/cards where the template
+      // default gave three — so a native-design theme feeds 2 here.
+      // An editor theme's own gridColumns (its meta) still wins
+      // when set; classic and PeekPro themes keep 3.
+      'gridColumns': _paramGridColumns ??
+          (_designParams?.nativeDesign == true ? 2 : 3),
       'largeGridColumns': 2,
       'bannerColumns': 2,
       // The native design layer's column/ratio fields: the

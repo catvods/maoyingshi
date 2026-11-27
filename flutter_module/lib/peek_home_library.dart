@@ -4527,298 +4527,46 @@ class _NativeShowcase extends StatelessWidget {
       );
 }
 
+/// The native grid's section header ("为你呈现 {{总数}} 部"):
+/// the pool's lone "为你呈现" string sits next to a "{{0}} 部"
+/// count string, and every root template puts its Section header
+/// above a PeekStickyGrid that iterates data.home.items — so the
+/// title belongs to the main grid, not to a banner-fed recommend
+/// row (no root has such a row; the only horizontal things are
+/// the Feature carousel and the 54px tab row). The count is the
+/// grid's own item total. Ink follows the design layer's own
+/// rule (page-background luminance, the same pair the Showcase
+/// captions use).
+class _NativeSectionHeader extends StatelessWidget {
+  const _NativeSectionHeader({required this.design, required this.count});
 
-/// LeeCat's native design home renders recommend as a titled
-/// section ("为你呈现") below the filter area — not as the RFW
-/// template's hero carousel above the pinned header. The
-/// exported RFW templates have no such section (their
-/// sectionHeader is empty), so the design layer draws it here:
-/// title row + a horizontal row of recommend posters whose
-/// shape follows the theme's declared designStyle through
-/// [ThemeDesignParams.posterShape] — disc for vinyl, ticket
-/// stub for 午夜票根， polaroid for 海盐相册， radar rings for
-/// 深空雷达， double gold frame for 黑金典藏， and so on (each
-/// mapping evidenced by the theme's own description; see
-/// theme_design.dart). Never keyed on a theme id.
-class _NativeRecommendSection extends StatelessWidget {
-  const _NativeRecommendSection({
-    required this.items,
-    required this.design,
-  });
-
-  final List<PeekRecommendItem> items;
   final ThemeDesignParams? design;
-
-  // LeeCat's own section title, verbatim.
-  static const String _title = '为你呈现';
-
-  String get _shape => design?.posterShape ?? 'source';
-
-  Color get _accent =>
-      design?.accent ?? const Color(0xFFFFBD70);
-
-  // The templates' two text colours: cream on dark bases,
-  // graphite on light ones — same pair the Lee sources write
-  // into their own captions.
-  Color get _textColor {
-    final List<Color> base = design?.backgroundColors ?? const <Color>[];
-    if (base.isEmpty) return const Color(0xFFFFE8CD);
-    return base.first.computeLuminance() < 0.35
-        ? const Color(0xFFFFE8CD)
-        : const Color(0xFF252A30);
-  }
-
-  // Per-shape item geometry: wide styles take a wider cell,
-  // the polaroid carries its name inside the white frame.
-  double get _itemWidth => switch (_shape) {
-        'aurora' => 160,
-        'cinema' => 180,
-        _ => 108,
-      };
-
-  double get _posterHeight => switch (_shape) {
-        'disc' => 108,
-        'aurora' => 100,
-        'cinema' => 112,
-        'matrix' => 108,
-        _ => 162,
-      };
-
-  bool get _nameInside => _shape == 'polaroid';
-
-  double get _itemHeight => _posterHeight + (_nameInside ? 0 : 30);
-
-  Widget _buildPoster(PeekRecommendItem item) {
-    final String pic = item.pic;
-    final Color placeholder =
-        design?.surfaceColor ?? const Color(0xFF37474F);
-    final double radius = design?.cardRadius ?? 16;
-    switch (_shape) {
-      case 'disc':
-        return _DiscPoster(pic: pic, accent: _accent, size: 108);
-      case 'ticket':
-        return _TicketPoster(
-          pic: pic,
-          accent: _accent,
-          radius: radius,
-          width: 108,
-          height: 162,
-          placeholder: placeholder,
-        );
-      case 'polaroid':
-        return _PolaroidPoster(
-          pic: pic,
-          name: item.name,
-          fontFamily: PeekHomeHooks.titleFontFamily,
-          width: 108,
-          height: 162,
-          placeholder: placeholder,
-        );
-      case 'radar':
-        return _RadarPoster(
-          pic: pic,
-          accent: _accent,
-          radius: radius,
-          width: 108,
-          height: 162,
-          placeholder: placeholder,
-        );
-      case 'gold':
-        return _GoldPoster(
-          pic: pic,
-          accent: _accent,
-          radius: radius,
-          width: 108,
-          height: 162,
-          placeholder: placeholder,
-        );
-      case 'paper':
-        return _PaperPoster(
-          pic: pic,
-          accent: _accent,
-          radius: radius,
-          width: 108,
-          height: 162,
-          placeholder: placeholder,
-        );
-      case 'polar':
-        return _PolarPoster(
-          pic: pic,
-          accent: _accent,
-          radius: radius,
-          width: 108,
-          height: 162,
-          placeholder: placeholder,
-        );
-      case 'matrix':
-        return _MatrixPoster(
-          pic: pic,
-          accent: _accent,
-          radius: radius,
-          width: 108,
-          height: 108,
-          placeholder: placeholder,
-        );
-      case 'aurora':
-        return _WidePoster(
-          pic: pic,
-          accent: _accent,
-          radius: radius,
-          width: 160,
-          height: 100,
-          placeholder: placeholder,
-        );
-      case 'cinema':
-        return _WidePoster(
-          pic: pic,
-          accent: _accent,
-          radius: radius,
-          width: 180,
-          height: 112,
-          placeholder: placeholder,
-        );
-      case 'capsule':
-        return _RectPoster(
-          pic: pic,
-          accent: _accent,
-          radius: 30,
-          width: 108,
-          height: 162,
-          placeholder: placeholder,
-          glow: true,
-        );
-      default:
-        return _RectPoster(
-          pic: pic,
-          accent: _accent,
-          radius: radius,
-          width: 108,
-          height: 162,
-          placeholder: placeholder,
-        );
-    }
-  }
+  final int count;
 
   @override
   Widget build(BuildContext context) {
-    final String? fontFamily = PeekHomeHooks.titleFontFamily;
+    final List<Color> bases = design?.backgroundColors ?? const <Color>[];
+    final Color ink = bases.isEmpty || bases.first.computeLuminance() < 0.35
+        ? const Color(0xFFFFE8CD)
+        : const Color(0xFF252A30);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 0, 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+      child: Row(
         children: <Widget>[
           Text(
-            _title,
+            '为你呈现',
             style: TextStyle(
-              fontFamily: fontFamily,
-              color: _textColor,
-              fontSize: 17,
+              color: ink,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: _itemHeight,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: items.length,
-              separatorBuilder: (BuildContext context, int index) =>
-                  const SizedBox(width: 14),
-              itemBuilder: (BuildContext context, int index) {
-                final PeekRecommendItem item = items[index];
-                return GestureDetector(
-                  onTap: () =>
-                      PeekHomeHooks.onRecommendTap?.call(item.index),
-                  child: SizedBox(
-                    width: _itemWidth,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        _buildPoster(item),
-                        if (!_nameInside) ...<Widget>[
-                          const SizedBox(height: 6),
-                          Text(
-                            item.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: fontFamily,
-                              color: _textColor,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// One record disc: circular cover, accent ring, spindle dot.
-/// The same treatment the carousel applies to vinyl's hero
-/// slides, factored out for the native recommend section.
-class _DiscPoster extends StatelessWidget {
-  const _DiscPoster({
-    required this.pic,
-    required this.accent,
-    required this.size,
-  });
-
-  final String pic;
-  final Color accent;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: accent, width: 2),
-              boxShadow: const <BoxShadow>[
-                BoxShadow(
-                  color: Color(0x55000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 6),
-                ),
-              ],
-            ),
-            child: ClipOval(
-              child: pic.isEmpty
-                  ? const ColoredBox(color: Color(0xFF37474F))
-                  : Image.network(
-                      pic,
-                      fit: BoxFit.cover,
-                      errorBuilder: (BuildContext context, Object error,
-                              StackTrace? stackTrace) =>
-                          const ColoredBox(color: Color(0xFF37474F)),
-                    ),
-            ),
-          ),
-          Center(
-            child: Container(
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: accent,
-                border:
-                    Border.all(color: const Color(0x66000000), width: 2),
-              ),
+          const Spacer(),
+          Text(
+            '$count 部',
+            style: TextStyle(
+              color: ink.withValues(alpha: 0.65),
+              fontSize: 13,
             ),
           ),
         ],
@@ -5071,52 +4819,6 @@ class _TicketClipper extends CustomClipper<Path> {
   bool shouldReclip(_TicketClipper old) => old.radius != radius;
 }
 
-class _TicketPoster extends StatelessWidget {
-  const _TicketPoster({
-    required this.pic,
-    required this.accent,
-    required this.radius,
-    required this.width,
-    required this.height,
-    required this.placeholder,
-  });
-
-  final String pic;
-  final Color accent;
-  final double radius;
-  final double width;
-  final double height;
-  final Color placeholder;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      height: height,
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          ClipPath(
-            clipper: _TicketClipper(radius: radius),
-            child: _sectionImage(pic, placeholder),
-          ),
-          // Dashed perforation across the stub, just above the
-          // lower third — the "虚线分隔" of the description.
-          Positioned(
-            left: 8,
-            right: 8,
-            bottom: height * 0.28,
-            child: _DashedLine(color: accent),
-          ),
-          CustomPaint(
-            painter: _TicketOutlinePainter(radius: radius, accent: accent),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// Outlines the ticket silhouette (same path as the clipper)
 /// so the stub keeps its 1px accent border.
 class _TicketOutlinePainter extends CustomPainter {
@@ -5195,387 +4897,6 @@ class _DashedLinePainter extends CustomPainter {
   @override
   bool shouldRepaint(_DashedLinePainter old) =>
       old.color != color || old.dash != dash || old.gap != gap;
-}
-
-/// Polaroid (海盐相册 "拍立得卡片 · 留白题签"): white frame,
-/// thick bottom strip carrying the title in ink — the name
-/// lives inside the frame, not below it.
-class _PolaroidPoster extends StatelessWidget {
-  const _PolaroidPoster({
-    required this.pic,
-    required this.name,
-    required this.fontFamily,
-    required this.width,
-    required this.height,
-    required this.placeholder,
-  });
-
-  final String pic;
-  final String name;
-  final String? fontFamily;
-  final double width;
-  final double height;
-  final Color placeholder;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-      decoration: const BoxDecoration(
-        color: Color(0xFFFDFDF8),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: <Widget>[
-          Expanded(child: _sectionImage(pic, placeholder)),
-          SizedBox(
-            height: 30,
-            child: Center(
-              child: Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: fontFamily,
-                  color: const Color(0xFF252A30),
-                  fontSize: 11.5,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Radar (深空雷达 "环线装饰"): concentric accent rings over
-/// the poster + a blip dot, clipped to the poster bounds.
-class _RadarPoster extends StatelessWidget {
-  const _RadarPoster({
-    required this.pic,
-    required this.accent,
-    required this.radius,
-    required this.width,
-    required this.height,
-    required this.placeholder,
-  });
-
-  final String pic;
-  final Color accent;
-  final double radius;
-  final double width;
-  final double height;
-  final Color placeholder;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      height: height,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            _sectionImage(pic, placeholder),
-            Center(
-              child: Container(
-                width: 118,
-                height: 118,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: accent.withValues(alpha: 0.35), width: 1),
-                ),
-              ),
-            ),
-            Center(
-              child: Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: accent.withValues(alpha: 0.5), width: 1),
-                ),
-              ),
-            ),
-            Center(
-              child: Container(
-                width: 7,
-                height: 7,
-                decoration:
-                    BoxDecoration(shape: BoxShape.circle, color: accent),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(radius),
-                border: Border.all(color: accent, width: 1),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Gold frame (黑金典藏 "金线装帧 · 典藏序号"): double gold
-/// rule — outer 1px accent + inner 1px at half alpha, inset.
-class _GoldPoster extends StatelessWidget {
-  const _GoldPoster({
-    required this.pic,
-    required this.accent,
-    required this.radius,
-    required this.width,
-    required this.height,
-    required this.placeholder,
-  });
-
-  final String pic;
-  final Color accent;
-  final double radius;
-  final double width;
-  final double height;
-  final Color placeholder;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      height: height,
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          ClipRRect(
-            borderRadius: BorderRadius.circular(radius),
-            child: _sectionImage(pic, placeholder),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(radius),
-              border: Border.all(color: accent, width: 1),
-            ),
-          ),
-          Positioned(
-            left: 5,
-            top: 5,
-            right: 5,
-            bottom: 5,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular((radius - 2).clamp(0, 99)),
-                border: Border.all(
-                    color: accent.withValues(alpha: 0.55), width: 1),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Paper (玫瑰书房 "细线目录"): the poster with a fine accent
-/// rule under it — the editorial list's divider.
-class _PaperPoster extends StatelessWidget {
-  const _PaperPoster({
-    required this.pic,
-    required this.accent,
-    required this.radius,
-    required this.width,
-    required this.height,
-    required this.placeholder,
-  });
-
-  final String pic;
-  final Color accent;
-  final double radius;
-  final double width;
-  final double height;
-  final Color placeholder;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      height: height,
-      child: Column(
-        children: <Widget>[
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(radius),
-              child: Stack(
-                fit: StackFit.expand,
-                children: <Widget>[
-                  _sectionImage(pic, placeholder),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(radius),
-                      border: Border.all(
-                          color: accent.withValues(alpha: 0.6), width: 1),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 5),
-          Container(height: 1, color: accent.withValues(alpha: 0.6)),
-        ],
-      ),
-    );
-  }
-}
-
-/// Polar (极地视窗 "蓝色侧签"): a vertical accent tab on the
-/// poster's left edge.
-class _PolarPoster extends StatelessWidget {
-  const _PolarPoster({
-    required this.pic,
-    required this.accent,
-    required this.radius,
-    required this.width,
-    required this.height,
-    required this.placeholder,
-  });
-
-  final String pic;
-  final Color accent;
-  final double radius;
-  final double width;
-  final double height;
-  final Color placeholder;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      height: height,
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          _RectPoster(
-            pic: pic,
-            accent: accent,
-            radius: radius,
-            width: width,
-            height: height,
-            placeholder: placeholder,
-          ),
-          Positioned(
-            left: 0,
-            top: 14,
-            bottom: 14,
-            width: 5,
-            child: Container(
-              decoration: BoxDecoration(
-                color: accent,
-                borderRadius: const BorderRadius.horizontal(
-                    right: Radius.circular(3)),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Matrix (赛博矩阵 "电路网格 · 方卡矩阵"): square card with
-/// a faint circuit grid over the image.
-class _MatrixPoster extends StatelessWidget {
-  const _MatrixPoster({
-    required this.pic,
-    required this.accent,
-    required this.radius,
-    required this.width,
-    required this.height,
-    required this.placeholder,
-  });
-
-  final String pic;
-  final Color accent;
-  final double radius;
-  final double width;
-  final double height;
-  final Color placeholder;
-
-  @override
-  Widget build(BuildContext context) {
-    final Color line = accent.withValues(alpha: 0.18);
-    return SizedBox(
-      width: width,
-      height: height,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            _sectionImage(pic, placeholder),
-            Positioned(left: width / 3, top: 0, bottom: 0, width: 1,
-                child: ColoredBox(color: line)),
-            Positioned(left: width * 2 / 3, top: 0, bottom: 0, width: 1,
-                child: ColoredBox(color: line)),
-            Positioned(top: height / 3, left: 0, right: 0, height: 1,
-                child: ColoredBox(color: line)),
-            Positioned(top: height * 2 / 3, left: 0, right: 0, height: 1,
-                child: ColoredBox(color: line)),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(radius),
-                border: Border.all(color: accent, width: 1),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Wide poster (极光巨幕 "宽幅影廊" / 午夜影院 "宽幕推荐"):
-/// landscape frame with a soft accent glow.
-class _WidePoster extends StatelessWidget {
-  const _WidePoster({
-    required this.pic,
-    required this.accent,
-    required this.radius,
-    required this.width,
-    required this.height,
-    required this.placeholder,
-  });
-
-  final String pic;
-  final Color accent;
-  final double radius;
-  final double width;
-  final double height;
-  final Color placeholder;
-
-  @override
-  Widget build(BuildContext context) {
-    return _RectPoster(
-      pic: pic,
-      accent: accent,
-      radius: radius,
-      width: width,
-      height: height,
-      placeholder: placeholder,
-      glow: true,
-    );
-  }
 }
 
 class _PeekStickyGrid extends StatefulWidget {
@@ -5726,17 +5047,19 @@ class _PeekStickyGridState extends State<_PeekStickyGrid> {
             child: widget.pinnedHeader,
           ),
         ),
-        // The native-design recommend section ("为你呈现"):
-        // LeeCat's native design home puts it below the filter
-        // area, inside the scrolling content. The exported RFW
-        // templates carry no such section, so the design layer
-        // injects it here when the bridge sets the hook.
-        if (PeekHomeHooks.recommendSection != null &&
-            PeekHomeHooks.recommendSection!.isNotEmpty)
+        // The native grid's section header ("为你呈现 {{总数}} 部"):
+        // the pool's lone "为你呈现" string sits next to a "{{0}} 部"
+        // count string, and every root template puts its Section
+        // header above a PeekStickyGrid that iterates
+        // data.home.items — so the title belongs to the main grid,
+        // not to a banner-fed recommend row (no root has such a
+        // row; the only horizontal things are the Feature carousel
+        // and the 54px tab row). The count is the grid's own total.
+        if (PeekHomeHooks.nativeShowcase)
           SliverToBoxAdapter(
-            child: _NativeRecommendSection(
-              items: PeekHomeHooks.recommendSection!,
+            child: _NativeSectionHeader(
               design: PeekHomeHooks.designParams,
+              count: PeekHomeHooks.gridItems?.length ?? 0,
             ),
           ),
         SliverToBoxAdapter(

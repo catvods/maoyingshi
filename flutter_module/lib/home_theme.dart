@@ -384,6 +384,128 @@ const List<HomeThemeEntry> homeThemeCatalog = <HomeThemeEntry>[
     barOpacity: 0.28,
     barFloating: false,
   ),
+  // 莫兰迪八色 + 月幕拱廊（2026-11-27 适配性一轮补进目录）: the
+  // pool's per-style config records + the recovered native
+  // Feature/Showcase fragments. Their sources are the night
+  // template body recoloured per style (generated, see
+  // leecat_adaptive/work/gen_morandi_assets.py); each renders its
+  // own native Feature/Showcase through featureKey dispatch.
+  // Colours are the table records verbatim; gradient/surface are
+  // the single background (morandi pages are flat — the table
+  // records one background int per style). Names: the fragment
+  // titles where they exist (陶灰放映/玫瑰书房/粉蜡片单/芥末票夹/
+  // 海雾相册/月幕拱廊）; 雾蓝视窗/私人放映 are derived from the
+  // table slogans + fragment titles, and every morandi name is
+  // prefixed to avoid colliding with 玫瑰书房 (paper) / 月幕拱廊
+  // (the arch theme).
+  HomeThemeEntry(
+    id: 'morandi-ash',
+    name: '莫兰迪·陶灰放映',
+    tag: 'SOFT SCREEN',
+    description: '陶灰里的这一场',
+    colors: <Color>[Color(0xFFA19CA2), Color(0xFFA19CA2), Color(0xFFCD7461)],
+    dark: false,
+    barTint: Color(0xFFA19CA2),
+    barAccent: Color(0xFFCD7461),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
+  HomeThemeEntry(
+    id: 'morandi-rose',
+    name: '莫兰迪·玫瑰书房',
+    tag: 'ROSE STUDY',
+    description: '把故事放进书房',
+    colors: <Color>[Color(0xFFEBD9AF), Color(0xFFEBD9AF), Color(0xFF6D536A)],
+    dark: false,
+    barTint: Color(0xFFEBD9AF),
+    barAccent: Color(0xFF6D536A),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
+  HomeThemeEntry(
+    id: 'morandi-mist',
+    name: '莫兰迪·雾蓝视窗',
+    tag: 'MIST WINDOW',
+    description: '透过雾蓝看一部',
+    colors: <Color>[Color(0xFFBCCEDA), Color(0xFFBCCEDA), Color(0xFF86BBBA)],
+    dark: false,
+    barTint: Color(0xFFBCCEDA),
+    barAccent: Color(0xFF86BBBA),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
+  HomeThemeEntry(
+    id: 'morandi-wax',
+    name: '莫兰迪·粉蜡片单',
+    tag: 'WAX LIST',
+    description: '粉蜡色的今晚片单',
+    colors: <Color>[Color(0xFFCFB7BD), Color(0xFFCFB7BD), Color(0xFFD3A5AA)],
+    dark: false,
+    barTint: Color(0xFFCFB7BD),
+    barAccent: Color(0xFFD3A5AA),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
+  HomeThemeEntry(
+    id: 'morandi-ochre',
+    name: '莫兰迪·芥末票夹',
+    tag: 'OCHRE TICKET',
+    description: '从这一格入场',
+    colors: <Color>[Color(0xFFAAB0BD), Color(0xFFAAB0BD), Color(0xFFD0BC2C)],
+    dark: false,
+    barTint: Color(0xFFAAB0BD),
+    barAccent: Color(0xFFD0BC2C),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
+  HomeThemeEntry(
+    id: 'morandi-violet',
+    name: '莫兰迪·私人放映',
+    tag: 'BLUE VIOLET',
+    description: '蓝紫光里开场',
+    colors: <Color>[Color(0xFF7180A6), Color(0xFF7180A6), Color(0xFFBB939D)],
+    dark: false,
+    barTint: Color(0xFF7180A6),
+    barAccent: Color(0xFFBB939D),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
+  HomeThemeEntry(
+    id: 'morandi-album',
+    name: '莫兰迪·海雾相册',
+    tag: 'SEA ALBUM',
+    description: '海雾相册收一帧',
+    colors: <Color>[Color(0xFF7595A3), Color(0xFF7595A3), Color(0xFFF5BAC9)],
+    dark: false,
+    barTint: Color(0xFF7595A3),
+    barAccent: Color(0xFFF5BAC9),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
+  HomeThemeEntry(
+    id: 'morandi-arch',
+    name: '莫兰迪·月幕拱廊',
+    tag: 'ROSE ARCADE',
+    description: '穿过蔷薇拱廊',
+    colors: <Color>[Color(0xFFCFA7BD), Color(0xFFCFA7BD), Color(0xFFAFC5D2)],
+    dark: false,
+    barTint: Color(0xFFCFA7BD),
+    barAccent: Color(0xFFAFC5D2),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
+  HomeThemeEntry(
+    id: 'design-arch',
+    name: '月幕拱廊',
+    tag: '拱形巨幕 · 月下放映',
+    description: '拱形巨幕配蔷薇渐变，月下放映像穿过一道拱廊。',
+    colors: <Color>[Color(0xFF221D36), Color(0xFF403357), Color(0xFFCBB9FF)],
+    dark: true,
+    barTint: Color(0xFF221D36),
+    barAccent: Color(0xFFCBB9FF),
+    barOpacity: 0.28,
+    barFloating: true,
+  ),
 ];
 
 HomeThemeEntry homeThemeEntry(String id) {

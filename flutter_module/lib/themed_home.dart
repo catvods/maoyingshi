@@ -10,6 +10,7 @@ import 'package:rfw/rfw.dart';
 import 'home_theme.dart';
 import 'peek_home_library.dart';
 import 'theme_design.dart';
+import 'title_font_loader.dart';
 import 'pigeon/b11_home_messages.g.dart';
 import 'pigeon/b12_home_a_messages.g.dart';
 import 'pigeon/b8_category_messages.g.dart';
@@ -177,6 +178,12 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     try {
       final String text = await loadThemeText(homeThemeId.value);
       _readDesignParams(text);
+      // 标题字体是模块资产：主题要衬线/文楷时先注册再首绘，
+      // 未安装模块时直接回落系统字体（ensureTitleFontLoaded 返回 false）。
+      final String? family = _designParams?.titleFontFamily;
+      if (family != null && isModuleTitleFontFamily(family)) {
+        await ensureTitleFontLoaded(family);
+      }
       _runtime.update(_themeName, parseLibraryFile(text));
       if (mounted) setState(() => _themeReady = true);
     } catch (_) {

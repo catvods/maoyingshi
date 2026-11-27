@@ -5,7 +5,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * 六个可选模块的静态定义（与 {@code docs/app-modularization.md} 模块总表一致）。
+ * 八个可选模块的静态定义（与 {@code docs/app-modularization.md} 模块总表一致；
+ * 该文档尚未落盘，见 P6 瘦身报告 ~/workspace/slim40/REPORT.md）。
  *
  * <p>体积为 mobile-arm64 下载口径（MiB，见 {@code ~/workspace/apk-size-analysis/REPORT.md}），
  * 仅用于模块管理页展示；安装校验以各模块 zip 内的 manifest.json 为准，不以这里为准。
@@ -75,8 +76,33 @@ public final class ModuleDefinition {
                     "赛博朋克.cube", "通透鲜艳.cube", "钨丝灯.cube", "高级质感.cube"),
             Collections.emptyList());
 
+    /**
+     * 迅雷下载引擎：磁力 / 电驴 / torrent 播放解析（Thunder 提取器）。
+     * 两件 .so 均取自 app/libs/thunder-release.aar 的 jni/，预载顺序由 DT_NEEDED 决定：
+     * libxl_thunder_sdk.so 依赖 libxl_stat.so，必须先载 stat。
+     * 未安装时磁力/电驴链接无法播放（无其他播放器能处理 BitTorrent 协议），
+     * 普通文件下载不受影响（VideoDownloadManager 走 OkHttp，从不经过迅雷）。
+     */
+    public static final ModuleDefinition THUNDER = new ModuleDefinition(
+            "thunder", "迅雷",
+            6_500_000L,
+            Arrays.asList("libxl_stat.so", "libxl_thunder_sdk.so"),
+            Arrays.asList("libxl_stat.so", "libxl_thunder_sdk.so"));
+
+    /**
+     * 标题字体包（资产包，无原生库）：LeeCat 同款两款字体。
+     * NotoSerifSC（衬线）与 LXGWWenKaiLite（文楷）原由 pubspec 注册、随包内置；
+     * 拆出后主题的 titleFont=serif/wenkai 在未安装时回落系统默认字体，
+     * 安装后 Dart 经 FontLoader 从模块目录运行时注册（见 title_font_loader.dart）。
+     */
+    public static final ModuleDefinition FONTS = new ModuleDefinition(
+            "fonts", "标题字体",
+            23_100_000L,
+            Arrays.asList("NotoSerifSC.ttf", "LXGWWenKaiLite-Regular.ttf"),
+            Collections.emptyList());
+
     public static final List<ModuleDefinition> ALL = Collections.unmodifiableList(
-            Arrays.asList(MPV, VLC, SHERPA, DOVI, IJK, LUT));
+            Arrays.asList(MPV, VLC, SHERPA, DOVI, IJK, LUT, THUNDER, FONTS));
 
     /** 模块 id：zip 文件名与私有目录名都用它（module-&lt;id&gt;-&lt;abi&gt;-&lt;versionCode&gt;.zip）。 */
     public final String id;

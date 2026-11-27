@@ -210,8 +210,10 @@ class ThemeDesignParams {
 
   /// The font family the title font parameter resolves to. The
   /// serif and wenkai families are the very font files LeeCat
-  /// bundles (assets/fonts, SIL OFL 1.1), registered in the
-  /// module pubspec under the same family names LeeCat uses.
+  /// bundles (assets/fonts, SIL OFL 1.1); they ship in the
+  /// 「标题字体」 module and are registered at runtime via FontLoader
+  /// (title_font_loader.dart) when a theme asks for them, falling
+  /// back to the system font while the module is not installed.
   String? get titleFontFamily => switch (titleFont) {
         'serif' => 'NotoSerifSC',
         'wenkai' => 'LXGWWenKaiLite',

@@ -135,13 +135,15 @@ android {
         checkReleaseBuilds = !fastRelease
     }
 
-    // 模块化（单元⑤）：5 个模块的 .so 不再打进 APK，随模块 zip 分发（VLC 不在 fork 范围内）。
-    // 只排除这 7 个文件（×2 ABI）：其余 .so（libexo_ass.so、FFmpeg、Chaquopy、Node 等）留在基础包。
+    // 模块化（单元⑤）：7 个模块的 .so 不再打进 APK，随模块 zip 分发（VLC 不在 fork 范围内）。
+    // 只排除这 9 个文件（×2 ABI）：其余 .so（libexo_ass.so、FFmpeg、Chaquopy、Node 等）留在基础包。
     // 安全依据（2026-11-26 对 b8-c0-40 的 mobile 两个 APK 内全部 .so 做 DT_NEEDED 全量核查）：
     // lib/ 里的 libc++_shared.so 唯一使用方是 mpv-libs 里的 libmpv/libmvcodec/libplayer，
     // 它们随 mpv 模块走、模块自带同名文件并按 loadOrder 先预载；ijk 三件的消费者只在模块
     // 内部互相引用；sherpa 与 DV 两件无 DT_NEEDED 消费者（DV 靠运行时 dlopen + 按名加载，
     // 两件同在 dovi 模块内）。assets/lab 里另有一份 libc++_shared.so 是实验室的，不在此列。
+    // 迅雷两件（P6，2026-11-27）：唯一使用方是 Thunder 提取器（XLTaskHelper），
+    // 它先经 ModuleManager.ensureLoaded(THUNDER) 预载，Java 绑定仍由 thunder AAR 留基础包。
     packaging {
         jniLibs {
             // addAll（而非 excludes +=）：AGP 的 excludes 只有 getter，Groovy 下 += 不可靠。
@@ -160,6 +162,10 @@ android {
                     "lib/armeabi-v7a/libexo_dovi_renderer.so",
                     "lib/arm64-v8a/libdovi_android.so",
                     "lib/armeabi-v7a/libdovi_android.so",
+                    "lib/arm64-v8a/libxl_stat.so",
+                    "lib/armeabi-v7a/libxl_stat.so",
+                    "lib/arm64-v8a/libxl_thunder_sdk.so",
+                    "lib/armeabi-v7a/libxl_thunder_sdk.so",
             ])
         }
     }
@@ -275,10 +281,10 @@ dependencies {
 }
 
 // ---- 模块打包（单元⑤）----
-// 把 5 个模块的 .so/资产移出 APK 后（VLC 不在 fork 范围内），按 ABI 打成 module-<id>-<abi>-<versionCode>.zip，
-// 再加一个总包 modules-all-<abi>-<versionCode>.zip（5 个分包 + total-manifest.json）。
+// 把 7 个模块的 .so/资产移出 APK 后（VLC 不在 fork 范围内），按 ABI 打成 module-<id>-<abi>-<versionCode>.zip，
+// 再加一个总包 modules-all-<abi>-<versionCode>.zip（7 个分包 + total-manifest.json）。
 // 分包 zip 根目录：manifest.json + 模块文件（平铺，文件名与 ModuleDefinition.files 一致）；
-// 总包根目录：6 个分包 zip + total-manifest.json（{modules:[{file,module,size,sha256}]}，
+// 总包根目录：7 个分包 zip + total-manifest.json（{modules:[{file,module,size,sha256}]}，
 // 总包本身不重复放 .so，只做分包的容器；校验以总清单内各分包 sha256 为准）。
 // 确定性：ZipOutputStream 写固定时间戳（1980-01-01）+ 固定条目顺序（manifest 在首位，
 // 其余按 ModuleDefinition.files / 模块表顺序）；manifest 内容不含时间戳。
@@ -290,14 +296,16 @@ dependencies {
 
 def moduleAbis = ["arm64-v8a": "arm64_v8a", "armeabi-v7a": "armeabi_v7a"]
 
-def moduleOrder = ["mpv", "sherpa", "dovi", "ijk", "lut"]
+def moduleOrder = ["mpv", "sherpa", "dovi", "ijk", "lut", "thunder", "fonts"]
 
 def moduleUpstreamVersions = [
-        mpv   : mpvSourceRevisions,
-        sherpa: "sherpa-onnx 1.13.4",
-        dovi  : "exo-dv5-native",
-        ijk   : "ijkplayer",
-        lut   : "lut_presets",
+        mpv    : mpvSourceRevisions,
+        sherpa : "sherpa-onnx 1.13.4",
+        dovi   : "exo-dv5-native",
+        ijk    : "ijkplayer",
+        lut    : "lut_presets",
+        thunder: "xunlei-sdk",
+        fonts  : "NotoSerifSC + LXGWWenKaiLite",
 ]
 
 // 文件名与 ModuleDefinition.files 逐项对应；顺序即 zip 内顺序。
@@ -308,9 +316,11 @@ def moduleFiles = [
         sherpa: ["libsherpa-onnx-jni.so"],
         dovi  : ["libdovi_android.so", "libexo_dovi_renderer.so"],
         ijk   : ["libijkffmpeg.so", "libijksdl.so", "libijkplayer.so"],
-        lut   : ["低对比.cube", "复古深棕.cube", "徕卡胶片.cube", "明亮清新.cube",
+        lut    : ["低对比.cube", "复古深棕.cube", "徕卡胶片.cube", "明亮清新.cube",
                  "柔和中性.cube", "浪漫柔美.cube", "色彩还原.cube", "蓝绿带亮.cube",
                  "赛博朋克.cube", "通透鲜艳.cube", "钨丝灯.cube", "高级质感.cube"],
+        thunder: ["libxl_stat.so", "libxl_thunder_sdk.so"],
+        fonts  : ["NotoSerifSC.ttf", "LXGWWenKaiLite-Regular.ttf"],
 ]
 
 def sha256Hex = { File file ->
@@ -437,6 +447,13 @@ def packageModulesAction = { String abi, String flavor ->
     def aarStage = new File(stageRoot, ".aar")
     extractAarJni(hdrAar, abi, new File(aarStage, "hdr"), ["libdovi_android.so"])
 
+    // 迅雷：本地 AAR（app/libs/thunder-release.aar），只取它的 jni/ 两件 .so 打 zip；
+    // Java 绑定（XLTaskHelper 等）仍由 implementation 的 fileTree 引入，留基础包。
+    def thunderAar = new File(projectDir, "libs/thunder-release.aar")
+    if (!thunderAar.isFile()) throw new GradleException("找不到 thunder AAR：${thunderAar}")
+    extractAarJni(thunderAar, abi, new File(aarStage, "thunder"),
+            ["libxl_stat.so", "libxl_thunder_sdk.so"])
+
     def doviRenderer = findCmakeDoviSo(abi, flavor)
 
     def subZips = []
@@ -461,6 +478,14 @@ def packageModulesAction = { String abi, String flavor ->
                     break
                 case "lut":
                     source = new File(projectDir, "src/main/lut-presets/${name}")
+                    break
+                case "thunder":
+                    source = new File(aarStage, "thunder/${name}")
+                    break
+                case "fonts":
+                    // 标题字体：Flutter 模块的 assets/fonts/，pubspec 不再注册为内置字体
+                    //（否则仍会打进 FontManifest.json），只从这里取文件打模块 zip。
+                    source = new File(projectDir, "../flutter_module/assets/fonts/${name}")
                     break
                 default:
                     source = null
@@ -493,7 +518,7 @@ def packageModulesAction = { String abi, String flavor ->
         logger.lifecycle("模块分包：${zipFile} (${zipFile.length()} 字节)")
     }
 
-    // 总包：5 个分包 + total-manifest.json（只列分包，不重复放 .so）。
+    // 总包：7 个分包 + total-manifest.json（只列分包，不重复放 .so）。
     def totalManifest = [modules: subZips]
     def totalJson = new groovy.json.JsonBuilder(totalManifest).toPrettyString()
     def totalStage = new File(stageRoot, "all")
@@ -511,7 +536,7 @@ moduleAbis.each { abi, flavor ->
     def flavorCap = flavor == "arm64_v8a" ? "Arm64_v8a" : "Armeabi_v7a"
     tasks.register("packageModules${flavorCap}") {
         group = "build"
-        description = "打包 ${abi} 的 5 个模块分包 + 总包（app/build/outputs/modules/${abi}/）"
+        description = "打包 ${abi} 的 7 个模块分包 + 总包（app/build/outputs/modules/${abi}/）"
         // DV 的渲染器 .so 由 CMake 编出。CI 实测任务名是 buildCMakeRelWithDebInfo[arm64-v8a]
         //（按 CMake 构建类型 + ABI 命名，不含 variant 名）。只依赖 release 的 CMake 任务：
         // 旧的 startsWith("buildCMake") 还会匹配到 buildCMakeDebug，白白多编一次。

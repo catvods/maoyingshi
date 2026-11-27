@@ -9,6 +9,7 @@ import 'color_picker.dart';
 import 'global_theme.dart';
 import 'home_theme.dart';
 import 'merged_theme.dart';
+import 'title_font_loader.dart';
 import 'ui_glass.dart';
 
 /// The parametric theme editor, modeled on LeeCat's 新增我的主题
@@ -146,6 +147,7 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
     ]) {
       c.addListener(() => setState(() {}));
     }
+    _ensurePreviewFont();
   }
 
   @override
@@ -162,6 +164,20 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// 编辑器预览用的标题字体：选中衬线/文楷后按需从字体模块注册，
+  /// 未安装模块时预览回落系统字体；注册完成后重绘一次。
+  void _ensurePreviewFont() {
+    final String? family = switch (_titleFont) {
+      'serif' => 'NotoSerifSC',
+      'wenkai' => 'LXGWWenKaiLite',
+      _ => null,
+    };
+    if (family == null) return;
+    unawaited(ensureTitleFontLoaded(family).then((_) {
+      if (mounted) setState(() {});
+    }));
   }
 
   String? _hex(TextEditingController controller) {
@@ -752,7 +768,10 @@ class _ThemeEditorPageState extends State<ThemeEditorPage> {
                 ('mono', '等宽'),
               ],
               _titleFont,
-              (String value) => setState(() => _titleFont = value),
+              (String value) {
+                setState(() => _titleFont = value);
+                _ensurePreviewFont();
+              },
             )),
           ),
           const SizedBox(height: 6),

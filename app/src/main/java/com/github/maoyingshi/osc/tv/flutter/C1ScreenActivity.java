@@ -30,6 +30,8 @@ import com.github.maoyingshi.osc.tv.event.ServerEvent;
 import com.github.maoyingshi.osc.tv.following.FollowingScheduler;
 import com.github.maoyingshi.osc.tv.impl.Callback;
 import com.github.maoyingshi.osc.tv.lab.LabFilePicker;
+import com.github.maoyingshi.osc.tv.module.ModuleDefinition;
+import com.github.maoyingshi.osc.tv.module.ModuleManager;
 import com.github.maoyingshi.osc.tv.player.Source;
 import com.github.maoyingshi.osc.tv.server.Server;
 import com.github.maoyingshi.osc.tv.setting.AutoBackupPolicy;
@@ -1596,6 +1598,25 @@ public class C1ScreenActivity extends AppCompatActivity {
                     }
                 } else {
                     result.error("bad_args", "导出参数不正确", null);
+                }
+            }
+            else if ("getFontFilePath".equals(call.method)) {
+                // 标题字体模块：返回模块目录内字体文件的绝对路径，供 Dart 经 FontLoader
+                // 运行时注册；未安装或名字未知返回 null，Dart 侧回落系统字体。
+                // 只在主题切换/编辑器预览时按需取路径，不做启动时加载。
+                String family = call.arguments == null ? "" : String.valueOf(call.arguments);
+                String fileName = "NotoSerifSC".equals(family) ? "NotoSerifSC.ttf"
+                        : "LXGWWenKaiLite".equals(family) ? "LXGWWenKaiLite-Regular.ttf" : null;
+                if (fileName == null) {
+                    result.success(null);
+                } else {
+                    ModuleManager manager = ModuleManager.getInstance(this);
+                    if (!manager.isInstalled(ModuleDefinition.FONTS.id)) {
+                        result.success(null);
+                    } else {
+                        result.success(manager.moduleFile(ModuleDefinition.FONTS.id, fileName)
+                                .getAbsolutePath());
+                    }
                 }
             }
             else result.notImplemented();

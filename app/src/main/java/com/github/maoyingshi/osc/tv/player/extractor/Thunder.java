@@ -3,9 +3,12 @@ package com.github.maoyingshi.osc.tv.player.extractor;
 import android.net.Uri;
 import android.os.SystemClock;
 
+import com.github.maoyingshi.osc.tv.App;
 import com.github.maoyingshi.osc.tv.R;
 import com.github.maoyingshi.osc.tv.bean.Episode;
 import com.github.maoyingshi.osc.tv.exception.ExtractException;
+import com.github.maoyingshi.osc.tv.module.ModuleDefinition;
+import com.github.maoyingshi.osc.tv.module.ModuleManager;
 import com.github.maoyingshi.osc.tv.player.Source;
 import com.github.maoyingshi.osc.tv.utils.Download;
 import com.github.maoyingshi.osc.tv.utils.ResUtil;
@@ -27,6 +30,23 @@ public class Thunder implements Source.Extractor {
 
     private GetTaskId taskId;
 
+    /** 迅雷模块是否已在本进程内预载成功（.so 一旦载入无法卸载，成功即永久有效）。 */
+    private static volatile boolean sLoaded;
+
+    /**
+     * 确保迅雷模块已预载：未安装时返回 false，调用方走降级（Parser 直接跳过、
+     * fetch 抛模块缺失提示）。XLTaskHelper 首次触碰即加载 native 库，
+     * 所以任何 XLTaskHelper.get() 之前都必须先过这一关，否则抛 UnsatisfiedLinkError。
+     * 做文件 IO（读 manifest），调用方保证在工作线程执行（播放解析与剧集解析均在后台线程）。
+     */
+    static boolean ensureLoaded() {
+        if (sLoaded) return true;
+        boolean loaded = ModuleManager.getInstance(App.get())
+                .ensureLoaded(ModuleDefinition.THUNDER);
+        if (loaded) sLoaded = true;
+        return loaded;
+    }
+
     @Override
     public boolean match(Uri uri) {
         return List.of("magnet", "ed2k").contains(UrlUtil.scheme(uri));
@@ -34,6 +54,9 @@ public class Thunder implements Source.Extractor {
 
     @Override
     public String fetch(String url) throws Exception {
+        if (!ensureLoaded()) {
+            throw new ExtractException("磁力/电驴播放需要迅雷模块，请到 设置 → 特色功能 → 模块 下载「迅雷」");
+        }
         return url.startsWith("magnet") ? addTorrentTask(Uri.parse(url)) : addThunderTask(url);
     }
 
@@ -68,7 +91,7 @@ public class Thunder implements Source.Extractor {
 
     @Override
     public void exit() {
-        XLTaskHelper.get().release();
+        if (sLoaded) XLTaskHelper.get().release();
     }
 
     public record Parser(String url) implements Callable<List<Episode>> {
@@ -76,7 +99,12 @@ public class Thunder implements Source.Extractor {
         private static final Pattern PATTERN = Pattern.compile("(magnet|thunder|ed2k):.*");
 
         public static boolean match(String url) {
-            return PATTERN.matcher(url).find() || isTorrent(url);
+            // 先做无 IO 的格式判断，只有真像磁力/种子链接时才查模块状态：
+            // 未安装时返回 false，剧集保持原样（单个磁力剧集），点播时 fetch 再报模块缺失；
+            // 若这里先返回 true，解析线程会在 XLTaskHelper.get() 上抛 UnsatisfiedLinkError，
+            // 导致整页剧集加载失败。
+            if (!PATTERN.matcher(url).find() && !isTorrent(url)) return false;
+            return ensureLoaded();
         }
 
         public static Parser get(String url) {

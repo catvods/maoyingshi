@@ -2,7 +2,7 @@ name: B8 C0 Shell
 
 # B8 C0 壳工程验证：推送到 b8-flutter-rewrite 或手动触发。
 # 构建 4 个风味 release APK（含 Flutter module），上传 artifact 并记录包体积，
-# 再把 4 个 APK + 12 个模块 zip（5 模块 × 2 ABI + 2 总包，packageModules 产出）
+# 再把 4 个 APK + 16 个模块 zip（7 模块 × 2 ABI + 2 总包，packageModules 产出）
 # + c0-sizes.txt 发布为 C0 专属 prerelease（tag b8-c0-<run>-<sha>），
 # 每个 APK 单独一个附件、可直接下载。不碰 update-channel 清单与正式版 tag。
 # 详见 docs/b8-c0-shell.md。现有 android-release.yml 未改动。

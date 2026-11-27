@@ -41,7 +41,7 @@ import java.util.Map;
  * 设置里的“模块”页：列出模块（名称、大小、版本、状态），操作是在线下载 / 本地导入 /
  * 删除 / 重新下载；顶部有“下载全部（总包）”。
  *
- * <p>fork 注：fork 无 VLC 内核，页面只列其余 5 个模块（见 {@link #visibleDefinitions()}）；
+ * <p>fork 注：fork 无 VLC 内核，页面只列其余 7 个模块（见 {@link #visibleDefinitions()}）；
  * {@link ModuleDefinition} 里的 VLC 定义仅为格式/测试兼容保留，不在此展示、不可下载。
  *
  * <p>在线下载走 GitHub 代理（见 ModuleDownloader），移动网络下先弹确认；下载中有进度、可取消，

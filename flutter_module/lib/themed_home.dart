@@ -160,6 +160,9 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     PeekHomeHooks.onCarouselPage = null;
     PeekHomeHooks.titleFontFamily = null;
     PeekHomeHooks.designParams = null;
+    PeekHomeHooks.recommendSection = null;
+    PeekHomeHooks.onRecommendTap = null;
+    PeekHomeHooks.nativeFeature = false;
     super.dispose();
   }
 
@@ -473,8 +476,45 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
   /// data value must be the bare code point, not an IconData map.
   int _iconData(IconData icon) => icon.codePoint;
 
+  /// Keeps the native-design recommend section in step with the
+  /// current theme and banner data. LeeCat's native design home
+  /// renders recommend as a titled section ("为你呈现") below the
+  /// filter area — the exported RFW templates carry no such
+  /// section, so for nativeDesign themes the section is drawn by
+  /// the design layer (peek library) from these hooks. Like
+  /// LeeCat, recommend also stays in the hero: the template's
+  /// hero carousel keeps showing it (its per-style frames come
+  /// from the same design parameters), except for the disc style,
+  /// whose hero is LeeCat's native "SIDE A" Feature panel
+  /// (PeekHomeHooks.nativeFeature; see 'hasRecommend' below).
+  void _syncRecommendSection() {
+    final ThemeDesignParams? params = _designParams;
+    if (params != null && params.nativeDesign && _recommend.isNotEmpty) {
+      PeekHomeHooks.recommendSection = <PeekRecommendItem>[
+        for (int i = 0; i < _recommend.length; i++)
+          PeekRecommendItem(
+            index: i,
+            name: _recommend[i].name,
+            pic: _recommend[i].picUrl,
+            remarks: _recommend[i].remarks,
+          ),
+      ];
+      PeekHomeHooks.onRecommendTap = (int index) {
+        _onEvent('openRecommend', <String, Object?>{'index': index});
+      };
+      // The disc style's hero is the native Feature panel, not
+      // the template carousel (recovered RFW fragment).
+      PeekHomeHooks.nativeFeature = params.posterShape == 'disc';
+    } else {
+      PeekHomeHooks.recommendSection = null;
+      PeekHomeHooks.onRecommendTap = null;
+      PeekHomeHooks.nativeFeature = false;
+    }
+  }
+
   void _pushData() {
     if (!mounted) return;
+    _syncRecommendSection();
     final B11HomeScreen screen = widget.screen;
     final bool landscape =
         MediaQuery.orientationOf(context) == Orientation.landscape;
@@ -538,7 +578,15 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
       'immersiveFilterPanelHeight': _filterGroups.length * 39.0 + 10.0,
       'source': <String, Object?>{'name': screen.title},
       'totalLabel': '${_items.length}',
-      'hasRecommend': _paramHero && _recommend.isNotEmpty,
+      // Only the disc style suppresses the template hero: its
+      // hero is LeeCat's native "SIDE A" Feature panel (see
+      // _syncRecommendSection). Other native-design themes keep
+      // the template hero carousel — like LeeCat, recommend
+      // appears both in the hero and in the section below the
+      // filters.
+      'hasRecommend': _paramHero &&
+          _recommend.isNotEmpty &&
+          _designParams?.posterShape != 'disc',
       'hasManyClasses': screen.tabs.length > 5,
       'displayStyle': _displayStyle,
       'gridColumns': _paramGridColumns ?? 3,

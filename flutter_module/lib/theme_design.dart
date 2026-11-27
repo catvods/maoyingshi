@@ -64,9 +64,10 @@ class ThemeDesignParams {
 
   /// LeeCat's HomeThemeDesignStyle: names the design layer's
   /// per-style treatments (vinyl = record discs, cinema = poster
-  /// wall, ticket = stub layout, ...). Only the treatments with
-  /// evidence outside the compiled design layer are reproduced;
-  /// see [posterShape].
+  /// wall, ticket = stub layout, ...). The treatments are
+  /// rendered from the style's own description + accent/radius
+  /// (see [posterShape]); exact native geometry stays
+  /// evidence-limited (compiled into libapp.so).
   final String? designStyle;
   final String? titleFont;
   final double? backgroundOpacity;
@@ -89,13 +90,36 @@ class ThemeDesignParams {
   final int? gridColumns;
 
   /// The poster treatment the design layer applies for this
-  /// style. 'disc' for vinyl — evidenced by LeeCat itself (the
-  /// theme's own description: 唱片式推荐 · 圆盘封面， and its
-  /// rendered recommend row of circular covers). Every other
-  /// style keeps the template's own Poster widget ('source'):
-  /// their native treatments are compiled into LeeCat's design
-  /// layer and cannot be extracted, so nothing is invented here.
-  String get posterShape => designStyle == 'vinyl' ? 'disc' : 'source';
+  /// style. Each mapping is evidenced by the theme's own
+  /// `description` in its leecat-theme meta (first-hand,
+  /// LeeCat's own words) — e.g. vinyl 唱片式推荐 · 圆盘封面 →
+  /// 'disc'; ticket 入场票推荐 · 虚线分隔 → 'ticket'; album
+  /// 拍立得卡片 · 留白题签 → 'polaroid'; radar 环线装饰 →
+  /// 'radar'; noir 金线装帧 · 典藏序号 → 'gold'; paper 细线
+  /// 目录 → 'paper'; polar 蓝色侧签 → 'polar'; matrix 电路
+  /// 网格 · 方卡矩阵 → 'matrix'; aurora 宽幅影廊 → 'aurora';
+  /// cinema 宽幕推荐 · 沉浸海报墙 → 'cinema'; rose 非对称
+  /// 浮岛 · 胶囊控件 → 'capsule'. 'source' (classic styles
+  /// and anything unmapped) keeps the template's own Poster
+  /// widget. The exact native geometry (notch depths, ring
+  /// radii, serial placement) is compiled into LeeCat's
+  /// libapp.so and not recoverable — the treatments here are
+  /// the description's own named device, rendered in the
+  /// theme's own accent/radius, never invented per theme id.
+  String get posterShape => switch (designStyle) {
+        'vinyl' => 'disc',
+        'ticket' => 'ticket',
+        'album' => 'polaroid',
+        'radar' => 'radar',
+        'noir' => 'gold',
+        'paper' => 'paper',
+        'polar' => 'polar',
+        'matrix' => 'matrix',
+        'aurora' => 'aurora',
+        'cinema' => 'cinema',
+        'rose' => 'capsule',
+        _ => 'source',
+      };
 
   /// The font family the title font parameter resolves to. The
   /// serif and wenkai families are the very font files LeeCat

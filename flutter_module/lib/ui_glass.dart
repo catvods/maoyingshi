@@ -212,7 +212,10 @@ class _GlassBlurScope extends InheritedWidget {
 /// Mirrors the home bar's recipe (b8-home-glass): a backdrop blur
 /// under a translucent tint of the surface color, framed by a
 /// defined 1px rim (no highlight gradient — a sheen read as a
-/// gray band on every surface and was removed). The frame is
+/// gray band on every surface and was removed), floating on a
+/// soft drop shadow (see [_glassShadows]). The depth comes from
+/// outside the surface — the shadow it casts and the rim — never
+/// from anything painted across its face. The frame is
 /// mode-aware: white in dark mode, black in light mode, each at
 /// an alpha chosen to stay clearly visible — a white-only frame
 /// is invisible on light glass at any alpha, and a flat 1px
@@ -235,6 +238,10 @@ class _GlassBlurScope extends InheritedWidget {
 ///   badges and title strips on media cards are the main case —
 ///   a scrolling grid used to carry up to three backdrop
 ///   filters per card.
+/// - The drop shadow follows the same split: only a surface
+///   that really blurs casts one. Below-threshold and nested
+///   surfaces stay shadowless, so dense lists of small glass
+///   chips and badges pay no shadow raster at all.
 class GlassSurface extends StatefulWidget {
   const GlassSurface({
     super.key,
@@ -395,11 +402,22 @@ class _GlassSurfaceState extends State<GlassSurface> {
         // RepaintBoundary: in a scrolling list each surface's
         // glass becomes its own layer, so a neighbour's repaint
         // (a splash, a progress tick) never re-rasterises it.
+        // The DecoratedBox paints only the drop shadow (no fill —
+        // the tint stack inside owns the face), outside the
+        // ClipRRect so the shadow is never clipped away; it is
+        // part of this surface's own layer, so it scrolls and
+        // repaints with the surface and nothing else.
         return RepaintBoundary(
-          child: ClipRRect(
-            key: _surfaceKey,
-            borderRadius: radius,
-            child: scoped,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              boxShadow: _glassShadows(cfg.darkMode, cast: blur),
+            ),
+            child: ClipRRect(
+              key: _surfaceKey,
+              borderRadius: radius,
+              child: scoped,
+            ),
           ),
         );
       },
@@ -426,6 +444,45 @@ Color glassButtonColor(BuildContext context, Color base) {
 /// as an edge, never as a band.
 Color _glassFrameColor(bool darkMode) =>
     darkMode ? Colors.white.withAlpha(72) : Colors.black.withAlpha(36);
+
+/// The drop shadow a blurring [GlassSurface] casts while the
+/// global glass switch is on — the surface's depth cue, the way
+/// a glass plate floats over the content under it. Two layers,
+/// both black and soft: a tight contact shadow (2dp down, 6dp
+/// blur) that grounds the plate's edge, and a wider ambient one
+/// (10dp down, 24dp blur, pulled in 4dp so it does not halo
+/// sideways) that reads as lift. Nothing is painted on the
+/// surface itself for depth — an interior sheen band was tried
+/// and rejected as a gray stripe; depth lives outside the rim.
+///
+/// Mode alphas follow the frame's lesson. Dark mode: contact
+/// alpha 64, ambient 48 — a black shadow on a dark backdrop
+/// only shows where the surface overlaps lighter content, so
+/// it can afford to be stronger. Light mode: contact 32,
+/// ambient 20 — on light glass any gray pooling reads as dirt
+/// (the home bar's light shadows were cut for exactly that),
+/// so the shadow stays faint and hugs the shape.
+///
+/// [cast] is false for surfaces that do not really blur
+/// (below the size threshold, or nested inside an already
+/// blurred surface): they get no shadow at all, keeping dense
+/// lists of small surfaces free of shadow raster cost.
+List<BoxShadow> _glassShadows(bool darkMode, {required bool cast}) {
+  if (!cast) return const <BoxShadow>[];
+  final Color contact =
+      darkMode ? Colors.black.withAlpha(64) : Colors.black.withAlpha(32);
+  final Color ambient =
+      darkMode ? Colors.black.withAlpha(48) : Colors.black.withAlpha(20);
+  return <BoxShadow>[
+    BoxShadow(color: contact, offset: const Offset(0, 2), blurRadius: 6),
+    BoxShadow(
+      color: ambient,
+      offset: const Offset(0, 10),
+      blurRadius: 24,
+      spreadRadius: -4,
+    ),
+  ];
+}
 
 /// The frame as a [BorderSide] for tint-only controls that have a
 /// border slot (a button's `styleFrom(side:)`, a chip's `side`):

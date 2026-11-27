@@ -163,6 +163,13 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
     PeekHomeHooks.recommendSection = null;
     PeekHomeHooks.onRecommendTap = null;
     PeekHomeHooks.nativeFeature = false;
+    PeekHomeHooks.gridItems = null;
+    PeekHomeHooks.onGridItemTap = null;
+    PeekHomeHooks.nativeShowcase = false;
+    PeekHomeHooks.displayStyle = 'grid';
+    PeekHomeHooks.totalLabel = null;
+    PeekHomeHooks.sourceName = null;
+    PeekHomeHooks.onFeatureAction = null;
     super.dispose();
   }
 
@@ -482,11 +489,11 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
   /// filter area — the exported RFW templates carry no such
   /// section, so for nativeDesign themes the section is drawn by
   /// the design layer (peek library) from these hooks. Like
-  /// LeeCat, recommend also stays in the hero: the template's
-  /// hero carousel keeps showing it (its per-style frames come
-  /// from the same design parameters), except for the disc style,
-  /// whose hero is LeeCat's native "SIDE A" Feature panel
-  /// (PeekHomeHooks.nativeFeature; see 'hasRecommend' below).
+  /// LeeCat, recommend also stays in the hero: every
+  /// native-design style's hero is its native Feature panel
+  /// (recovered RFW fragments, PeekHomeHooks.nativeFeature; see
+  /// 'hasRecommend' below), and the section below the filters
+  /// shows it a second time.
   void _syncRecommendSection() {
     final ThemeDesignParams? params = _designParams;
     if (params != null && params.nativeDesign && _recommend.isNotEmpty) {
@@ -502,19 +509,69 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
       PeekHomeHooks.onRecommendTap = (int index) {
         _onEvent('openRecommend', <String, Object?>{'index': index});
       };
-      // The disc style's hero is the native Feature panel, not
-      // the template carousel (recovered RFW fragment).
-      PeekHomeHooks.nativeFeature = params.posterShape == 'disc';
+      // The hero is the native Feature panel for every
+      // native-design style with a recovered fragment — the
+      // disc style was only the first one wired.
+      PeekHomeHooks.nativeFeature = params.featureKey != null;
+      // The Feature panels' buttons fire the same events the
+      // templates do (openSearch / openHistory / openFavorite /
+      // showDisplayStylePicker).
+      PeekHomeHooks.onFeatureAction = (String name) {
+        _onEvent(name, const <String, Object?>{});
+      };
     } else {
       PeekHomeHooks.recommendSection = null;
       PeekHomeHooks.onRecommendTap = null;
       PeekHomeHooks.nativeFeature = false;
+      PeekHomeHooks.onFeatureAction = null;
+    }
+  }
+
+  /// The native Showcase grid: for native-design styles with a
+  /// recovered Showcase fragment, the grid renders the
+  /// per-style Showcase cells (peek library) from the same items
+  /// the template would have built Film cells from — the
+  /// template sources are untouched; the swap happens in
+  /// _PeekStickyGrid. The generic style has no recovered
+  /// Showcase (its fragment is truncated in the pool dump), so
+  /// its grid stays the template's.
+  void _syncNativeShowcase() {
+    final ThemeDesignParams? params = _designParams;
+    final String? key = params?.featureKey;
+    if (params != null &&
+        params.nativeDesign &&
+        key != null &&
+        key != 'generic' &&
+        _items.isNotEmpty) {
+      PeekHomeHooks.gridItems = <PeekGridItem>[
+        for (int i = 0; i < _items.length; i++)
+          PeekGridItem(
+            index: i,
+            name: _items[i].name,
+            pic: _items[i].picUrl,
+            remarks: _items[i].remarks,
+            rankLabel: '${i + 1}',
+          ),
+      ];
+      PeekHomeHooks.onGridItemTap = _openItem;
+      PeekHomeHooks.nativeShowcase = true;
+    } else {
+      PeekHomeHooks.gridItems = null;
+      PeekHomeHooks.onGridItemTap = null;
+      PeekHomeHooks.nativeShowcase = false;
     }
   }
 
   void _pushData() {
     if (!mounted) return;
     _syncRecommendSection();
+    _syncNativeShowcase();
+    // The native Feature's static panels read the same data
+    // fields the fragments reference (totalLabel / source.name),
+    // and the Showcase swap needs the current display style.
+    PeekHomeHooks.totalLabel = '${_items.length}';
+    PeekHomeHooks.sourceName = widget.screen.title;
+    PeekHomeHooks.displayStyle = _displayStyle;
     final B11HomeScreen screen = widget.screen;
     final bool landscape =
         MediaQuery.orientationOf(context) == Orientation.landscape;
@@ -578,20 +635,30 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
       'immersiveFilterPanelHeight': _filterGroups.length * 39.0 + 10.0,
       'source': <String, Object?>{'name': screen.title},
       'totalLabel': '${_items.length}',
-      // Only the disc style suppresses the template hero: its
-      // hero is LeeCat's native "SIDE A" Feature panel (see
-      // _syncRecommendSection). Other native-design themes keep
-      // the template hero carousel — like LeeCat, recommend
-      // appears both in the hero and in the section below the
-      // filters.
+      // The native Feature replaces the template hero for every
+      // native-design style with a recovered fragment (see
+      // _syncRecommendSection): the template hero is suppressed
+      // and the design layer draws the Feature instead. Other
+      // themes keep the template hero carousel — like LeeCat,
+      // recommend appears both in the hero and in the section
+      // below the filters.
       'hasRecommend': _paramHero &&
           _recommend.isNotEmpty &&
-          _designParams?.posterShape != 'disc',
+          !PeekHomeHooks.nativeFeature,
       'hasManyClasses': screen.tabs.length > 5,
       'displayStyle': _displayStyle,
       'gridColumns': _paramGridColumns ?? 3,
       'largeGridColumns': 2,
       'bannerColumns': 2,
+      // The native design layer's column/ratio fields: the
+      // config tables reference them (collection = the
+      // single-column row layouts, cinema = the two-column wide
+      // cards). The exported templates don't read them — the
+      // design layer's Showcase grid does — but they are part
+      // of the native data contract, so the bridge feeds them.
+      'collectionColumns': 1,
+      'cinemaColumns': 2,
+      'collectionRatio': 2.4,
       'glassGridColumns': _paramGridColumns ?? 3,
       'heroHeight': _paramHeroHeight ?? 220.0,
       'wideListRatio': 2.4,
@@ -622,6 +689,12 @@ class _ThemedHomeViewState extends State<ThemedHomeView> {
         'open': _iconData(Icons.open_in_new),
         'push': _iconData(Icons.send),
         'source': _iconData(Icons.swap_horiz),
+        // The native Feature fragments reference these three
+        // (capsule's moon chip, bubble's sparkle button, the
+        // generic style's play button).
+        'moon': _iconData(Icons.nightlight_round),
+        'sparkle': _iconData(Icons.auto_awesome),
+        'play': _iconData(Icons.play_arrow),
       },
       'loading': _loading,
       'errorMessage': _errorMessage,

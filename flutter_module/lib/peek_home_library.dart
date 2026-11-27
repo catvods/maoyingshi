@@ -51,13 +51,41 @@ class PeekHomeHooks {
   static void Function(int index)? onRecommendTap;
 
   /// The native Feature hero replaces the template's hero
-  /// carousel when the bridge sets it (currently only the disc
-  /// style: LeeCat's vinyl Feature is the "SIDE A" disc panel,
-  /// recovered verbatim from the design layer's embedded RFW
-  /// fragment — see _NativeFeature). Other styles keep the
-  /// template hero. PeekStickyGrid renders the Feature as the
-  /// top sliver when this is true.
+  /// carousel when the bridge sets it: every native-design
+  /// style's hero is its own Feature panel, recovered verbatim
+  /// from the design layer's embedded RFW fragments (see
+  /// _NativeFeature). PeekStickyGrid renders the Feature as
+  /// the top sliver when this is true.
   static bool nativeFeature = false;
+
+  /// The native Showcase grid (LeeCat's native design home):
+  /// for themes whose design layer renders grid items as
+  /// per-style Showcase cells, the bridge sets the items here
+  /// and _PeekStickyGrid builds the cells from them instead of
+  /// the template's RFW-built Film children. Null (or empty) =
+  /// no swap — the template's grid renders as before. The tap
+  /// routes to the same host call as a template cell tap.
+  static List<PeekGridItem>? gridItems;
+  static void Function(int index)? onGridItemTap;
+  static bool nativeShowcase = false;
+
+  /// The current display style the bridge feeds the template
+  /// ('grid', 'largeGrid', 'banner', 'list', 'list2', 'card',
+  /// 'textList'). The Showcase swap applies to the grid modes
+  /// only — in list/textList the template's RowItem/TextItem
+  /// rows render.
+  static String displayStyle = 'grid';
+
+  /// The two data fields the native Feature's static panels
+  /// reference (totalLabel / source.name in the fragments),
+  /// set by the bridge alongside the recommend section.
+  static String? totalLabel;
+  static String? sourceName;
+
+  /// Feature-panel buttons (openSearch / openHistory /
+  /// openFavorite / showDisplayStylePicker): the bridge routes
+  /// the action name to its _onEvent.
+  static void Function(String name)? onFeatureAction;
 }
 
 /// One item of the native-design recommend section: the B12
@@ -74,6 +102,25 @@ class PeekRecommendItem {
   final String name;
   final String pic;
   final String remarks;
+}
+
+/// One item of the native Showcase grid: the B11 grid item
+/// reduced to what the Showcase cells render (rankLabel is the
+/// 1-based position the fragments print).
+class PeekGridItem {
+  const PeekGridItem({
+    required this.index,
+    required this.name,
+    required this.pic,
+    required this.remarks,
+    required this.rankLabel,
+  });
+
+  final int index;
+  final String name;
+  final String pic;
+  final String remarks;
+  final String rankLabel;
 }
 
 BoxFit _fit(Object? value, BoxFit fallback) {
@@ -690,140 +737,3796 @@ class _PeekCarouselState extends State<_PeekCarousel> {
   }
 }
 
-/// LeeCat's native Feature hero for the disc style (vinyl),
+/// LeeCat's native Feature hero: the per-style hero panel
 /// recovered verbatim from the design layer's embedded RFW
-/// fragment: a non-autoplaying carousel (viewportFraction 0.92)
-/// of "SIDE A" cards — disc on the left (square aspect, fully
-/// round clip, 28px spindle hole with a 5px accent ring),
-/// title panel on the right ("SIDE A\n33 RPM", name, "● 落针，
-/// 开场"). Height 270.0 is the style's record height in the
-/// design layer's per-style config map (pool). Keyed on
-/// posterShape 'disc', never on a theme id.
+/// fragments (pool dump pp 49965–50024 + 50075 — one Feature +
+/// one Showcase per style). The Feature replaces the template's
+/// hero carousel for every native-design style with a recovered
+/// fragment (the bridge sets nativeFeature); the carousel
+/// variants auto-advance on the fragment's own interval, the
+/// panel variants are static. Fragment colours are verbatim
+/// except the description-matched styles, whose text would be
+/// unreadable on their own page background and is re-based onto
+/// the theme's own meta (marked 推定 in the report): polaroid
+/// (album, light page), capsule when the style is rose (light
+/// page; arch is verbatim — its meta matches the capsule
+/// record exactly), journal (paper). The generic style's
+/// fragment is truncated in the pool dump itself (it cuts off
+/// mid-string at the "观看影片" button's text colour) — the
+/// visible part is implemented verbatim and the button's text
+/// colour and size are inferred to match its play icon (推定）;
+/// its Showcase is missing entirely, so the generic style has
+/// no Showcase swap. Never keyed on a theme id.
 class _NativeFeature extends StatefulWidget {
   const _NativeFeature({required this.items, required this.design});
 
-  static const double height = 270;
-
   final List<PeekRecommendItem> items;
   final ThemeDesignParams? design;
+
+  /// The Feature height for the active theme: the config
+  /// table's per-style height, or the pool's heroHeight switch
+  /// (portrait 330 / landscape 390) when the style has no
+  /// recorded height.
+  static double heightFor(ThemeDesignParams? design, bool landscape) =>
+      design?.featureHeight(landscape: landscape) ??
+          (landscape ? 390.0 : 330.0);
 
   @override
   State<_NativeFeature> createState() => _NativeFeatureState();
 }
 
 class _NativeFeatureState extends State<_NativeFeature> {
-  late final PageController _controller =
-      PageController(viewportFraction: 0.92);
+  late PageController _controller;
+  Timer? _timer;
+
+  String get _key => widget.design?.featureKey ?? 'generic';
+
+  static const Set<String> _carouselKeys = <String>{
+    'aurora',
+    'noir',
+    'morandi-ash',
+    'morandi-mist',
+    'morandi-violet',
+    'morandi-arch',
+    'capsule',
+    'panorama',
+    'premiere',
+    'prism',
+    'vinyl',
+    'generic',
+  };
+
+  double get _viewportFraction => switch (_key) {
+        'aurora' => 0.94,
+        'noir' => 0.96,
+        'morandi-ash' => 0.94,
+        'morandi-mist' => 0.88,
+        'morandi-violet' => 0.92,
+        'morandi-arch' => 0.82,
+        'capsule' => 0.82,
+        'panorama' => 0.96,
+        'premiere' => 0.96,
+        'prism' => 0.92,
+        'vinyl' => 0.92,
+        _ => 1.0,
+      };
+
+  int? get _intervalMs => switch (_key) {
+        'aurora' => 6500,
+        'morandi-ash' => 6800,
+        'morandi-mist' => 6400,
+        'morandi-violet' => 7200,
+        'panorama' => 7000,
+        'premiere' => 7500,
+        'prism' => 7000,
+        _ => null,
+      };
+
+  Color get _accent => widget.design?.accent ?? const Color(0xFFFFBD70);
+  List<Color> get _bases =>
+      widget.design?.backgroundColors ?? const <Color>[];
+  Color get _base =>
+      _bases.isNotEmpty ? _bases.first : const Color(0xFF302019);
+  String? get _fontFamily => PeekHomeHooks.titleFontFamily;
+  Color get _placeholder =>
+      widget.design?.surfaceColor ?? const Color(0xFF37474F);
+
+  /// Text colour that reads on the theme's own page background:
+  /// cream on dark bases, graphite on light ones — the same
+  /// pair the Lee sources write into their own captions.
+  Color get _ink {
+    if (_bases.isEmpty) return const Color(0xFFFFE8CD);
+    return _bases.first.computeLuminance() < 0.35
+        ? const Color(0xFFFFE8CD)
+        : const Color(0xFF252A30);
+  }
+
+  /// The capsule fragment belongs to arch (verbatim — its meta
+  /// matches the capsule record exactly); rose re-bases the
+  /// texts that would be unreadable on its light page.
+  bool get _capsuleRebase =>
+      _key == 'capsule' && widget.design?.designStyle == 'rose';
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController(viewportFraction: _viewportFraction);
+    _restartTimer();
+  }
+
+  @override
+  void didUpdateWidget(_NativeFeature oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.design?.featureKey != widget.design?.featureKey) {
+      _controller.dispose();
+      _controller = PageController(viewportFraction: _viewportFraction);
+    }
+    _restartTimer();
+  }
 
   @override
   void dispose() {
+    _timer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
+  void _restartTimer() {
+    _timer?.cancel();
+    final int? interval = _intervalMs;
+    if (interval == null || widget.items.length < 2) return;
+    _timer = Timer.periodic(Duration(milliseconds: interval), (Timer timer) {
+      if (!mounted || !_controller.hasClients) return;
+      final int current = _controller.page?.round() ?? 0;
+      final int next = (current + 1) % widget.items.length;
+      _controller.animateToPage(next,
+          duration: const Duration(milliseconds: 480),
+          curve: Curves.easeOutCubic);
+    });
+  }
+
+  void _fire(String name) => PeekHomeHooks.onFeatureAction?.call(name);
+
+  Widget _action(String name, Widget child) => GestureDetector(
+        onTap: () => _fire(name),
+        child: child,
+      );
+
+  Widget _tapCard(PeekRecommendItem item, Widget child) => GestureDetector(
+        onTap: () => PeekHomeHooks.onRecommendTap?.call(item.index),
+        child: child,
+      );
+
   @override
   Widget build(BuildContext context) {
-    final ThemeDesignParams? design = widget.design;
-    final Color accent = design?.accent ?? const Color(0xFFFFBD70);
-    final List<Color> bases = design?.backgroundColors ?? const <Color>[];
-    final Color base =
-        bases.isNotEmpty ? bases.first : const Color(0xFF302019);
-    final String? fontFamily = PeekHomeHooks.titleFontFamily;
+    if (!_carouselKeys.contains(_key)) return _panel();
     return PageView.builder(
       controller: _controller,
       itemCount: widget.items.length,
-      itemBuilder: (BuildContext context, int index) {
-        final PeekRecommendItem item = widget.items[index];
-        return GestureDetector(
-          onTap: () => PeekHomeHooks.onRecommendTap?.call(item.index),
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: base.withValues(alpha: 0.53),
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(
-                  color: accent.withValues(alpha: 0.27), width: 1),
+      itemBuilder: (BuildContext context, int index) =>
+          _card(widget.items[index]),
+    );
+  }
+
+  Widget _card(PeekRecommendItem item) => switch (_key) {
+        'aurora' => _tapCard(item, _auroraCard(item)),
+        'noir' => _tapCard(item, _noirCard(item)),
+        'morandi-ash' => _tapCard(item, _ashCard(item)),
+        'morandi-mist' => _tapCard(item, _mistCard(item)),
+        'morandi-violet' => _tapCard(item, _violetCard(item)),
+        'morandi-arch' => _tapCard(item, _archCard(item)),
+        'capsule' => _tapCard(item, _capsuleCard(item)),
+        'panorama' => _tapCard(item, _panoramaCard(item)),
+        'premiere' => _tapCard(item, _premiereCard(item)),
+        'prism' => _tapCard(item, _prismCard(item)),
+        'vinyl' => _tapCard(item, _vinylCard(item)),
+        _ => _tapCard(item, _genericCard(item)),
+      };
+
+  Widget _panel() => switch (_key) {
+        'arcade' => _arcadePanel(),
+        'journal' => _journalPanel(),
+        'morandi-rose' => _rosePanel(),
+        'morandi-wax' => _waxPanel(),
+        'morandi-ochre' => _ochrePanel(),
+        'morandi-album' => _albumPanel(),
+        'ticket' => _ticketPanel(),
+        'polaroid' => _polaroidPanel(),
+        'bubble' => _bubblePanel(),
+        'celluloid' => _celluloidPanel(),
+        'radar' => _radarPanel(),
+        'matrix' => _matrixPanel(),
+        _ => const SizedBox.shrink(),
+      };
+
+  // --- Carousel cards (one per fragment, verbatim) ---
+
+  Widget _auroraCard(PeekRecommendItem item) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              _sectionImage(item.pic, _placeholder),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: <Color>[
+                      _base.withValues(alpha: 0),
+                      _base.withValues(alpha: 0.93),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _accent.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'AURORA / 特别放映',
+                        style: TextStyle(
+                          color: Color(0xFFFFFFFF),
+                          fontSize: 10,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: SizedBox.shrink()),
+                    Text(
+                      item.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: _fontFamily,
+                        color: const Color(0xFFFFFFFF),
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Text(
+                        '${item.remarks}  ·  进入故事  →',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: _accent,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _noirCard(PeekRecommendItem item) => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+        decoration: BoxDecoration(
+          color: _base.withValues(alpha: 0.6),
+          border: Border.all(color: _accent.withValues(alpha: 0.4), width: 1),
+        ),
+        child: Row(
+          children: <Widget>[
+            Expanded(flex: 5, child: _sectionImage(item.pic, _placeholder)),
+            Expanded(
+              flex: 5,
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      'PRIVATE\nSCREENING',
+                      style: TextStyle(
+                        color: _accent,
+                        fontSize: 11,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    Container(
+                      height: 1,
+                      margin: const EdgeInsets.symmetric(vertical: 18),
+                      color: _accent,
+                    ),
+                    Text(
+                      item.name,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: _fontFamily,
+                        color: const Color(0xFFFFF5DE),
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Text(
+                        item.remarks,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: _accent,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '落座，静候开场 →',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: _accent,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: Center(
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: ClipOval(
-                        child: Stack(
-                          fit: StackFit.expand,
+          ],
+        ),
+      );
+
+  Widget _ashCard(PeekRecommendItem item) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              _sectionImage(item.pic, _placeholder),
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: <Color>[
+                      Color(0x33867984),
+                      Color(0xEE6C7984),
+                      Color(0xCC967278),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Color(0xDDCD7461),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Text(
+                        'SOFT SCREEN / 陶灰放映',
+                        style: TextStyle(
+                          color: Color(0xFF252A30),
+                          fontSize: 10,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: SizedBox.shrink()),
+                    Text(
+                      item.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: _fontFamily,
+                        color: const Color(0xFFFFF7F3),
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        '${item.remarks}  /  进入',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFFFFC8BC),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _mistCard(PeekRecommendItem item) => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: const BoxDecoration(
+          color: Color(0xCCF0F5F6),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: Color(0xAA86BBBA), width: 1),
+        ),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    _sectionImage(item.pic, _placeholder),
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: <Color>[
+                            Color(0x00BCCEDA),
+                            Color(0xCC96B8C4),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Align(
+                      alignment: Alignment.topLeft,
+                      child: const Container(
+                        margin: EdgeInsets.all(12),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Color(0xEEDBB6BE),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          'MIST WINDOW',
+                          style: TextStyle(
+                            color: Color(0xFF252A30),
+                            fontSize: 10,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 12, 4, 2),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      item.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: _fontFamily,
+                        color: const Color(0xFF252A30),
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    '打开 →',
+                    style: TextStyle(
+                      color: Color(0xFF252A30),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _violetCard(PeekRecommendItem item) => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: const BoxDecoration(
+          color: Color(0xAA7180A6),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Color(0x99BB939D), width: 1),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: _sectionImage(item.pic, _placeholder),
+            ),
+            const Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: <Color>[
+                    Color(0x337F7DA3),
+                    Color(0xDD7180A6),
+                    Color(0xCC809DBD),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text(
+                    'BLUE VIOLET / 私人放映',
+                    style: TextStyle(
+                      color: Color(0xFFFFDDE4),
+                      fontSize: 10,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const Expanded(child: SizedBox.shrink()),
+                  Text(
+                    item.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: _fontFamily,
+                      color: const Color(0xFFFFF6F8),
+                      fontSize: 27,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const Text(
+                    '现在入场 →',
+                    style: TextStyle(
+                      color: Color(0xFFFFDDE4),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _archCard(PeekRecommendItem item) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.elliptical(110, 110),
+                  topRight: Radius.elliptical(110, 110),
+                  bottomRight: Radius.circular(24),
+                  bottomLeft: Radius.circular(24),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    _sectionImage(item.pic, _placeholder),
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: <Color>[
+                            Color(0x00CFA7BD),
+                            Color(0xDDAFC5D2),
+                            Color(0xCCD3A5AA),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Align(
+                      alignment: Alignment.bottomCenter,
+                      child: const Container(
+                        margin: EdgeInsets.all(10),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Color(0xDDFFF1F3),
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: Text(
+                          'ROSE ARCADE',
+                          style: TextStyle(
+                            color: Color(0xFF252A30),
+                            fontSize: 11,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: Text(
+                item.name,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: _fontFamily,
+                  color: const Color(0xFF252A30),
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _capsuleCard(PeekRecommendItem item) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.elliptical(120, 120),
+                  topRight: Radius.elliptical(120, 120),
+                  bottomRight: Radius.circular(28),
+                  bottomLeft: Radius.circular(28),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    _sectionImage(item.pic, _placeholder),
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Container(
+                        margin: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _base.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: <Widget>[
-                            _sectionImage(
-                              item.pic,
-                              design?.surfaceColor ??
-                                  const Color(0xFF37474F),
+                            Icon(
+                              Icons.nightlight_round,
+                              color: Color(0xFFE4D9FF),
+                              size: 14,
                             ),
-                            Center(
-                              child: Container(
-                                width: 28,
-                                height: 28,
-                                decoration: BoxDecoration(
-                                  color: base,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                      color: accent, width: 5),
-                                ),
+                            Text(
+                              '  月下首映',
+                              style: TextStyle(
+                                color: Color(0xFFE4D9FF),
+                                fontSize: 12,
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 18),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          'SIDE A\n33 RPM',
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: Text(
+                item.name,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: _fontFamily,
+                  color: _capsuleRebase
+                      ? _ink
+                      : const Color(0xFFEFEAFF),
+                  fontSize: 21,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _panoramaCard(PeekRecommendItem item) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: Column(
+            children: <Widget>[
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    _sectionImage(item.pic, _placeholder),
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Container(
+                        margin: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _base.withValues(alpha: 0.67),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Text(
+                          '↗  EXPLORE / 极地放映',
                           style: TextStyle(
-                            color: accent,
+                            color: _accent,
                             fontSize: 11,
-                            letterSpacing: 2,
                           ),
                         ),
-                        Padding(
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                color: _base.withValues(alpha: 0.6),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 18, vertical: 16),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        item.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: _fontFamily,
+                          color: const Color(0xFFEAF8FF),
+                          fontSize: 21,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '进入 →',
+                      style: TextStyle(
+                        color: _accent,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _premiereCard(PeekRecommendItem item) => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        decoration: const BoxDecoration(
+          color: Color(0x992C101D),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Color(0x77FF647B), width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(26, 16, 26, 58),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: _sectionImage(item.pic, _placeholder),
+                ),
+              ),
+              const _ThemePattern(
+                  kind: 'curtain', color: Color(0xBBDE345E)),
+              const Align(
+                alignment: Alignment.topCenter,
+                child: const Container(
+                  margin: EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Color(0xBB2C101D),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    'PREMIERE / 今夜首映',
+                    style: TextStyle(
+                      color: Color(0xFFFFCCD3),
+                      fontSize: 11,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(30, 0, 30, 14),
+                  child: Text(
+                    item.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: _fontFamily,
+                      color: const Color(0xFFFFEDEF),
+                      fontSize: 23,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _prismCard(PeekRecommendItem item) => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[
+              Color(0xAA16495A),
+              Color(0xAA59328C),
+            ],
+          ),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(28),
+            topRight: Radius.circular(8),
+            bottomRight: Radius.circular(28),
+            bottomLeft: Radius.circular(8),
+          ),
+          border: Border.all(color: Color(0xAA63EBFF), width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(28),
+            topRight: Radius.circular(8),
+            bottomRight: Radius.circular(28),
+            bottomLeft: Radius.circular(8),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              const _ThemePattern(kind: 'grid', color: Color(0x4463EBFF)),
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Text(
+                      'Q / 光子放映室',
+                      style: TextStyle(
+                        color: Color(0xFFB5F6FF),
+                        fontSize: 11,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: _sectionImage(item.pic, _placeholder),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
                           child: Text(
                             item.name,
-                            maxLines: 3,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontFamily: fontFamily,
-                              color: const Color(0xFFFFF0DE),
-                              fontSize: 23,
+                              fontFamily: _fontFamily,
+                              color: const Color(0xFFFFFFFF),
+                              fontSize: 22,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
-                        Text(
-                          '● 落针，开场',
-                          style: TextStyle(color: accent, fontSize: 11),
+                        const Container(
+                          width: 34,
+                          height: 34,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Color(0x4463EBFF),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: Color(0xFF63EBFF), width: 1),
+                          ),
+                          child: Text(
+                            '↗',
+                            style: TextStyle(
+                              color: Color(0xFFB5F6FF),
+                              fontSize: 20,
+                            ),
+                          ),
                         ),
                       ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  // The vinyl card keeps the previous line's implementation
+  // verbatim (it was already wired); _card wraps it in the
+  // recommend tap, so there is no GestureDetector here.
+  Widget _vinylCard(PeekRecommendItem item) => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: _base.withValues(alpha: 0.53),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(
+              color: _accent.withValues(alpha: 0.27), width: 1),
+        ),
+        child: Row(
+            children: <Widget>[
+              Expanded(
+                child: Center(
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: ClipOval(
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: <Widget>[
+                          _sectionImage(item.pic, _placeholder),
+                          Center(
+                            child: Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: _base,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                    color: _accent, width: 5),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 18),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'SIDE A\n33 RPM',
+                        style: TextStyle(
+                          color: _accent,
+                          fontSize: 11,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Text(
+                          item.name,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: _fontFamily,
+                            color: const Color(0xFFFFF0DE),
+                            fontSize: 23,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '● 落针，开场',
+                        style: TextStyle(color: _accent, fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+
+  Widget _genericCard(PeekRecommendItem item) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              _sectionImage(item.pic, _placeholder),
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: <Color>[
+                      Color(0x20132920),
+                      Color(0xF0132920),
+                    ],
+                  ),
+                ),
+              ),
+              const Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                  child: const Text(
+                    "今日精选 · EDITOR'S PICK",
+                    style: TextStyle(
+                      color: Color(0xFFF1F1E4),
+                      fontSize: 11,
+                      letterSpacing: 1.4,
+                    ),
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        item.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: _fontFamily,
+                          color: const Color(0xFFFFFFFF),
+                          fontSize: 26,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      Text(
+                        item.remarks,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFFD5DED4),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      const Row(
+                        children: <Widget>[
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFF1F1E4),
+                              borderRadius: BorderRadius.circular(9),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Icon(
+                                  Icons.play_arrow,
+                                  color: Color(0xFF253D32),
+                                  size: 18,
+                                ),
+                                SizedBox(width: 5),
+                                // The pool dump cuts off here, mid-string,
+                                // at this text's colour: it is inferred to
+                                // match the play icon (推定）.
+                                Text(
+                                  '观看影片',
+                                  style: TextStyle(
+                                    color: Color(0xFF253D32),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  // --- Static panels (one per fragment, verbatim) ---
+
+  Widget _arcadePanel() => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          color: Color(0x88111724),
+          border: Border.all(color: Color(0xFFCAFF42), width: 1.5),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Color(0x334AFFCB),
+              blurRadius: 18,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                const Expanded(
+                  child: Text(
+                    '●  PRESS PLAY',
+                    style: TextStyle(
+                      color: Color(0xFFCAFF42),
+                      fontSize: 10,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${PeekHomeHooks.totalLabel ?? ''} TITLES',
+                  style: const TextStyle(
+                    color: Color(0xFF7A8AFF),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                '今晚，开一局。',
+                style: TextStyle(
+                  fontFamily: _fontFamily,
+                  color: const Color(0xFFFFFFFF),
+                  fontSize: 27,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            Row(
+              children: <Widget>[
+                _action(
+                  'openSearch',
+                  const Text(
+                    '[ 搜索影片 ]',
+                    style: TextStyle(
+                      color: Color(0xFFCAFF42),
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                const Expanded(child: SizedBox.shrink()),
+                _action(
+                  'openHistory',
+                  const Text(
+                    '继续旅程 →',
+                    style: TextStyle(
+                      color: Color(0xFFCAFF42),
+                      fontSize: 13,
                     ),
                   ),
                 ),
               ],
             ),
+          ],
+        ),
+      );
+
+  // The journal fragment's texts are near-white / light blue on
+  // the page background; for paper (light parchment) they are
+  // re-based onto the theme's own accent and ink (推定） — the
+  // Showcase keeps its dark pill, so its colours stay verbatim.
+  Widget _journalPanel() => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'THE SCREEN JOURNAL',
+              style: TextStyle(
+                color: _accent,
+                fontSize: 10,
+                letterSpacing: 3,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                '今晚\n看点什么？',
+                style: TextStyle(
+                  fontFamily: _fontFamily,
+                  color: _ink,
+                  fontSize: 33,
+                  fontWeight: FontWeight.w900,
+                  height: 1,
+                ),
+              ),
+            ),
+            Container(height: 2, color: _accent),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                '${PeekHomeHooks.sourceName ?? ''} / '
+                '${PeekHomeHooks.totalLabel ?? ''} 个故事',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: _accent,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _rosePanel() => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: const BoxDecoration(
+          color: Color(0xCCEBE0C1),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Color(0x887A5D77), width: 1),
+        ),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text(
+                    'ROSE STUDY / 玫瑰书房',
+                    style: TextStyle(
+                      color: Color(0xFF252A30),
+                      fontSize: 10,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      '翻开今晚的\n柔软章节',
+                      style: TextStyle(
+                        fontFamily: _fontFamily,
+                        color: const Color(0xFF252A30),
+                        fontSize: 25,
+                        fontWeight: FontWeight.w800,
+                        height: 1.05,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${PeekHomeHooks.sourceName ?? ''} · '
+                    '${PeekHomeHooks.totalLabel ?? ''}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF252A30),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _action(
+              'openFavorite',
+              const Container(
+                width: 74,
+                height: 74,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Color(0x88C19E98),
+                  borderRadius: BorderRadius.circular(22),
+                  border:
+                      Border.all(color: Color(0x996D536A), width: 1),
+                ),
+                child: Text(
+                  'MY\nSHELF',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF252A30),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _waxPanel() => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: const BoxDecoration(
+          color: Color(0xAACFB7BD),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Color(0x88D3A5AA), width: 1),
+        ),
+        child: Row(
+          children: <Widget>[
+            const Container(
+              width: 56,
+              height: 96,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Color(0x88AFC5D2),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                'LIST',
+                style: TextStyle(
+                  color: Color(0xFF252A30),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Text(
+                      'WAX LIST / 粉蜡片单',
+                      style: TextStyle(
+                        color: Color(0xFF252A30),
+                        fontSize: 10,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        '轻轻排好\n今晚顺序',
+                        style: TextStyle(
+                          fontFamily: _fontFamily,
+                          color: const Color(0xFF252A30),
+                          fontSize: 25,
+                          fontWeight: FontWeight.w800,
+                          height: 1.05,
+                        ),
+                      ),
+                    ),
+                    _action(
+                      'showDisplayStylePicker',
+                      const Text(
+                        '切换视图 →',
+                        style: TextStyle(
+                          color: Color(0xFF252A30),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _ochrePanel() => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: const BoxDecoration(
+          color: Color(0xCCF4CBC8),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Color(0xAAD0BC2C), width: 1),
+        ),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text(
+                    'OCHRE TICKET / 芥末票夹',
+                    style: TextStyle(
+                      color: Color(0xFF252A30),
+                      fontSize: 10,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      '从这一格，\n入场。',
+                      style: TextStyle(
+                        fontFamily: _fontFamily,
+                        color: const Color(0xFF252A30),
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        height: 1.05,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '片库 · ${PeekHomeHooks.totalLabel ?? ''}',
+                    style: const TextStyle(
+                      color: Color(0xFF252A30),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                const Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFD0BC2C),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '8',
+                    style: TextStyle(
+                      color: Color(0xFF252A30),
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: _action(
+                    'openSearch',
+                    const Text(
+                      '找片',
+                      style: TextStyle(
+                        color: Color(0xFF252A30),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+  Widget _albumPanel() => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          color: Color(0x99B7B0AE),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: Color(0x88F5BAC9), width: 1),
+        ),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text(
+                    'SEA ALBUM / 海雾相册',
+                    style: TextStyle(
+                      color: Color(0xFFFFD5DE),
+                      fontSize: 10,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      '收好今晚的\n一帧心动',
+                      style: TextStyle(
+                        fontFamily: _fontFamily,
+                        color: const Color(0xFFFFFFFF),
+                        fontSize: 25,
+                        fontWeight: FontWeight.w800,
+                        height: 1.05,
+                      ),
+                    ),
+                  ),
+                  _action(
+                    'openHistory',
+                    const Text(
+                      '翻看记录 →',
+                      style: TextStyle(
+                        color: Color(0xFFFFD5DE),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Container(
+              width: 68,
+              height: 86,
+              decoration: BoxDecoration(
+                color: Color(0x668AA6B8),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(22),
+                  topRight: Radius.circular(8),
+                  bottomRight: Radius.circular(22),
+                  bottomLeft: Radius.circular(8),
+                ),
+                border:
+                    Border.all(color: Color(0xAAF5BAC9), width: 1),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _ticketPanel() => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: _base.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: _accent.withValues(alpha: 0.53), width: 1),
+        ),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    'AFTER HOURS / 午夜场',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: _accent,
+                      fontSize: 10,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Text(
+                      '下一站，好故事。',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: _fontFamily,
+                        color: const Color(0xFFFFF3EB),
+                        fontSize: 25,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  _action(
+                    'openHistory',
+                    Text(
+                      '凭票入场  →  继续观看',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: _accent,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // The fragment's childless divider Container expands
+            // to the row height in RFW; in Flutter that needs an
+            // explicit infinite height (clamped by the row).
+            Container(
+              width: 1,
+              height: double.infinity,
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              color: _accent.withValues(alpha: 0.4),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  'CINEMA',
+                  style: TextStyle(
+                    color: _accent,
+                    fontSize: 10,
+                  ),
+                ),
+                const Text(
+                  '01',
+                  style: TextStyle(
+                    color: Color(0xFFFFF3EB),
+                    fontSize: 38,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Row(
+                  children: <Widget>[
+                    for (final double width in <double>[1, 3, 2, 1, 3, 1, 2])
+                      Container(
+                        width: width,
+                        height: 18,
+                        margin: const EdgeInsets.all(1),
+                        color: _accent,
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+  // The polaroid fragment's texts are near-white on the page
+  // background; for album (light page) the title and button
+  // text are re-based onto the theme's ink and accent (推定） —
+  // the teal accents stay, they are the fragment's identity.
+  Widget _polaroidPanel() => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text(
+                    'SALT & FILM  /  生活切片',
+                    style: TextStyle(
+                      color: Color(0xFF94E7E0),
+                      fontSize: 10,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Text(
+                      '把光影，\n装进相册。',
+                      style: TextStyle(
+                        fontFamily: _fontFamily,
+                        color: _ink,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _action(
+              'openSearch',
+              Container(
+                width: 72,
+                height: 72,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Color(0x3394E7E0),
+                  borderRadius: BorderRadius.circular(24),
+                  border:
+                      Border.all(color: Color(0x8894E7E0), width: 1),
+                ),
+                child: Text(
+                  '＋\n找一部',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: _ink,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _bubblePanel() => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: const BoxDecoration(
+          color: Color(0x77301D32),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+            bottomRight: Radius.circular(8),
+            bottomLeft: Radius.circular(32),
           ),
-        );
-      },
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Text(
+              'BERRY CLUB / 今日灵感',
+              style: TextStyle(
+                color: Color(0xFFFFB4D8),
+                fontSize: 10,
+                letterSpacing: 1,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Text(
+                '快乐，不设片限。',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: _fontFamily,
+                  color: const Color(0xFFFFEAF5),
+                  fontSize: 27,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: _action(
+                    'openSearch',
+                    const Container(
+                      alignment: Alignment.center,
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Color(0x44FFB4D8),
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          Icon(
+                            Icons.auto_awesome,
+                            color: Color(0xFFFFEAF5),
+                            size: 14,
+                          ),
+                          Expanded(
+                            child: Text(
+                              '  发现新片',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Color(0xFFFFEAF5),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _action(
+                    'openHistory',
+                    const Container(
+                      alignment: Alignment.center,
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Color(0x44BBA8FF),
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: Text(
+                        '↗  继续追剧',
+                        style: TextStyle(
+                          color: Color(0xFFF0EAFF),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+  Widget _celluloidPanel() => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: const BoxDecoration(
+          color: Color(0x9925231F),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Color(0x77F1CE98), width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Column(
+            children: <Widget>[
+              const SizedBox(
+                height: 22,
+                child: _ThemePattern(
+                    kind: 'slate', color: Color(0x99F1CE98)),
+              ),
+              Expanded(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      const Text(
+                        "DIRECTOR'S CUT / 导演剪辑",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Color(0xFFF1CE98),
+                          fontSize: 10,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          '故事，从这一镜开始。',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: _fontFamily,
+                            color: const Color(0xFFFFF4DF),
+                            fontSize: 25,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Text(
+                              '片库 / ${PeekHomeHooks.totalLabel ?? ''}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Color(0xFFF1CE98),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                          _action(
+                            'openHistory',
+                            const Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: Color(0x77F1CE98), width: 1),
+                              ),
+                              child: Text(
+                                '观看记录 →',
+                                style: TextStyle(
+                                  color: Color(0xFFF1CE98),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _radarPanel() => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: _base.withValues(alpha: 0.53),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: _accent.withValues(alpha: 0.4), width: 1),
+        ),
+        child: Row(
+          children: <Widget>[
+            SizedBox(
+              width: 112,
+              // The fragment's radar colour carries its own
+              // alpha (0x99); the theme accent is passed at
+              // that alpha.
+              child: _ThemePattern(
+                  kind: 'radar', color: _accent.withValues(alpha: 0.6)),
+            ),
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'DEEP SPACE',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: _accent,
+                        fontSize: 10,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        '探索\n故事星域',
+                        style: TextStyle(
+                          fontFamily: _fontFamily,
+                          color: const Color(0xFFE5FFF3),
+                          fontSize: 25,
+                          fontWeight: FontWeight.w800,
+                          height: 1.05,
+                        ),
+                      ),
+                    ),
+                    _action(
+                      'openSearch',
+                      Text(
+                        '寻找影片 →',
+                        style: TextStyle(
+                          color: _accent,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _matrixPanel() => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: _base.withValues(alpha: 0.53),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _accent.withValues(alpha: 0.53), width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              // The fragment's circuit colour carries its own
+              // alpha (0x33); the theme accent is passed at
+              // that alpha.
+              _ThemePattern(
+                  kind: 'circuit', color: _accent.withValues(alpha: 0.2)),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    const Text(
+                      'MATRIX / 影像终端',
+                      style: TextStyle(
+                        color: Color(0xFFDCC6FF),
+                        fontSize: 10,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Text(
+                        '下一帧，无限可能。',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: _fontFamily,
+                          color: const Color(0xFFF6EFFF),
+                          fontSize: 25,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: _action(
+                            'openSearch',
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 9),
+                              decoration: BoxDecoration(
+                                color: _accent.withValues(alpha: 0.27),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Text(
+                                '01 / 搜索',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Color(0xFFF6EFFF),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _action(
+                            'openHistory',
+                            const Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 9),
+                              decoration: BoxDecoration(
+                                color: Color(0x336BF5DA),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '02 / 记录',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Color(0xFFBCFFED),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+}
+
+/// LeeCat's native design pattern overlay (the ThemePattern
+/// widget the fragments reference — kinds curtain, slate, film,
+/// grid, radar, circuit). Its implementation is compiled into
+/// LeeCat's libapp.so and does not appear in the pool dump, so
+/// every kind below is an inferred drawing of the named device
+/// (推定）, painted with the fragment's own colour.
+class _ThemePattern extends StatelessWidget {
+  const _ThemePattern({required this.kind, required this.color});
+
+  final String kind;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: CustomPaint(
+          painter: _ThemePatternPainter(kind: kind, color: color)),
     );
   }
 }
+
+class _ThemePatternPainter extends CustomPainter {
+  const _ThemePatternPainter({required this.kind, required this.color});
+
+  final String kind;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    switch (kind) {
+      case 'curtain':
+        _paintCurtain(canvas, size);
+      case 'slate':
+        _paintSlate(canvas, size);
+      case 'film':
+        _paintFilm(canvas, size);
+      case 'grid':
+        _paintGrid(canvas, size);
+      case 'radar':
+        _paintRadar(canvas, size);
+      case 'circuit':
+        _paintCircuit(canvas, size);
+    }
+  }
+
+  void _paintCurtain(Canvas canvas, Size size) {
+    // Vertical drape pleats: alternating translucent bands.
+    const double step = 26;
+    bool strong = true;
+    for (double x = 0; x < size.width; x += step) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, 0, step * 0.55, size.height),
+          const Radius.circular(6),
+        ),
+        Paint()
+          ..color =
+              strong ? color : color.withValues(alpha: color.a * 0.35),
+      );
+      strong = !strong;
+    }
+  }
+
+  void _paintSlate(Canvas canvas, Size size) {
+    // Clapperboard diagonal stripes.
+    const double stripe = 14;
+    final Path path = Path();
+    for (double x = -size.height;
+        x < size.width + size.height;
+        x += stripe * 2) {
+      path.addPath(_diagonalStripe(x, stripe, size), Offset.zero);
+    }
+    canvas.drawPath(
+        path, Paint()..color = color.withValues(alpha: color.a * 0.6));
+  }
+
+  Path _diagonalStripe(double x, double width, Size size) => Path()
+    ..moveTo(x, 0)
+    ..lineTo(x + width, 0)
+    ..lineTo(x + width + size.height, size.height)
+    ..lineTo(x + size.height, size.height)
+    ..close();
+
+  void _paintFilm(Canvas canvas, Size size) {
+    // Filmstrip: sprocket holes down both edges.
+    const double holeW = 7;
+    const double holeH = 5;
+    const double gap = 14;
+    final Paint paint = Paint()..color = color;
+    for (double y = 6; y + holeH < size.height; y += holeH + gap) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+            Rect.fromLTWH(4, y, holeW, holeH), const Radius.circular(2)),
+        paint,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+            Rect.fromLTWH(size.width - 4 - holeW, y, holeW, holeH),
+            const Radius.circular(2)),
+        paint,
+      );
+    }
+  }
+
+  void _paintGrid(Canvas canvas, Size size) {
+    const double step = 26;
+    final Paint paint = Paint()
+      ..color = color
+      ..strokeWidth = 1;
+    for (double x = step; x < size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = step; y < size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  void _paintRadar(Canvas canvas, Size size) {
+    // Concentric rings + crosshair + a sweep wedge.
+    final Offset center = Offset(size.width / 2, size.height / 2);
+    final double maxR =
+        (size.width < size.height ? size.width : size.height) / 2;
+    final Paint ring = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    for (final double r in <double>[maxR, maxR * 0.66, maxR * 0.33]) {
+      canvas.drawCircle(center, r, ring);
+    }
+    canvas.drawLine(Offset(center.dx - maxR, center.dy),
+        Offset(center.dx + maxR, center.dy), ring);
+    canvas.drawLine(Offset(center.dx, center.dy - maxR),
+        Offset(center.dx, center.dy + maxR), ring);
+    final Path sweep = Path()
+      ..moveTo(center.dx, center.dy)
+      ..arcTo(
+          Rect.fromCircle(center: center, radius: maxR), -1.2, 0.9, false)
+      ..close();
+    canvas.drawPath(
+        sweep, Paint()..color = color.withValues(alpha: color.a * 0.14));
+    canvas.drawCircle(center, 3, Paint()..color = color);
+  }
+
+  void _paintCircuit(Canvas canvas, Size size) {
+    // Orthogonal traces with node dots; a tiny deterministic
+    // generator so the pattern is stable across rebuilds.
+    int seed = 7;
+    int next() {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed;
+    }
+
+    final Paint trace = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final Paint node = Paint()..color = color;
+    for (int i = 0; i < 9; i++) {
+      double x = (next() % 1000) / 1000 * size.width;
+      double y = (next() % 1000) / 1000 * size.height;
+      final Path path = Path()..moveTo(x, y);
+      for (int s = 0; s < 3; s++) {
+        if (next() % 2 == 0) {
+          x += 30 + next() % 60;
+        } else {
+          y += 24 + next() % 48;
+        }
+        path.lineTo(x, y);
+      }
+      canvas.drawPath(path, trace);
+      canvas.drawCircle(Offset(x, y), 2.5, node);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ThemePatternPainter old) =>
+      old.kind != kind || old.color != color;
+}
+
+/// The fragments' HomeCaption as the library's own HomeCaption
+/// renders it (name 13 w600 + remarks 10.5 at 0.7 alpha, title
+/// font family) — the fragment's fontSize argument is ignored
+/// by that builder, as for the RFW templates.
+class _ShowcaseCaption extends StatelessWidget {
+  const _ShowcaseCaption({
+    required this.name,
+    required this.remarks,
+    required this.color,
+  });
+
+  final String name;
+  final String remarks;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: color,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            decoration: TextDecoration.none,
+            fontFamily: PeekHomeHooks.titleFontFamily,
+          ),
+        ),
+        if (remarks.isNotEmpty)
+          Text(
+            remarks,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: color.withValues(alpha: 0.7),
+              fontSize: 10.5,
+              decoration: TextDecoration.none,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// LeeCat's native Showcase (grid item): the per-style grid
+/// cell recovered verbatim from the design layer's embedded
+/// RFW fragments (one Showcase per style, same pool lines as
+/// the Features). The bridge swaps the grid to these cells
+/// (_PeekStickyGrid) for native-design styles with a recovered
+/// Showcase; the generic style has no recovered Showcase (its
+/// fragment is truncated) and keeps the template's Poster.
+/// Colours verbatim except the capsule cell when the style is
+/// rose (its caption would be unreadable on the light page —
+/// re-based to the theme's ink, 推定； arch is verbatim). The
+/// exact-match styles use the theme's own accent/base (equal
+/// to the fragment literals), so a user theme re-declaring the
+/// style follows its own meta.
+class _NativeShowcase extends StatelessWidget {
+  const _NativeShowcase({required this.item, required this.design});
+
+  final PeekGridItem item;
+  final ThemeDesignParams? design;
+
+  String get _key => design?.featureKey ?? 'generic';
+  Color get _accent => design?.accent ?? const Color(0xFFFFBD70);
+  List<Color> get _bases =>
+      design?.backgroundColors ?? const <Color>[];
+  Color get _base =>
+      _bases.isNotEmpty ? _bases.first : const Color(0xFF302019);
+  String? get _fontFamily => PeekHomeHooks.titleFontFamily;
+  Color get _placeholder =>
+      design?.surfaceColor ?? const Color(0xFF37474F);
+
+  Color get _ink {
+    if (_bases.isEmpty) return const Color(0xFFFFE8CD);
+    return _bases.first.computeLuminance() < 0.35
+        ? const Color(0xFFFFE8CD)
+        : const Color(0xFF252A30);
+  }
+
+  bool get _capsuleRebase =>
+      _key == 'capsule' && design?.designStyle == 'rose';
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => PeekHomeHooks.onGridItemTap?.call(item.index),
+      child: switch (_key) {
+        'vinyl' => _vinylCell(),
+        'aurora' => _auroraCell(),
+        'noir' => _noirCell(),
+        'ticket' => _ticketCell(),
+        'polaroid' => _polaroidCell(),
+        'panorama' => _panoramaCell(),
+        'radar' => _radarCell(),
+        'matrix' => _matrixCell(),
+        'capsule' => _capsuleCell(),
+        'journal' => _journalCell(),
+        'bubble' => _bubbleCell(),
+        'premiere' => _premiereCell(),
+        'celluloid' => _celluloidCell(),
+        'prism' => _prismCell(),
+        'morandi-ash' => _ashCell(),
+        'morandi-rose' => _roseCell(),
+        'morandi-mist' => _mistCell(),
+        'morandi-wax' => _waxCell(),
+        'morandi-ochre' => _ochreCell(),
+        'morandi-violet' => _violetCell(),
+        'morandi-album' => _albumCell(),
+        'morandi-arch' => _archCell(),
+        'arcade' => _arcadeCell(),
+        _ => _fallbackCell(),
+      },
+    );
+  }
+
+  Widget _vinylCell() => Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: _base.withValues(alpha: 0.47),
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: Center(
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(240),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: <Widget>[
+                        _sectionImage(item.pic, _placeholder),
+                        Center(
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: _base,
+                              borderRadius: BorderRadius.circular(20),
+                              border:
+                                  Border.all(color: _accent, width: 3),
+                            ),
+                            child: Text(
+                              item.rankLabel,
+                              style: TextStyle(
+                                color: _accent,
+                                fontSize: 8,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 10, 0, 2),
+              child: _ShowcaseCaption(
+                name: item.name,
+                remarks: item.remarks,
+                color: const Color(0xFFFFE6C7),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _auroraCell() => ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            _sectionImage(item.pic, _placeholder),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: <Color>[
+                    _base.withValues(alpha: 0),
+                    _base.withValues(alpha: 0.93),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    '/ ${item.rankLabel}',
+                    style: TextStyle(
+                      color: _accent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const Expanded(child: SizedBox.shrink()),
+                  _ShowcaseCaption(
+                    name: item.name,
+                    remarks: item.remarks,
+                    color: const Color(0xFFFFFFFF),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _noirCell() => Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: _base.withValues(alpha: 0.47),
+          border:
+              Border.all(color: _accent.withValues(alpha: 0.4), width: 1),
+        ),
+        child: Column(
+          children: <Widget>[
+            Expanded(child: _sectionImage(item.pic, _placeholder)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Text(
+                '—  ${item.rankLabel}  —',
+                style: TextStyle(
+                  color: _accent,
+                  fontSize: 10,
+                  letterSpacing: 2,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 2, 4, 8),
+              child: _ShowcaseCaption(
+                name: item.name,
+                remarks: item.remarks,
+                color: const Color(0xFFFFF5DE),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _ticketCell() => ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: _base.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(24),
+            border:
+                Border.all(color: _accent.withValues(alpha: 0.4), width: 1),
+          ),
+          child: Row(
+            children: <Widget>[
+              SizedBox(
+                width: 88,
+                child: _sectionImage(item.pic, _placeholder),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'NOW ADMITTING',
+                        style: TextStyle(
+                          color: _accent,
+                          fontSize: 9,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          item.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: _fontFamily,
+                            color: const Color(0xFFFFF3EB),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        item.remarks,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: _accent,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // The fragment's childless stub Container expands
+              // to the row height in RFW; in Flutter that needs
+              // an explicit infinite height (clamped by the row).
+              Container(
+                width: 42,
+                height: double.infinity,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: _accent.withValues(alpha: 0.2),
+                  border: Border.all(
+                      color: _accent.withValues(alpha: 0.27), width: 1),
+                ),
+                child: Text(
+                  item.rankLabel,
+                  style: TextStyle(
+                    color: _accent,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _polaroidCell() => Container(
+        padding: const EdgeInsets.fromLTRB(9, 9, 9, 4),
+        decoration: const BoxDecoration(
+          color: Color(0xBBE8FFF8),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Color(0x33102025),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(17),
+                child: _sectionImage(item.pic, _placeholder),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+              child: Text(
+                'FRAME / ${item.rankLabel}',
+                style: const TextStyle(
+                  color: Color(0xFF123C3A),
+                  fontSize: 9,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(2, 2, 2, 10),
+              child: _ShowcaseCaption(
+                name: item.name,
+                remarks: item.remarks,
+                color: const Color(0xFF123C3A),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _panoramaCell() => ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              flex: 6,
+              child: _sectionImage(item.pic, _placeholder),
+            ),
+            Expanded(
+              flex: 4,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                color: _base.withValues(alpha: 0.67),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'VIEW / ${item.rankLabel}',
+                      style: TextStyle(
+                        color: _accent,
+                        fontSize: 9,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: _fontFamily,
+                          color: const Color(0xFFEAF8FF),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      item.remarks,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: _accent,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _radarCell() => Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: _base.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(24),
+          border:
+              Border.all(color: _accent.withValues(alpha: 0.27), width: 1),
+        ),
+        child: Row(
+          children: <Widget>[
+            SizedBox(
+              width: 94,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Stack(
+                  children: <Widget>[
+                    _sectionImage(item.pic, _placeholder),
+                    Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        color: _base.withValues(alpha: 0.73),
+                        child: Text(
+                          item.rankLabel,
+                          style: TextStyle(
+                            color: _accent,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'SECTOR / CINEMA',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: _accent,
+                        fontSize: 9,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: _fontFamily,
+                          color: const Color(0xFFE5FFF3),
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Container(
+                        height: 1, color: _accent.withValues(alpha: 0.27)),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        item.remarks,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: _accent,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _matrixCell() => ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          decoration: BoxDecoration(
+            color: _base.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(18),
+            border:
+                Border.all(color: _accent.withValues(alpha: 0.53), width: 1),
+          ),
+          child: Column(
+            children: <Widget>[
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        'FILE / ${item.rankLabel}',
+                        style: const TextStyle(
+                          color: Color(0xFFDCC6FF),
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                    const Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF6BF5DA),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFC9A0FF),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: _sectionImage(item.pic, _placeholder),
+                  ),
+                ),
+              ),
+              const Container(
+                height: 3,
+                margin: EdgeInsets.fromLTRB(12, 8, 12, 0),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: <Color>[
+                      Color(0xFFC9A0FF),
+                      Color(0xFF6BF5DA),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                child: _ShowcaseCaption(
+                  name: item.name,
+                  remarks: item.remarks,
+                  color: const Color(0xFFF6EFFF),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _capsuleCell() => Column(
+        children: <Widget>[
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.elliptical(96, 96),
+                topRight: Radius.elliptical(96, 96),
+                bottomRight: Radius.circular(20),
+                bottomLeft: Radius.circular(20),
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  _sectionImage(item.pic, _placeholder),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      margin: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _base.withValues(alpha: 0.67),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          const Icon(
+                            Icons.nightlight_round,
+                            color: Color(0xFFE4D9FF),
+                            size: 12,
+                          ),
+                          Text(
+                            '  ${item.rankLabel}',
+                            style: const TextStyle(
+                              color: Color(0xFFE4D9FF),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 14),
+            child: _ShowcaseCaption(
+              name: item.name,
+              remarks: item.remarks,
+              color: _capsuleRebase ? _ink : const Color(0xFFEFEAFF),
+            ),
+          ),
+        ],
+      );
+
+  Widget _journalCell() => Container(
+        padding: const EdgeInsets.all(10),
+        decoration: const BoxDecoration(
+          color: Color(0x66122336),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: <Widget>[
+            SizedBox(
+              width: 36,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  item.rankLabel,
+                  style: const TextStyle(
+                    color: Color(0xFF83BBFF),
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 84,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: _sectionImage(item.pic, _placeholder),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      item.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: _fontFamily,
+                        color: const Color(0xFFF1F5FF),
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Text(
+                        item.remarks,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF83BBFF),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      '打开故事  ↗',
+                      style: TextStyle(
+                        color: Color(0xFF83BBFF),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _bubbleCell() => ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(10),
+          bottomRight: Radius.circular(30),
+          bottomLeft: Radius.circular(10),
+        ),
+        child: Container(
+          color: const Color(0x88301D32),
+          child: Column(
+            children: <Widget>[
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                child: _ShowcaseCaption(
+                  name: item.name,
+                  remarks: item.remarks,
+                  color: const Color(0xFFFFD9ED),
+                ),
+              ),
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    _sectionImage(item.pic, _placeholder),
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        margin: const EdgeInsets.all(10),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xCC301D32),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: const Color(0xFFFFB4D8), width: 1),
+                        ),
+                        child: Text(
+                          item.rankLabel,
+                          style: const TextStyle(
+                            color: Color(0xFFFFB4D8),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _premiereCell() => ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          color: const Color(0x992C101D),
+          child: Column(
+            children: <Widget>[
+              const Container(height: 5, color: Color(0xFFFF647B)),
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    _sectionImage(item.pic, _placeholder),
+                    const _ThemePattern(
+                        kind: 'curtain', color: Color(0x99C52C4F)),
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Container(
+                        margin: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xAA2C101D),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          item.rankLabel,
+                          style: const TextStyle(
+                            color: Color(0xFFFFCCD3),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                child: _ShowcaseCaption(
+                  name: item.name,
+                  remarks: item.remarks,
+                  color: const Color(0xFFFFEDEF),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _celluloidCell() => ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          color: const Color(0xAA25231F),
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 20),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    _sectionImage(item.pic, _placeholder),
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: <Color>[
+                            Color(0x0025231F),
+                            Color(0xDD25231F),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'REEL / ${item.rankLabel}',
+                            style: const TextStyle(
+                              color: Color(0xFFFFF4DF),
+                              fontSize: 11,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const Expanded(child: SizedBox.shrink()),
+                          _ShowcaseCaption(
+                            name: item.name,
+                            remarks: item.remarks,
+                            color: const Color(0xFFFFF4DF),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const _ThemePattern(kind: 'film', color: Color(0x99F1CE98)),
+            ],
+          ),
+        ),
+      );
+
+  Widget _prismCell() => Container(
+        padding: const EdgeInsets.all(6),
+        decoration: const BoxDecoration(
+          color: Color(0x6615233C),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(8),
+            bottomRight: Radius.circular(24),
+            bottomLeft: Radius.circular(8),
+          ),
+          border: Border.all(color: Color(0x8863EBFF), width: 1),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Color(0x224CE5FF),
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  topRight: Radius.circular(5),
+                  bottomRight: Radius.circular(18),
+                  bottomLeft: Radius.circular(5),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    _sectionImage(item.pic, _placeholder),
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        color: const Color(0x9915233C),
+                        child: Text(
+                          'Q / ${item.rankLabel}',
+                          style: const TextStyle(
+                            color: Color(0xFFB5F6FF),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 10, 6, 4),
+              child: _ShowcaseCaption(
+                name: item.name,
+                remarks: item.remarks,
+                color: const Color(0xFFE7FBFF),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _ashCell() => ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              flex: 6,
+              child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  _sectionImage(item.pic, _placeholder),
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Container(
+                      margin: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xDDCD7461),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        item.rankLabel,
+                        style: const TextStyle(
+                          color: Color(0xFF252A30),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 4,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                color: const Color(0xCC6C7984),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Text(
+                      'GALLERY',
+                      style: TextStyle(
+                        color: Color(0xFFE8DCDD),
+                        fontSize: 9,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: _fontFamily,
+                          color: const Color(0xFFFFF7F3),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      item.remarks,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFFFFC8BC),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _roseCell() => Container(
+        padding: const EdgeInsets.all(9),
+        decoration: const BoxDecoration(
+          color: Color(0xDDEBD9AF),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Color(0x66A893A3), width: 1),
+        ),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: _sectionImage(item.pic, _placeholder),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 2),
+              child: Row(
+                children: <Widget>[
+                  const Container(
+                      width: 28, height: 2, color: Color(0xFF6D536A)),
+                  const Expanded(child: SizedBox.shrink()),
+                  Text(
+                    item.rankLabel,
+                    style: const TextStyle(
+                      color: Color(0xFF252A30),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 2, 0, 8),
+              child: _ShowcaseCaption(
+                name: item.name,
+                remarks: item.remarks,
+                color: const Color(0xFF252A30),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _mistCell() => Container(
+        padding: const EdgeInsets.all(8),
+        decoration: const BoxDecoration(
+          color: Color(0xDDEAF1F4),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Color(0x6686BBBA), width: 1),
+        ),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: _sectionImage(item.pic, _placeholder),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 10, 8, 0),
+              child: _ShowcaseCaption(
+                name: item.name,
+                remarks: item.remarks,
+                color: const Color(0xFF252A30),
+              ),
+            ),
+            const Padding(
+              padding: const EdgeInsets.fromLTRB(0, 6, 0, 4),
+              child: const Container(
+                width: 42,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: Color(0xFF86BBBA),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _waxCell() => ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Color(0xDDC3B8BE),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Color(0x66D3A5AA), width: 1),
+          ),
+          child: Row(
+            children: <Widget>[
+              Container(
+                width: 54,
+                height: double.infinity,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Color(0x77D3A5AA),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Text(
+                  item.rankLabel,
+                  style: const TextStyle(
+                    color: Color(0xFF252A30),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 82,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: _sectionImage(item.pic, _placeholder),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 12, 8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: _fontFamily,
+                          color: const Color(0xFF252A30),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          item.remarks,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF252A30),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _ochreCell() => ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Color(0xDDAAB0BD),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Color(0x88D0BC2C), width: 1),
+          ),
+          child: Row(
+            children: <Widget>[
+              Container(
+                width: 70,
+                height: double.infinity,
+                color: const Color(0xFFD0BC2C),
+                alignment: Alignment.center,
+                child: Text(
+                  item.rankLabel,
+                  style: const TextStyle(
+                    color: Color(0xFF252A30),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 82,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: _sectionImage(item.pic, _placeholder),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 12, 8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const Text(
+                        'ADMIT ONE',
+                        style: TextStyle(
+                          color: Color(0xFF252A30),
+                          fontSize: 9,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Text(
+                          item.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: _fontFamily,
+                            color: const Color(0xFF252A30),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        item.remarks,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF252A30),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _violetCell() => ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          color: const Color(0xAA7180A6),
+          child: Column(
+            children: <Widget>[
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    _sectionImage(item.pic, _placeholder),
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: <Color>[
+                            Color(0x007180A6),
+                            Color(0xDD7180A6),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Container(
+                        margin: const EdgeInsets.all(9),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xCCBB939D),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          item.rankLabel,
+                          style: const TextStyle(
+                            color: Color(0xFF252A30),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                child: _ShowcaseCaption(
+                  name: item.name,
+                  remarks: item.remarks,
+                  color: const Color(0xFFFFF6F8),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _albumCell() => Container(
+        padding: const EdgeInsets.all(8),
+        decoration: const BoxDecoration(
+          color: Color(0xDDB7B0AE),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(26),
+            topRight: Radius.circular(10),
+            bottomRight: Radius.circular(26),
+            bottomLeft: Radius.circular(10),
+          ),
+          border: Border.all(color: Color(0x77F5BAC9), width: 1),
+        ),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(6),
+                  bottomRight: Radius.circular(20),
+                  bottomLeft: Radius.circular(6),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    _sectionImage(item.pic, _placeholder),
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Container(
+                        margin: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xCC5F8494),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          item.rankLabel,
+                          style: const TextStyle(
+                            color: Color(0xFFFFD5DE),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 10, 4, 4),
+              child: _ShowcaseCaption(
+                name: item.name,
+                remarks: item.remarks,
+                color: const Color(0xFF252A30),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _archCell() => Column(
+        children: <Widget>[
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.elliptical(92, 92),
+                topRight: Radius.elliptical(92, 92),
+                bottomRight: Radius.circular(20),
+                bottomLeft: Radius.circular(20),
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  _sectionImage(item.pic, _placeholder),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      margin: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xEECFA7BD),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Text(
+                        'ARCH / ${item.rankLabel}',
+                        style: const TextStyle(
+                          color: Color(0xFF252A30),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 12),
+            child: _ShowcaseCaption(
+              name: item.name,
+              remarks: item.remarks,
+              color: const Color(0xFF252A30),
+            ),
+          ),
+        ],
+      );
+
+  Widget _arcadeCell() => Container(
+        padding: const EdgeInsets.all(4),
+        decoration: const BoxDecoration(
+          color: Color(0x88111724),
+          border: Border.all(color: Color(0x997A8AFF), width: 1),
+        ),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  _sectionImage(item.pic, _placeholder),
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      color: const Color(0xCC111724),
+                      child: Text(
+                        'LV. ${item.rankLabel}',
+                        style: const TextStyle(
+                          color: Color(0xFFCAFF42),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+              child: _ShowcaseCaption(
+                name: item.name,
+                remarks: item.remarks,
+                color: const Color(0xFFCAFF42),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  // Defensive only: the bridge never enables the Showcase swap
+  // for the generic style (its fragment is truncated), so this
+  // is the template's own Poster look.
+  Widget _fallbackCell() => Column(
+        children: <Widget>[
+          Expanded(
+            child: _RectPoster(
+              pic: item.pic,
+              accent: _accent,
+              radius: 16,
+              width: double.infinity,
+              height: double.infinity,
+              placeholder: _placeholder,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 8, 4, 2),
+            child: _ShowcaseCaption(
+              name: item.name,
+              remarks: item.remarks,
+              color: const Color(0xFFFFFFFF),
+            ),
+          ),
+        ],
+      );
+}
+
 
 /// LeeCat's native design home renders recommend as a titled
 /// section ("为你呈现") below the filter area — not as the RFW
@@ -1337,10 +5040,15 @@ Widget _sectionImage(String pic, Color placeholder) {
 /// The bite is a real clip (not a painted circle), so it reads
 /// on any page background.
 class _TicketClipper extends CustomClipper<Path> {
-  const _TicketClipper({required this.radius, this.notch = 10});
+  const _TicketClipper({required this.radius});
 
   final double radius;
-  final double notch;
+
+  /// The notch depth is a fixed design constant (10, the value
+  /// the previous line recorded as inferred); no caller varies
+  /// it, so it is a const here rather than an optional
+  /// parameter (flutter analyze flags never-passed optionals).
+  static const double _notch = 10;
 
   @override
   Path getClip(Size size) {
@@ -1349,10 +5057,10 @@ class _TicketClipper extends CustomClipper<Path> {
           Offset.zero & size, Radius.circular(radius)));
     final Path left = Path()
       ..addOval(Rect.fromCircle(
-          center: Offset(0, size.height / 2), radius: notch));
+          center: Offset(0, size.height / 2), radius: _notch));
     final Path right = Path()
       ..addOval(Rect.fromCircle(
-          center: Offset(size.width, size.height / 2), radius: notch));
+          center: Offset(size.width, size.height / 2), radius: _notch));
     return Path.combine(
         PathOperation.difference,
         Path.combine(PathOperation.difference, rect, left),
@@ -1360,8 +5068,7 @@ class _TicketClipper extends CustomClipper<Path> {
   }
 
   @override
-  bool shouldReclip(_TicketClipper old) =>
-      old.radius != radius || old.notch != notch;
+  bool shouldReclip(_TicketClipper old) => old.radius != radius;
 }
 
 class _TicketPoster extends StatelessWidget {
@@ -1438,18 +5145,24 @@ class _TicketOutlinePainter extends CustomPainter {
 /// divider). Drawn, not faked with a Border, so the dash
 /// pattern is exact.
 class _DashedLine extends StatelessWidget {
-  const _DashedLine({required this.color, this.dash = 5, this.gap = 4});
+  const _DashedLine({required this.color});
 
   final Color color;
-  final double dash;
-  final double gap;
+
+  /// Dash/gap are fixed design constants (5/4); no caller
+  /// varies them, so they are literals here rather than
+  /// optional parameters (flutter analyze flags never-passed
+  /// optionals).
+  static const double _dash = 5;
+  static const double _gap = 4;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 1,
       child: CustomPaint(
-        painter: _DashedLinePainter(color: color, dash: dash, gap: gap),
+        painter:
+            _DashedLinePainter(color: color, dash: _dash, gap: _gap),
       ),
     );
   }
@@ -1923,6 +5636,62 @@ class _PeekStickyGridState extends State<_PeekStickyGrid> {
     super.dispose();
   }
 
+  /// The native Showcase swap is on when the bridge set it, the
+  /// items are present, and the template is in a grid display
+  /// mode (list/textList keep the template's RowItem/TextItem
+  /// rows).
+  bool get _nativeShowcase =>
+      PeekHomeHooks.nativeShowcase &&
+      PeekHomeHooks.gridItems != null &&
+      PeekHomeHooks.gridItems!.isNotEmpty &&
+      PeekHomeHooks.displayStyle != 'list' &&
+      PeekHomeHooks.displayStyle != 'textList';
+
+  /// Grid columns under the swap: the style's config column key
+  /// (cinema = 2 wide cards, collection = 1 full-width row);
+  /// grid styles keep the template's own count (the user's
+  /// display choice / editor columns).
+  int get _gridColumns {
+    if (!_nativeShowcase) return widget.crossAxisCount;
+    final String? columns = ThemeDesignParams
+        .nativeStyleConfigs[PeekHomeHooks.designParams?.featureKey]
+        ?.columns;
+    if (columns == 'cinema') return 2;
+    if (columns == 'collection') return 1;
+    return widget.crossAxisCount;
+  }
+
+  /// Grid ratio under the swap: the config table's ratio, or
+  /// the template's own ratio when the style has no recorded
+  /// ratio (aurora / noir / arcade); the collection styles use
+  /// the native collectionRatio (2.4, the wide-row ratio).
+  double get _gridRatio {
+    if (!_nativeShowcase) return widget.childAspectRatio;
+    final String? columns = ThemeDesignParams
+        .nativeStyleConfigs[PeekHomeHooks.designParams?.featureKey]
+        ?.columns;
+    final double? ratio = ThemeDesignParams
+        .nativeStyleConfigs[PeekHomeHooks.designParams?.featureKey]
+        ?.ratio;
+    if (ratio != null) return ratio;
+    if (columns == 'collection') return 2.4;
+    return widget.childAspectRatio;
+  }
+
+  SliverChildDelegate get _gridDelegate {
+    if (!_nativeShowcase) {
+      return SliverChildListDelegate(widget.children);
+    }
+    final List<PeekGridItem> items = PeekHomeHooks.gridItems!;
+    return SliverChildBuilderDelegate(
+      (BuildContext context, int index) => _NativeShowcase(
+        item: items[index],
+        design: PeekHomeHooks.designParams,
+      ),
+      childCount: items.length,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
@@ -1936,7 +5705,10 @@ class _PeekStickyGridState extends State<_PeekStickyGrid> {
             PeekHomeHooks.recommendSection!.isNotEmpty)
           SliverToBoxAdapter(
             child: SizedBox(
-              height: _NativeFeature.height,
+              height: _NativeFeature.heightFor(
+                PeekHomeHooks.designParams,
+                MediaQuery.orientationOf(context) == Orientation.landscape,
+              ),
               child: _NativeFeature(
                 items: PeekHomeHooks.recommendSection!,
                 design: PeekHomeHooks.designParams,
@@ -1979,12 +5751,12 @@ class _PeekStickyGridState extends State<_PeekStickyGrid> {
                 widget.horizontalPadding, widget.bottomPadding),
             sliver: SliverGrid(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: widget.crossAxisCount,
-                childAspectRatio: widget.childAspectRatio,
+                crossAxisCount: _gridColumns,
+                childAspectRatio: _gridRatio,
                 mainAxisSpacing: widget.mainAxisSpacing,
                 crossAxisSpacing: widget.crossAxisSpacing,
               ),
-              delegate: SliverChildListDelegate(widget.children),
+              delegate: _gridDelegate,
             ),
           ),
       ],

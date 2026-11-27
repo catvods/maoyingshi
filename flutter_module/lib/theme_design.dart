@@ -121,6 +121,93 @@ class ThemeDesignParams {
         _ => 'source',
       };
 
+  /// The native Feature fragment key for this design style, or
+  /// null when the style has no native Feature (classic styles
+  /// keep the template hero). Evidenced by the design layer's
+  /// own pool data: exact colour matches for vinyl / aurora /
+  /// noir / ticket / radar / matrix, polar→panorama and
+  /// arch→capsule (the arch meta's accent #cbb9ff and first
+  /// background #221d36 decode from its own Rkb record);
+  /// description matches for album→polaroid, rose→capsule,
+  /// paper→journal and cinema→generic; the 8 morandi plus
+  /// premiere / celluloid / prism / bubble / arcade are their
+  /// own config-table records and map to themselves.
+  String? get featureKey => switch (designStyle) {
+        'vinyl' => 'vinyl',
+        'aurora' => 'aurora',
+        'noir' => 'noir',
+        'ticket' => 'ticket',
+        'album' => 'polaroid',
+        'polar' => 'panorama',
+        'radar' => 'radar',
+        'matrix' => 'matrix',
+        'rose' => 'capsule',
+        'paper' => 'journal',
+        'cinema' => 'generic',
+        'arch' => 'capsule',
+        'premiere' => 'premiere',
+        'celluloid' => 'celluloid',
+        'prism' => 'prism',
+        'bubble' => 'bubble',
+        'arcade' => 'arcade',
+        'morandi-ash' => 'morandi-ash',
+        'morandi-rose' => 'morandi-rose',
+        'morandi-mist' => 'morandi-mist',
+        'morandi-wax' => 'morandi-wax',
+        'morandi-ochre' => 'morandi-ochre',
+        'morandi-violet' => 'morandi-violet',
+        'morandi-album' => 'morandi-album',
+        'morandi-arch' => 'morandi-arch',
+        _ => null,
+      };
+
+  /// Per-style native config recovered from LeeCat's design
+  /// layer (the pool's two per-style config tables + the 24 RFW
+  /// fragments): [columns] is the Showcase grid's column key —
+  /// 'grid' = data.home.gridColumns, 'cinema' =
+  /// data.home.cinemaColumns (2 wide cards), 'collection' =
+  /// data.home.collectionColumns (1 full-width row); [ratio] is
+  /// the Showcase grid's childAspectRatio, null = the native
+  /// collectionRatio data field (2.4, the wide-row ratio);
+  /// [height] is the native Feature height, null = the pool's
+  /// heroHeight switch (portrait 330 / landscape 390). Styles
+  /// with no record here (aurora, noir, arcade, journal,
+  /// generic) keep the template's grid geometry and the
+  /// heroHeight switch.
+  static const Map<String, ({String columns, double? ratio, double? height})>
+      nativeStyleConfigs = <String,
+          ({String columns, double? ratio, double? height})>{
+    'vinyl': (columns: 'grid', ratio: 0.88, height: 270),
+    'ticket': (columns: 'collection', ratio: null, height: 180),
+    'radar': (columns: 'collection', ratio: null, height: 206),
+    'matrix': (columns: 'grid', ratio: 0.78, height: 188),
+    'panorama': (columns: 'cinema', ratio: 1.60, height: 300),
+    'polaroid': (columns: 'grid', ratio: 0.76, height: 156),
+    'capsule': (columns: 'grid', ratio: 0.62, height: 300),
+    'journal': (columns: 'collection', ratio: null, height: null),
+    'premiere': (columns: 'grid', ratio: 0.65, height: 340),
+    'celluloid': (columns: 'cinema', ratio: 1.42, height: 190),
+    'prism': (columns: 'cinema', ratio: 1.18, height: 310),
+    'bubble': (columns: 'grid', ratio: 0.85, height: 196),
+    'morandi-ash': (columns: 'cinema', ratio: 1.46, height: 300),
+    'morandi-rose': (columns: 'grid', ratio: 0.72, height: 178),
+    'morandi-mist': (columns: 'grid', ratio: 0.76, height: 286),
+    'morandi-wax': (columns: 'collection', ratio: null, height: 168),
+    'morandi-ochre': (columns: 'collection', ratio: null, height: 184),
+    'morandi-violet': (columns: 'grid', ratio: 0.66, height: 320),
+    'morandi-album': (columns: 'grid', ratio: 0.82, height: 174),
+    'morandi-arch': (columns: 'grid', ratio: 0.70, height: 306),
+  };
+
+  /// The native Feature height for this theme: the config
+  /// table's per-style height, or the pool's heroHeight switch
+  /// (portrait 330 / landscape 390) when the style has no
+  /// recorded height.
+  double featureHeight({required bool landscape}) {
+    final double? height = nativeStyleConfigs[featureKey]?.height;
+    return height ?? (landscape ? 390.0 : 330.0);
+  }
+
   /// The font family the title font parameter resolves to. The
   /// serif and wenkai families are the very font files LeeCat
   /// bundles (assets/fonts, SIL OFL 1.1), registered in the

@@ -63,6 +63,7 @@ import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.StandardMethodCodec;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -79,6 +80,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /**
  * B8 C1/C2/B2/B3/B4: host Activity for the migrated screens (About, subtitle
@@ -740,6 +744,7 @@ public class C1ScreenActivity extends AppCompatActivity {
     private static final int MAX_THEME_BYTES = 512 * 1024;
     private MethodChannel.Result pendingThemeExport;
     private String pendingThemeExportText;
+    private byte[] pendingThemeExportBytes;
 
     private File userThemeDir() {
         File dir = new File(getFilesDir(), "home_themes");
@@ -865,6 +870,95 @@ public class C1ScreenActivity extends AppCompatActivity {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Batch theme import / export (.zip)
+    //
+    // Export zips the given files here (java.util.zip; this module
+    // has no archive dependency on the Dart side) and saves the .zip
+    // through the same CREATE_DOCUMENT dialog as a single export.
+    // Import unpacks a picked .zip here and hands the entries back
+    // to Dart, which imports each through the same
+    // importUserThemeText path as a single file (same validation and
+    // md5 dedup). The two sides share the one pending-export slot:
+    // exactly one of the text / bytes fields is set per export.
+    // ------------------------------------------------------------------
+
+    private static final int MAX_THEME_ZIP_ENTRIES = 50;
+    private static final int MAX_THEME_ZIP_BYTES = 32 * 1024 * 1024;
+
+    private List<Map<String, Object>> readThemeZipEntries(String path) throws Exception {
+        InputStream in = path.startsWith("content://")
+                ? getContentResolver().openInputStream(Uri.parse(path))
+                : new FileInputStream(new File(path));
+        if (in == null) throw new IllegalArgumentException("无法读取所选文件");
+        byte[] zipBytes;
+        try (InputStream input = in) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int len;
+            while ((len = input.read(buf)) != -1) {
+                out.write(buf, 0, len);
+                if (out.size() > MAX_THEME_ZIP_BYTES) {
+                    throw new IllegalArgumentException("主题包太大（超过 32MB）");
+                }
+            }
+            zipBytes = out.toByteArray();
+        }
+        if (zipBytes.length < 2 || zipBytes[0] != 'P' || zipBytes[1] != 'K') {
+            throw new IllegalArgumentException("所选文件不是有效的主题包（.zip）");
+        }
+        List<Map<String, Object>> entries = new ArrayList<>();
+        try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
+            ZipEntry entry;
+            while ((entry = zip.getNextEntry()) != null) {
+                String name = entry.getName();
+                if (entry.isDirectory() || name == null || name.endsWith("/")) continue;
+                int slash = name.lastIndexOf('/');
+                String base = slash >= 0 ? name.substring(slash + 1) : name;
+                if (base.isEmpty() || base.startsWith(".") || name.startsWith("__MACOSX/")) continue;
+                if (entries.size() >= MAX_THEME_ZIP_ENTRIES) {
+                    throw new IllegalArgumentException("主题包里文件太多（一次最多 50 个）");
+                }
+                Map<String, Object> map = new HashMap<>();
+                map.put("name", base);
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                byte[] buf = new byte[8192];
+                int len;
+                boolean tooBig = false;
+                while ((len = zip.read(buf)) != -1) {
+                    out.write(buf, 0, len);
+                    if (out.size() > MAX_THEME_BYTES + 65536) {
+                        tooBig = true;
+                        break;
+                    }
+                }
+                if (tooBig) {
+                    map.put("error", "文件过大（超过 512KB）");
+                } else {
+                    map.put("text", out.toString("UTF-8"));
+                }
+                entries.add(map);
+            }
+        }
+        return entries;
+    }
+
+    private byte[] buildThemeZip(List<?> files) throws Exception {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(out)) {
+            for (Object item : files) {
+                if (!(item instanceof Map)) continue;
+                Map<?, ?> file = (Map<?, ?>) item;
+                ZipEntry entry = new ZipEntry(String.valueOf(file.get("name")));
+                entry.setTime(System.currentTimeMillis());
+                zip.putNextEntry(entry);
+                zip.write(String.valueOf(file.get("text")).getBytes(StandardCharsets.UTF_8));
+                zip.closeEntry();
+            }
+        }
+        return out.toByteArray();
     }
 
     // ------------------------------------------------------------------
@@ -1278,6 +1372,7 @@ public class C1ScreenActivity extends AppCompatActivity {
                     Map<?, ?> args = (Map<?, ?>) call.arguments;
                     pendingThemeExport = result;
                     pendingThemeExportText = String.valueOf(args.get("text"));
+                    pendingThemeExportBytes = null;
                     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
                     intent.setType("text/plain");
@@ -1287,7 +1382,55 @@ public class C1ScreenActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         pendingThemeExport = null;
                         pendingThemeExportText = null;
+                        pendingThemeExportBytes = null;
                         result.error("export_failed", "无法打开保存对话框", null);
+                    }
+                } else {
+                    result.error("bad_args", "导出参数不正确", null);
+                }
+            }
+            else if ("importThemeZip".equals(call.method)) {
+                LabFilePicker.pick(this, false, "application/zip", path -> {
+                    if (path == null || path.isEmpty()) {
+                        result.success(null);
+                        return;
+                    }
+                    try {
+                        result.success(readThemeZipEntries(path));
+                    } catch (Exception e) {
+                        result.error("invalid_zip", e.getMessage(), null);
+                    }
+                });
+            }
+            else if ("exportThemeZip".equals(call.method)) {
+                if (pendingThemeExport != null) {
+                    result.error("busy", "另一个导出正在进行", null);
+                } else if (call.arguments instanceof Map) {
+                    Map<?, ?> args = (Map<?, ?>) call.arguments;
+                    Object files = args.get("files");
+                    if (!(files instanceof List) || ((List<?>) files).isEmpty()) {
+                        result.error("bad_args", "没有可导出的主题", null);
+                    } else {
+                        try {
+                            pendingThemeExport = result;
+                            pendingThemeExportText = null;
+                            pendingThemeExportBytes = buildThemeZip((List<?>) files);
+                            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                            intent.addCategory(Intent.CATEGORY_OPENABLE);
+                            intent.setType("application/zip");
+                            intent.putExtra(Intent.EXTRA_TITLE, String.valueOf(args.get("name")));
+                            try {
+                                startActivityForResult(intent, REQUEST_EXPORT_THEME);
+                            } catch (Exception e) {
+                                pendingThemeExport = null;
+                                pendingThemeExportBytes = null;
+                                result.error("export_failed", "无法打开保存对话框", null);
+                            }
+                        } catch (Exception e) {
+                            pendingThemeExport = null;
+                            pendingThemeExportBytes = null;
+                            result.error("export_failed", "打包失败", null);
+                        }
                     }
                 } else {
                     result.error("bad_args", "导出参数不正确", null);
@@ -1722,16 +1865,20 @@ public class C1ScreenActivity extends AppCompatActivity {
         if (flutterFragment != null) {
             flutterFragment.onActivityResult(requestCode, resultCode, data);
         }
-        // Home-theme export: write the pending theme source to the
-        // document the user picked in the CREATE_DOCUMENT dialog.
+        // Home-theme export: write the pending theme source (or the
+        // pending theme .zip bytes) to the document the user picked
+        // in the CREATE_DOCUMENT dialog.
         if (requestCode == REQUEST_EXPORT_THEME && pendingThemeExport != null) {
             MethodChannel.Result exportResult = pendingThemeExport;
             String exportText = pendingThemeExportText;
+            byte[] exportBytes = pendingThemeExportBytes;
             pendingThemeExport = null;
             pendingThemeExportText = null;
+            pendingThemeExportBytes = null;
             if (resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
                 try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
-                    out.write(exportText.getBytes(StandardCharsets.UTF_8));
+                    if (exportBytes != null) out.write(exportBytes);
+                    else if (exportText != null) out.write(exportText.getBytes(StandardCharsets.UTF_8));
                     exportResult.success(true);
                 } catch (Exception e) {
                     exportResult.error("export_failed", "写入文件失败", null);

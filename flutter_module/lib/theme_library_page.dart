@@ -179,6 +179,170 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
     }
   }
 
+  /// A zip-safe file name for one exported theme: illegal
+  /// characters become '_', and names that collide after
+  /// sanitizing get a ' (2)' / ' (3)' suffix before the extension.
+  String _zipEntryName(String name, Set<String> used) {
+    String base =
+        name.replaceAll(RegExp(r'[\/\\:*?"<>|\x00-\x1F]'), '_').trim();
+    if (base.isEmpty) base = '未命名主题';
+    String stem = base;
+    int n = 2;
+    while (used.contains('$stem.lzt')) {
+      stem = '$base ($n)';
+      n++;
+    }
+    used.add('$stem.lzt');
+    return '$stem.lzt';
+  }
+
+  /// Shows a batch result: how many went through and, for the ones
+  /// that did not, each name with its reason. A toast cannot hold a
+  /// list, so failures always get this dialog.
+  Future<void> _showBatchResult(
+      String title, String summary, List<String> failures) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: glassButtonColor(
+            context,
+            Theme.of(context).colorScheme.surfaceContainerHigh,
+          ),
+          title: Text(title),
+          content: Text('$summary\n${failures.join('\n')}'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('知道了'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _importBatch() async {
+    List<ThemeZipEntry>? entries;
+    try {
+      entries = await importThemeZip();
+    } on PlatformException catch (e) {
+      _toast(e.message ?? '导入失败');
+      return;
+    } catch (_) {
+      _toast('导入失败');
+      return;
+    }
+    if (entries == null) return;
+    if (entries.isEmpty) {
+      _toast('压缩包里没有主题文件');
+      return;
+    }
+    final Set<String> before = <String>{
+      for (final HomeThemeEntry e in userThemes.value) e.id,
+    };
+    final List<String> imported = <String>[];
+    final List<String> existed = <String>[];
+    final List<String> failures = <String>[];
+    for (final ThemeZipEntry zipEntry in entries) {
+      if (zipEntry.text == null) {
+        failures.add('${zipEntry.name}：${zipEntry.error ?? '无法读取'}');
+        continue;
+      }
+      try {
+        final HomeThemeEntry? entry =
+            await importUserThemeText(zipEntry.text!);
+        if (entry == null) {
+          failures.add('${zipEntry.name}：导入失败');
+        } else if (before.contains(entry.id)) {
+          existed.add(entry.name);
+        } else {
+          imported.add(entry.name);
+        }
+      } on PlatformException catch (e) {
+        failures.add('${zipEntry.name}：${e.message ?? '不是有效的主题源码'}');
+      } catch (_) {
+        failures.add('${zipEntry.name}：导入失败');
+      }
+    }
+    if (mounted) setState(() => _filter = 2);
+    if (failures.isEmpty) {
+      _toast(existed.isEmpty
+          ? '已导入 ${imported.length} 个主题'
+          : '已导入 ${imported.length} 个主题，${existed.length} 个已存在');
+    } else {
+      await _showBatchResult(
+        '批量导入结果',
+        '已导入 ${imported.length} 个'
+            '${existed.isEmpty ? '' : '，${existed.length} 个已存在'}，'
+            '${failures.length} 个失败：',
+        failures,
+      );
+    }
+  }
+
+  Future<void> _exportBatch() async {
+    final List<MergedThemeEntry> mine = <MergedThemeEntry>[
+      ...mergedRecordEntries(mergedUserThemes.value),
+      ...mergedUserSourceEntries(
+          mergedUserThemes.value, userThemes.value),
+    ];
+    if (mine.isEmpty) {
+      _toast('还没有自己的主题可导出');
+      return;
+    }
+    final List<Map<String, String>> files = <Map<String, String>>[];
+    final List<String> failures = <String>[];
+    final Set<String> usedNames = <String>{};
+    for (final MergedThemeEntry entry in mine) {
+      final MergedThemeRecord? record = entry.record;
+      final HomeThemeEntry? homeEntry = entry.homeEntry;
+      final String sourceId =
+          record != null ? record.structureSourceId : (homeEntry?.id ?? '');
+      if (sourceId.isEmpty) {
+        failures.add('${entry.name}：没有可导出的源码');
+        continue;
+      }
+      try {
+        String text = await loadThemeText(sourceId);
+        if (record != null) {
+          text = rewriteThemeDisplayName(text, record.params.name);
+        }
+        files.add(<String, String>{
+          'name': _zipEntryName(entry.name, usedNames),
+          'text': text,
+        });
+      } catch (_) {
+        failures.add('${entry.name}：源码读取失败');
+      }
+    }
+    if (files.isEmpty) {
+      await _showBatchResult('批量导出结果', '没有主题导出成功，失败：', failures);
+      return;
+    }
+    try {
+      final bool ok = await exportThemeZip('陌奥影视主题.zip', files);
+      if (!ok) {
+        _toast('已取消导出');
+        return;
+      }
+      if (failures.isEmpty) {
+        _toast('已导出 ${files.length} 个主题');
+      } else {
+        await _showBatchResult(
+          '批量导出结果',
+          '已导出 ${files.length} 个主题，${failures.length} 个失败：',
+          failures,
+        );
+      }
+    } on PlatformException catch (e) {
+      _toast(e.message ?? '导出失败');
+    } catch (_) {
+      _toast('导出失败');
+    }
+  }
+
   Future<bool> _confirm(String title, String body) async {
     final bool? sure = await showDialog<bool>(
       context: context,
@@ -328,10 +492,12 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
         actions: <Widget>[
           PopupMenuButton<String>(
             icon: const Icon(Icons.file_upload_outlined),
-            tooltip: '导入主题',
+            tooltip: '导入 / 导出',
             onSelected: (String value) {
               if (value == 'file') unawaited(_importFile());
               if (value == 'paste') unawaited(_importPaste());
+              if (value == 'batchImport') unawaited(_importBatch());
+              if (value == 'batchExport') unawaited(_exportBatch());
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
               const PopupMenuItem<String>(
@@ -341,6 +507,14 @@ class _ThemeLibraryPageState extends State<ThemeLibraryPage> {
               const PopupMenuItem<String>(
                 value: 'paste',
                 child: Text('粘贴主题源码'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'batchImport',
+                child: Text('批量导入（.zip）'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'batchExport',
+                child: Text('批量导出（.zip）'),
               ),
             ],
           ),

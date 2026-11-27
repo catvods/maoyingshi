@@ -555,6 +555,50 @@ Future<bool> exportThemeText(String fileName, String text) async {
   return ok ?? false;
 }
 
+/// One entry unpacked from a theme .zip by the host: [name] is the
+/// file name inside the zip; [text] is its UTF-8 source (null when
+/// the host skipped the entry, with the reason in [error]).
+class ThemeZipEntry {
+  const ThemeZipEntry({required this.name, this.text, this.error});
+
+  final String name;
+  final String? text;
+  final String? error;
+}
+
+/// Picks a .zip and returns its theme sources for Dart-side import
+/// (each entry goes through importUserThemeText, so validation and
+/// md5 dedup match the single-file route). Returns null when the
+/// user cancelled the picker; a [PlatformException] signals a bad
+/// zip (not a .zip file, too many files, too big).
+Future<List<ThemeZipEntry>?> importThemeZip() async {
+  final List<dynamic>? raw = await _homeThemeChannel
+      .invokeMethod<List<dynamic>>('importThemeZip');
+  if (raw == null) return null;
+  final List<ThemeZipEntry> entries = <ThemeZipEntry>[];
+  for (final dynamic item in raw) {
+    if (item is Map<dynamic, dynamic>) {
+      entries.add(ThemeZipEntry(
+        name: '${item['name'] ?? ''}',
+        text: item['text'] as String?,
+        error: item['error'] as String?,
+      ));
+    }
+  }
+  return entries;
+}
+
+/// Saves a batch of themes as one .zip through the host: [files]
+/// are {'name': entry file name, 'text': RFW source} maps, zipped
+/// host-side (this module has no archive dependency). Returns false
+/// when the user cancelled the save dialog.
+Future<bool> exportThemeZip(
+    String fileName, List<Map<String, String>> files) async {
+  final bool? ok = await _homeThemeChannel.invokeMethod<bool>(
+      'exportThemeZip', <String, Object>{'name': fileName, 'files': files});
+  return ok ?? false;
+}
+
 // ---------------------------------------------------------------------------
 // Theme editor support
 //

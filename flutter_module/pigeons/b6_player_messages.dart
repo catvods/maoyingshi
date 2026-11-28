@@ -103,6 +103,7 @@ class B6PlayerSettings {
     required this.blurayMenuText,
     required this.scaleTitle,
     required this.scaleText,
+    required this.lutVisible,
     required this.lutTitle,
     required this.lutText,
     required this.captionVisible,
@@ -168,6 +169,8 @@ class B6PlayerSettings {
   String scaleTitle;
   String scaleText;
 
+  /// True when the LUT module switch is on; gates the LUT row.
+  bool lutVisible;
   String lutTitle;
   String lutText;
 

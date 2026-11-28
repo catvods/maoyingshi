@@ -15,6 +15,8 @@ import com.github.maoyingshi.osc.tv.api.config.UserAdRuleStore;
 import com.github.maoyingshi.osc.tv.bean.AiConfig;
 import com.github.maoyingshi.osc.tv.event.RefreshEvent;
 import com.github.maoyingshi.osc.tv.impl.DanmakuListener;
+import com.github.maoyingshi.osc.tv.module.ModuleDefinition;
+import com.github.maoyingshi.osc.tv.module.ModuleManager;
 import com.github.maoyingshi.osc.tv.player.IntroSkipKinds;
 import com.github.maoyingshi.osc.tv.service.RecommendationFeedbackStore;
 import com.github.maoyingshi.osc.tv.setting.DanmakuSetting;
@@ -255,7 +257,8 @@ public class B3HostApiImpl implements B3Messages.B3HostApi {
                 .setFeedbackTitle(activity.getString(R.string.setting_recommendation_feedback))
                 .setFeedbackText(getRecommendationFeedbackText())
                 .setSubtitleGroupTitle(activity.getString(R.string.setting_ai_group_subtitle))
-                .setSubtitleAiSettingsVisible(Setting.isAiConfigReady())
+                .setSubtitleAiSettingsVisible(Setting.isAiConfigReady()
+                        && ModuleManager.getInstance(activity).isEnabled(ModuleDefinition.SHERPA.id))
                 .setRealtimeModelTitle(activity.getString(R.string.player_subtitle_realtime_model))
                 .setRealtimeModelText(getRealtimeModelText())
                 .setRealtimeModelDownloading(RealtimeSubtitleController.get().isModelDownloading())

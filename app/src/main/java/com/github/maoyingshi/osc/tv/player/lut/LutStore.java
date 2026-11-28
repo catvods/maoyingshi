@@ -186,7 +186,7 @@ public class LutStore {
      */
     private static void scanModule(List<LutPreset> items) {
         ModuleManager modules = ModuleManager.getInstance(App.get());
-        if (!modules.isInstalled(ModuleDefinition.LUT.id)) return;
+        if (!modules.isInstalled(ModuleDefinition.LUT.id) || !modules.isEnabled(ModuleDefinition.LUT.id)) return;
         File dir = modules.moduleDir(ModuleDefinition.LUT.id);
         File[] files = dir == null ? null : dir.listFiles(
                 file -> file.isFile() && LutPreset.formatOf(file.getName()) != null);

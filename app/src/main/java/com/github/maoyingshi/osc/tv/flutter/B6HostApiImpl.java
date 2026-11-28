@@ -107,7 +107,8 @@ public class B6HostApiImpl implements B6Messages.B6HostApi {
                 .setExo4kCompatText(safeText(PlaybackPerformanceSetting::getSummary))
                 .setKernelTitle(activity.getString(R.string.player_kernel))
                 .setKernelText(arrayText(kernel, PlayerSetting.getPlayer(), ""))
-                .setMpvVisible(PlayerSetting.getPlayer() == PlayerSetting.MPV)
+                .setMpvVisible(PlayerSetting.getPlayer() == PlayerSetting.MPV
+                        && PlayerSetting.isKernelEnabled(PlayerSetting.MPV))
                 .setMpvConfigTitle(activity.getString(R.string.player_mpv_config))
                 .setMpvConfigText(safeText(MpvConfigStore::summary))
                 .setMpvRenderTitle(activity.getString(R.string.player_mpv_render))
@@ -116,6 +117,7 @@ public class B6HostApiImpl implements B6Messages.B6HostApi {
                 .setBlurayMenuText(getSwitch(PlayerSetting.isBlurayMenu()))
                 .setScaleTitle(activity.getString(R.string.player_scale))
                 .setScaleText(arrayText(scale, PlayerSetting.getScale(), ""))
+                .setLutVisible(ModuleManager.getInstance(activity).isEnabled(ModuleDefinition.LUT.id))
                 .setLutTitle(activity.getString(R.string.player_lut))
                 .setLutText(safeText(LutSetting::getSummary))
                 .setCaptionVisible(PlayerSetting.hasCaption())

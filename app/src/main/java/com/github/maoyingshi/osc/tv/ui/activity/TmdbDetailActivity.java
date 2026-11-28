@@ -9498,7 +9498,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     }
 
     private void onInlinePlayerChoice(String[] kernels, int which) {
-        if (which < kernels.length) switchInlinePlayer(PlayerSetting.kernelAt(which));
+        if (which < kernels.length) switchInlinePlayer(PlayerSetting.enabledKernelAt(which));
         else openInlineExternal();
     }
 

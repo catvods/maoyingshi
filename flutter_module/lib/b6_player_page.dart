@@ -136,14 +136,15 @@ class _PlayerSettingsViewState extends State<PlayerSettingsView>
           showChevron: true,
           onTap: () => afterDialog(api.openScale()),
         ),
-        SettingsRow(
-          icon: Icons.palette_outlined,
-          iconBackground: Colors.purple,
-          title: info.lutTitle,
-          value: info.lutText,
-          showChevron: true,
-          onTap: () => afterDialog(api.openLut()),
-        ),
+        if (info.lutVisible)
+          SettingsRow(
+            icon: Icons.palette_outlined,
+            iconBackground: Colors.purple,
+            title: info.lutTitle,
+            value: info.lutText,
+            showChevron: true,
+            onTap: () => afterDialog(api.openLut()),
+          ),
         if (info.captionVisible)
           SettingsRow(
             icon: Icons.closed_caption_outlined,

@@ -9,6 +9,7 @@ import android.os.Build;
 import android.text.TextUtils;
 
 import com.github.catvod.net.OkHttp;
+import com.github.catvod.utils.Prefers;
 import com.github.maoyingshi.osc.tv.BuildConfig;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
@@ -143,6 +144,23 @@ public final class ModuleManager {
         return getStatus(moduleId) == ModuleStatus.INSTALLED;
     }
 
+    /**
+     * 模块启用开关（默认开），存在 SharedPreferences，键 {@code module_enabled_<id>}。
+     * 关 = 当作未安装处理（内核选择、设置入口不再把它当可用项），文件保留在磁盘上，
+     * 再打开不用重新下载，直接恢复可用。未知 id 一律当作启用，不拦旧逻辑。
+     * fork 注：开关覆盖模块页列出的 7 个模块（mpv、sherpa、dovi、ijk、lut、thunder、
+     * fonts）；VLC 定义仅作格式/测试兼容保留，不在模块页出现。
+     */
+    public boolean isEnabled(String moduleId) {
+        if (ModuleDefinition.byId(moduleId) == null) return true;
+        return Prefers.getBoolean("module_enabled_" + moduleId, true);
+    }
+
+    public void setEnabled(String moduleId, boolean enabled) {
+        if (ModuleDefinition.byId(moduleId) == null) return;
+        Prefers.put("module_enabled_" + moduleId, enabled);
+    }
+
     /** 已安装模块占用的字节数（未安装返回 0）。 */
     public long installedSizeBytes(String moduleId) {
         File dir = moduleDir(moduleId);
@@ -168,6 +186,9 @@ public final class ModuleManager {
      */
     public boolean ensureLoaded(ModuleDefinition definition) {
         if (definition == null) return false;
+        // 开关关掉的模块当作未安装：Thunder 磁力解析、Sherpa 实时字幕、DOVI 渲染器、
+        // MPV/IJK 内核预载都走这里，关了即不可用，不用重新下载，打开即恢复。
+        if (!isEnabled(definition.id)) return false;
         synchronized (this) {
             if (loaded.contains(definition.id)) return true;
         }

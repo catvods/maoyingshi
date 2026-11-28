@@ -551,15 +551,38 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
         // is the fallback. Coordinates are 0..1-relative in both.
         final List<_PathSegment>? segments =
             _decodePathSegments(source, <Object>['path']);
+        final Widget clip;
         if (segments != null && segments.isNotEmpty) {
-          return ClipPath(clipper: _BezierClipper(segments), child: child);
+          clip = ClipPath(clipper: _BezierClipper(segments), child: child);
+        } else {
+          final List<Offset>? points =
+              _decodeOffsets(source, <Object>['points']);
+          if (points == null || points.length < 3) {
+            return child;
+          }
+          clip = ClipPath(clipper: _PolygonClipper(points), child: child);
         }
-        final List<Offset>? points =
-            _decodeOffsets(source, <Object>['points']);
-        if (points == null || points.length < 3) {
-          return child;
-        }
-        return ClipPath(clipper: _PolygonClipper(points), child: child);
+        // A shaped poster must not inherit the movie poster's aspect
+        // ratio: an Image sizes itself by its own portrait ratio, so
+        // without this the clip box is narrow and tall and every
+        // theme renders a different size. When the parent gives a
+        // tight height (Poster Expanded), fill the whole cell image
+        // area, so all shaped posters share one size. Loose
+        // constraints (a decoration inside an Align) keep the
+        // child's own size.
+        return LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            if (!constraints.hasTightHeight ||
+                !constraints.hasBoundedWidth) {
+              return clip;
+            }
+            return SizedBox(
+              width: constraints.maxWidth,
+              height: constraints.maxHeight,
+              child: clip,
+            );
+          },
+        );
       },
       'RotatedBox': (BuildContext context, DataSource source) {
         final int turns = source.v<int>(<Object>['quarterTurns']) ?? 0;
@@ -625,6 +648,12 @@ List<Offset>? _decodeOffsets(DataSource source, List<Object> key) {
 
 /// Clips to the polygon through the given 0..1-relative points
 /// (straight edges only). For smooth curves use [_BezierClipper].
+///
+/// The points are mapped onto the largest centered square that fits
+/// the box (uniform scale by the short side, not one scale per axis),
+/// so artwork drawn in the unit square keeps its designed proportions
+/// no matter how tall or wide the box is: a circle stays a circle
+/// even when the poster image underneath is portrait.
 class _PolygonClipper extends CustomClipper<Path> {
   const _PolygonClipper(this.points);
 
@@ -632,10 +661,13 @@ class _PolygonClipper extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
+    final double s = size.shortestSide;
+    final double ox = (size.width - s) / 2;
+    final double oy = (size.height - s) / 2;
     final Path path = Path();
     for (int i = 0; i < points.length; i++) {
       final Offset p =
-          Offset(points[i].dx * size.width, points[i].dy * size.height);
+          Offset(ox + points[i].dx * s, oy + points[i].dy * s);
       if (i == 0) {
         path.moveTo(p.dx, p.dy);
       } else {
@@ -661,6 +693,11 @@ class _PolygonClipper extends CustomClipper<Path> {
 /// [_CommandPainter]'s path command, so curves stay smooth at any
 /// size. [points] ([_PolygonClipper]) remains the straight-edge
 /// fallback when no `path` is given.
+///
+/// Like [_PolygonClipper], segments are mapped onto the largest
+/// centered square that fits the box (uniform scale by the short
+/// side), so a circle stays a circle no matter how tall or wide
+/// the box is.
 class _BezierClipper extends CustomClipper<Path> {
   const _BezierClipper(this.segments);
 
@@ -668,32 +705,31 @@ class _BezierClipper extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
+    final double s = size.shortestSide;
+    final double ox = (size.width - s) / 2;
+    final double oy = (size.height - s) / 2;
+    Offset norm(double x, double y) => Offset(ox + x * s, oy + y * s);
     final Path path = Path();
     for (final _PathSegment segment in segments) {
       switch (segment.op) {
         case 'move':
-          path.moveTo(segment.x * size.width, segment.y * size.height);
+          final Offset p = norm(segment.x, segment.y);
+          path.moveTo(p.dx, p.dy);
           break;
         case 'line':
-          path.lineTo(segment.x * size.width, segment.y * size.height);
+          final Offset p = norm(segment.x, segment.y);
+          path.lineTo(p.dx, p.dy);
           break;
         case 'quad':
-          path.quadraticBezierTo(
-            segment.cx * size.width,
-            segment.cy * size.height,
-            segment.x * size.width,
-            segment.y * size.height,
-          );
+          final Offset c = norm(segment.cx, segment.cy);
+          final Offset p = norm(segment.x, segment.y);
+          path.quadraticBezierTo(c.dx, c.dy, p.dx, p.dy);
           break;
         case 'cubic':
-          path.cubicTo(
-            segment.c1x * size.width,
-            segment.c1y * size.height,
-            segment.c2x * size.width,
-            segment.c2y * size.height,
-            segment.x * size.width,
-            segment.y * size.height,
-          );
+          final Offset c1 = norm(segment.c1x, segment.c1y);
+          final Offset c2 = norm(segment.c2x, segment.c2y);
+          final Offset p = norm(segment.x, segment.y);
+          path.cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, p.dx, p.dy);
           break;
         case 'close':
           path.close();

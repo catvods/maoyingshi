@@ -543,11 +543,21 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
         );
       },
       'ClipPath': (BuildContext context, DataSource source) {
+        final Widget? child = source.optionalChild(<Object>['child']);
+        if (child == null) {
+          return const SizedBox.shrink();
+        }
+        // Bezier `path` wins when given; `points` (straight edges)
+        // is the fallback. Coordinates are 0..1-relative in both.
+        final List<_PathSegment>? segments =
+            _decodePathSegments(source, <Object>['path']);
+        if (segments != null && segments.isNotEmpty) {
+          return ClipPath(clipper: _BezierClipper(segments), child: child);
+        }
         final List<Offset>? points =
             _decodeOffsets(source, <Object>['points']);
-        final Widget? child = source.optionalChild(<Object>['child']);
-        if (points == null || points.length < 3 || child == null) {
-          return child ?? const SizedBox.shrink();
+        if (points == null || points.length < 3) {
+          return child;
         }
         return ClipPath(clipper: _PolygonClipper(points), child: child);
       },
@@ -614,8 +624,7 @@ List<Offset>? _decodeOffsets(DataSource source, List<Object> key) {
 }
 
 /// Clips to the polygon through the given 0..1-relative points
-/// (straight edges only). Arcs and curves belong to [_CommandPainter]'s
-/// path command (quadratic/cubic Bezier segments), not here.
+/// (straight edges only). For smooth curves use [_BezierClipper].
 class _PolygonClipper extends CustomClipper<Path> {
   const _PolygonClipper(this.points);
 
@@ -644,6 +653,60 @@ class _PolygonClipper extends CustomClipper<Path> {
       if (points[i] != oldClipper.points[i]) return true;
     }
     return false;
+  }
+}
+
+/// Clips to a Bezier path through 0..1-relative segments ('move' |
+/// 'line' | 'quad' | 'cubic' | 'close'), decoded the same way as
+/// [_CommandPainter]'s path command, so curves stay smooth at any
+/// size. [points] ([_PolygonClipper]) remains the straight-edge
+/// fallback when no `path` is given.
+class _BezierClipper extends CustomClipper<Path> {
+  const _BezierClipper(this.segments);
+
+  final List<_PathSegment> segments;
+
+  @override
+  Path getClip(Size size) {
+    final Path path = Path();
+    for (final _PathSegment segment in segments) {
+      switch (segment.op) {
+        case 'move':
+          path.moveTo(segment.x * size.width, segment.y * size.height);
+          break;
+        case 'line':
+          path.lineTo(segment.x * size.width, segment.y * size.height);
+          break;
+        case 'quad':
+          path.quadraticBezierTo(
+            segment.cx * size.width,
+            segment.cy * size.height,
+            segment.x * size.width,
+            segment.y * size.height,
+          );
+          break;
+        case 'cubic':
+          path.cubicTo(
+            segment.c1x * size.width,
+            segment.c1y * size.height,
+            segment.c2x * size.width,
+            segment.c2y * size.height,
+            segment.x * size.width,
+            segment.y * size.height,
+          );
+          break;
+        case 'close':
+          path.close();
+          break;
+      }
+    }
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(_BezierClipper oldClipper) {
+    return !_listEquals(segments, oldClipper.segments);
   }
 }
 

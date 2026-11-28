@@ -208,6 +208,26 @@ public class ThemeControllerContractTest {
         }
     }
 
+    /**
+     * 详情页必须跟全局主题走：配色来自当前激活的 profile（经
+     * {@code tokensForDetail} 按详情页自己的亮/暗模式解析），而不是写死的
+     * 亮/暗/影院三套固定色。换主题后返回详情页时，onResume 的比对刷新必须
+     * 在场，否则页面会一直停留在旧配色。
+     */
+    @Test
+    public void detailPageFollowsTheActiveThemeProfile() throws Exception {
+        String detail = read("src/main/java/com/github/maoyingshi/osc/tv/ui/activity/TmdbDetailActivity.java");
+        assertTrue(detail.contains("ThemeController.tokensForDetail("));
+        assertTrue(detail.contains("ThemeColors.fromTokens("));
+        assertTrue(detail.contains("refreshDetailThemeIfChanged()"));
+        assertFalse(detail.contains("ThemeColors.light()"));
+        assertFalse(detail.contains("ThemeColors.dark()"));
+        assertFalse(detail.contains("ThemeColors.cinema("));
+        assertFalse(detail.contains("TmdbCinemaTheme.palette("));
+        String cinema = read("src/main/java/com/github/maoyingshi/osc/tv/ui/helper/TmdbCinemaTheme.java");
+        assertTrue(cinema.contains("public static Palette fromTokens(ThemeTokens tokens, boolean light)"));
+    }
+
     private static String read(String path) throws Exception {
         Path root = Files.exists(Path.of("src")) ? Path.of("") : Path.of("app");
         return Files.readString(root.resolve(path), StandardCharsets.UTF_8);

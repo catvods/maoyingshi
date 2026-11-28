@@ -26,6 +26,7 @@ public class TmdbPersonAdapter extends RecyclerView.Adapter<TmdbPersonAdapter.Vi
     private final List<TmdbPerson> items = new ArrayList<>();
     private boolean cinema;
     private boolean light;
+    private TmdbCinemaTheme.Palette cinemaPalette;
 
     public TmdbPersonAdapter(Listener listener) {
         this.listener = listener;
@@ -57,6 +58,16 @@ public class TmdbPersonAdapter extends RecyclerView.Adapter<TmdbPersonAdapter.Vi
         notifyDataSetChanged();
     }
 
+    /**
+     * Hands the themed cinema palette to this adapter. When set, the cinema
+     * cards use it; otherwise they fall back to the fixed
+     * {@link TmdbCinemaTheme#palette(boolean)}.
+     */
+    public void setCinemaPalette(TmdbCinemaTheme.Palette cinemaPalette) {
+        this.cinemaPalette = cinemaPalette;
+        notifyDataSetChanged();
+    }
+
     public void setLight(boolean light) {
         this.light = light;
         notifyDataSetChanged();
@@ -73,7 +84,7 @@ public class TmdbPersonAdapter extends RecyclerView.Adapter<TmdbPersonAdapter.Vi
         TmdbPerson item = items.get(position);
         holder.binding.name.setText(item.getName());
         holder.binding.subtitle.setText(item.getSubtitle());
-        TmdbCinemaTheme.Palette palette = TmdbCinemaTheme.palette(light);
+        TmdbCinemaTheme.Palette palette = cinemaPalette != null ? cinemaPalette : TmdbCinemaTheme.palette(light);
         boolean darkChrome = !light;
         holder.binding.name.setTextColor(cinema ? palette.primary() : darkChrome ? 0xFFFFFFFF : 0xFF12202D);
         holder.binding.subtitle.setTextColor(cinema ? palette.secondary() : darkChrome ? 0x99FFFFFF : 0x9912202D);

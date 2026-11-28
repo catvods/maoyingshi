@@ -44,6 +44,7 @@ public class TmdbRailAdapter extends RecyclerView.Adapter<TmdbRailAdapter.ViewHo
     private FocusListener focusListener;
     private boolean cinema;
     private boolean light;
+    private TmdbCinemaTheme.Palette cinemaPalette;
 
     public TmdbRailAdapter(Listener listener) {
         this.listener = listener;
@@ -92,6 +93,17 @@ public class TmdbRailAdapter extends RecyclerView.Adapter<TmdbRailAdapter.ViewHo
         notifyDataSetChanged();
     }
 
+    /**
+     * Hands the themed cinema palette to this adapter. When set, the cinema
+     * card stroke uses it; otherwise it falls back to the fixed
+     * {@link TmdbCinemaTheme#palette(boolean)}. The rail card background
+     * stays the fixed dark poster-frame colour in both cases.
+     */
+    public void setCinemaPalette(TmdbCinemaTheme.Palette cinemaPalette) {
+        this.cinemaPalette = cinemaPalette;
+        notifyDataSetChanged();
+    }
+
     public void setLight(boolean light) {
         this.light = light;
         notifyDataSetChanged();
@@ -124,7 +136,7 @@ public class TmdbRailAdapter extends RecyclerView.Adapter<TmdbRailAdapter.ViewHo
         holder.doubanRating.setVisibility(View.VISIBLE);
         holder.doubanRating.setAlpha(ratings.hasDoubanRating() ? 1.0f : 0.55f);
         holder.ratingGroup.setVisibility(View.VISIBLE);
-        TmdbCinemaTheme.Palette palette = TmdbCinemaTheme.palette(light);
+        TmdbCinemaTheme.Palette palette = cinemaPalette != null ? cinemaPalette : TmdbCinemaTheme.palette(light);
         holder.title.setTextColor(0xFFFFFFFF);
         holder.subtitle.setTextColor(cinema ? 0xB3FFFFFF : 0x99FFFFFF);
         holder.tmdbRating.setTextColor(0xFFFFD35C);

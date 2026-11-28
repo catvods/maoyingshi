@@ -1,6 +1,7 @@
 package com.github.maoyingshi.osc.tv.ui.helper;
 
 import com.github.maoyingshi.osc.tv.setting.Setting;
+import com.github.maoyingshi.osc.tv.theme.ThemeTokens;
 
 public final class TmdbCinemaTheme {
 
@@ -13,6 +14,50 @@ public final class TmdbCinemaTheme {
 
     public static Palette palette(boolean light) {
         return light ? light() : dark();
+    }
+
+    /**
+     * Builds the cinema palette from the active global theme's tokens, so
+     * the cinema style's cards follow the theme like the rest of the detail
+     * page. The mapping mirrors the detail page's own colour contract: the
+     * same surface/container/outline/primary slots, the same fixed alphas the
+     * fixed palettes used — only the hue now comes from the theme. Deliberate
+     * consequences for the default theme: cinema light loses its fixed warm
+     * paper tint (it takes the theme's surface — a warm global theme restores
+     * the warmth), accent/play follow the theme primary instead of the old
+     * green/bronze, and chipActive follows the theme's success container
+     * instead of the old amber (light).
+     */
+    public static Palette fromTokens(ThemeTokens tokens, boolean light) {
+        int surface = tokens.colorSurface();
+        int surfaceContainer = tokens.colorSurfaceContainer();
+        int surfaceContainerHigh = tokens.colorSurfaceContainerHigh();
+        int onSurface = tokens.colorOnSurface();
+        return new Palette(
+                surface,
+                withAlpha(surfaceContainer, light ? 0x99 : 0xC9),
+                surfaceContainerHigh,
+                light ? withAlpha(surfaceContainer, 0xD9) : withAlpha(surfaceContainerHigh, 0x40),
+                withAlpha(tokens.colorSuccessContainer(), light ? 0xFF : 0x66),
+                withAlpha(tokens.colorOutline(), light ? 0x33 : 0x24),
+                withAlpha(tokens.colorOutline(), light ? 0x66 : 0x42),
+                onSurface,
+                withAlpha(onSurface, light ? 0xCC : 0xD9),
+                tokens.colorOnSurfaceVariant(),
+                withAlpha(onSurface, 0xE6),
+                tokens.colorPrimary(),
+                tokens.colorPrimary(),
+                withAlpha(surface, light ? 0xBF : 0xB3),
+                withAlpha(light ? surfaceContainer : surfaceContainerHigh, light ? 0xD9 : 0xB3),
+                withAlpha(tokens.colorOutline(), 0x33),
+                withAlpha(surfaceContainer, light ? 0x1F : 0x26),
+                withAlpha(surfaceContainerHigh, light ? 0xD9 : 0x40)
+        );
+    }
+
+    /** Replaces only the alpha of an opaque theme colour. */
+    private static int withAlpha(int color, int alpha) {
+        return (color & 0x00FFFFFF) | ((alpha & 0xFF) << 24);
     }
 
     private static Palette dark() {

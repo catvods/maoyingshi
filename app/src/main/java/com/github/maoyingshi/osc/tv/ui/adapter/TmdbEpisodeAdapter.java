@@ -61,6 +61,7 @@ public class TmdbEpisodeAdapter extends RecyclerView.Adapter<TmdbEpisodeAdapter.
     private boolean showScrapedName = Setting.getTmdbEpisodeShowScrapedName();
     private boolean showFileSize = Setting.isTmdbEpisodeFileSize();
     private int activeStrokeColor = 0xFF2CC56F;
+    private Integer activeChipBackground;
     private int gridSpanCount = 2;
     private String fallbackStillUrl = "";
     private View.OnKeyListener keyListener;
@@ -119,6 +120,16 @@ public class TmdbEpisodeAdapter extends RecyclerView.Adapter<TmdbEpisodeAdapter.
     public void setActiveStrokeColor(int activeStrokeColor) {
         if (this.activeStrokeColor == activeStrokeColor) return;
         this.activeStrokeColor = activeStrokeColor;
+        notifyDataSetChanged();
+    }
+
+    /**
+     * The "currently playing" chip background. When unset, the adapter keeps
+     * its fixed green; the detail page hands it the themed selected colour.
+     */
+    public void setActiveChipBackground(int activeChipBackground) {
+        if (Objects.equals(this.activeChipBackground, activeChipBackground)) return;
+        this.activeChipBackground = activeChipBackground;
         notifyDataSetChanged();
     }
 
@@ -536,7 +547,7 @@ public class TmdbEpisodeAdapter extends RecyclerView.Adapter<TmdbEpisodeAdapter.
         }
         TmdbCardFocusHelper.bind(
                 holder.binding.getRoot(),
-                activated ? (light ? 0xFFE5F7EC : 0x6630A86B) : (light ? 0xEEFFFFFF : 0xCC16202A),
+                activated ? (activeChipBackground != null ? activeChipBackground : (light ? 0xFFE5F7EC : 0x6630A86B)) : (light ? 0xEEFFFFFF : 0xCC16202A),
                 activated ? activeStrokeColor : (light ? 0x33647480 : 0x33FFFFFF),
                 activated ? 2 : 1,
                 focused -> {

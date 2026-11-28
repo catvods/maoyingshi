@@ -149,6 +149,8 @@ import com.github.maoyingshi.osc.tv.setting.PlayerSetting;
 import com.github.maoyingshi.osc.tv.setting.Setting;
 import com.github.maoyingshi.osc.tv.setting.TmdbSitePolicy;
 import com.github.maoyingshi.osc.tv.theme.ThemeController;
+import com.github.maoyingshi.osc.tv.theme.ThemeSeed;
+import com.github.maoyingshi.osc.tv.theme.ThemeTokens;
 import com.github.maoyingshi.osc.tv.title.MediaTitleLearningExample;
 import com.github.maoyingshi.osc.tv.title.MediaTitleLearningStore;
 import com.github.maoyingshi.osc.tv.title.MediaTitleParser;
@@ -557,6 +559,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     private static final int DETAIL_EPISODE_FOCUS_MAX_ATTEMPTS = 6;
     private boolean tmdbMediaLoading;
     private boolean lightTheme;
+    private ThemeColors lastAppliedThemeColors;
     private boolean backdropSlideLoading;
     private String backdropSlideTitle = "";
     private String backdropSlidePrimary = "";
@@ -2112,11 +2115,12 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     private void applyDetailTheme() {
         lightTheme = resolveLightTheme();
         applyDetailEdgeToEdge();
-        ThemeColors colors = currentThemeColors();
+        ThemeTokens tokens = detailThemeTokens(lightTheme);
+        ThemeColors colors = ThemeColors.fromTokens(tokens, lightTheme);
         applyBackdropSurface(colors);
         binding.backdropFill.setAlpha(backdropSlideAlpha());
         binding.backdrop.setAlpha(backdropSlideAlpha());
-        binding.backdropShade.setBackground(modeController.isCinemaStyle() ? cinemaBackdropShade() : TmdbDetailLayoutUtils.colorDrawable(colors.backdropShade));
+        binding.backdropShade.setBackground(modeController.isCinemaStyle() ? cinemaBackdropShade(colors) : TmdbDetailLayoutUtils.colorDrawable(colors.backdropShade));
         setCard(binding.contentPanel, colors.panel, colors.line);
         setPlayerCard(colors);
         setCard(binding.tmdbPanel, colors.panel, colors.line);
@@ -2142,7 +2146,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
         setEpisodeToolButton(binding.episodeViewMode, colors);
         setEpisodeToolButton(binding.episodeFileName, colors);
         setEpisodeToolButton(binding.episodeDownload, colors);
-        setButton(binding.play, colors.play, colors.play, 0xFFFFFFFF);
+        setButton(binding.play, colors.play, colors.play, colors.onPlay);
         binding.headerTitle.setTextColor(colors.primary);
         binding.title.setTextColor(colors.primary);
         binding.subtitle.setTextColor(colors.secondary);
@@ -2166,11 +2170,14 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
         }
         if (episodeAdapter != null) {
             episodeAdapter.setTheme(lightTheme, colors.accent);
+            episodeAdapter.setActiveChipBackground(colors.chipActive);
         }
         if (episodePhotoAdapter != null) episodePhotoAdapter.setLight(lightTheme);
         if (posterAdapter != null) posterAdapter.setLight(lightTheme);
         setDetailAdaptersLight(lightTheme);
+        setDetailAdaptersCinemaPalette(tokens);
         if (modeController.isCinemaStyle()) scheduleBackdropSlide(BACKDROP_SLIDE_DELAY_MS);
+        lastAppliedThemeColors = colors;
     }
 
     private void styleSourceValue() {
@@ -2189,6 +2196,22 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
         if (personalTmdbAdapter != null) personalTmdbAdapter.setLight(light);
         if (personalDoubanAdapter != null) personalDoubanAdapter.setLight(light);
         if (personalAiAdapter != null) personalAiAdapter.setLight(light);
+    }
+
+    /**
+     * Hands the themed cinema palette to the cast/rail adapters so their
+     * cinema cards follow the global theme like the rest of the page. The
+     * adapters keep using the fixed {@link TmdbCinemaTheme#palette(boolean)}
+     * when no palette was handed to them.
+     */
+    private void setDetailAdaptersCinemaPalette(ThemeTokens tokens) {
+        TmdbCinemaTheme.Palette palette = TmdbCinemaTheme.fromTokens(tokens, lightTheme);
+        if (castAdapter != null) castAdapter.setCinemaPalette(palette);
+        if (creatorAdapter != null) creatorAdapter.setCinemaPalette(palette);
+        if (relatedAdapter != null) relatedAdapter.setCinemaPalette(palette);
+        if (personalTmdbAdapter != null) personalTmdbAdapter.setCinemaPalette(palette);
+        if (personalDoubanAdapter != null) personalDoubanAdapter.setCinemaPalette(palette);
+        if (personalAiAdapter != null) personalAiAdapter.setCinemaPalette(palette);
     }
 
     private void tintTmdbSectionTitles(ThemeColors colors) {
@@ -2366,19 +2389,16 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
         }
     }
 
-    private Drawable cinemaBackdropShade() {
-        if (lightTheme) return cinemaLightBackdropShade();
+    /**
+     * 剧幕模式下海报上的渐变遮罩：形状（alpha 序列）保持原样，底色跟主题走，
+     * 这样渐变淡出的那一端永远是当前页面的背景色。
+     */
+    private Drawable cinemaBackdropShade(ThemeColors colors) {
+        if (lightTheme) return cinemaLightBackdropShade(colors);
+        int base = colors.background;
         boolean compact = isCompactWidth();
-        GradientDrawable horizontal = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, compact ? new int[]{
-                0xEC090B0F, 0xD6090B0F, 0x78090B0F, 0x42090B0F, 0x96090B0F
-        } : new int[]{
-                0xF2090B0F, 0xDC090B0F, 0x82090B0F, 0x48090B0F, 0xA6090B0F
-        });
-        GradientDrawable vertical = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, compact ? new int[]{
-                0x10090B0F, 0x26090B0F, 0xA6090B0F, 0xE6090B0F
-        } : new int[]{
-                0x12090B0F, 0x2D090B0F, 0xB8090B0F, 0xF0090B0F
-        });
+        GradientDrawable horizontal = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, compact ? shade(base, 0xEC, 0xD6, 0x78, 0x42, 0x96) : shade(base, 0xF2, 0xDC, 0x82, 0x48, 0xA6));
+        GradientDrawable vertical = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, compact ? shade(base, 0x10, 0x26, 0xA6, 0xE6) : shade(base, 0x12, 0x2D, 0xB8, 0xF0));
         return new LayerDrawable(new Drawable[]{horizontal, vertical});
     }
 
@@ -2389,19 +2409,20 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
      * 深色剧幕一直是「暗幕 + 浅字」，浅色剧幕此前该层被改成全透明，内容直接浮在
      * 剧照原图上，文字与 chip 都没有稳定底板，所以既看不清也不像深色模式。
      */
-    private Drawable cinemaLightBackdropShade() {
+    private Drawable cinemaLightBackdropShade(ThemeColors colors) {
+        int base = colors.background;
         boolean compact = isCompactWidth();
-        GradientDrawable horizontal = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, compact ? new int[]{
-                0xB8F4F7FA, 0x99F4F7FA, 0x55F4F7FA, 0x24F4F7FA, 0x70F4F7FA
-        } : new int[]{
-                0x99F4F7FA, 0x80F4F7FA, 0x40F4F7FA, 0x1AF4F7FA, 0x55F4F7FA
-        });
-        GradientDrawable vertical = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, compact ? new int[]{
-                0x0AF4F7FA, 0x18F4F7FA, 0x55F4F7FA, 0x99F4F7FA
-        } : new int[]{
-                0x04F4F7FA, 0x0FF4F7FA, 0x3DF4F7FA, 0x70F4F7FA
-        });
+        GradientDrawable horizontal = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, compact ? shade(base, 0xB8, 0x99, 0x55, 0x24, 0x70) : shade(base, 0x99, 0x80, 0x40, 0x1A, 0x55));
+        GradientDrawable vertical = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, compact ? shade(base, 0x0A, 0x18, 0x55, 0x99) : shade(base, 0x04, 0x0F, 0x3D, 0x70));
         return new LayerDrawable(new Drawable[]{horizontal, vertical});
+    }
+
+    /** Builds a gradient stop list from one base RGB plus the alpha of each stop. */
+    private static int[] shade(int base, int... alphas) {
+        int rgb = base & 0x00FFFFFF;
+        int[] stops = new int[alphas.length];
+        for (int i = 0; i < alphas.length; i++) stops[i] = rgb | ((alphas[i] & 0xFF) << 24);
+        return stops;
     }
 
     private void tintInlineControl(View view) {
@@ -2459,7 +2480,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     }
 
     private void updatePlayerPanelFocus() {
-        updatePlayerPanelFocus(lightTheme ? ThemeColors.light() : ThemeColors.dark());
+        updatePlayerPanelFocus(currentThemeColors());
     }
 
     private void updatePlayerPanelFocus(ThemeColors colors) {
@@ -2498,7 +2519,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
                     new int[]{}
             };
             button.setAlpha(1f);
-            button.setBackgroundTintList(new ColorStateList(states, new int[]{colors.chipActive, 0xFFFFFFFF}));
+            button.setBackgroundTintList(new ColorStateList(states, new int[]{colors.chipActive, colors.background}));
             button.setTextColor(new ColorStateList(states, new int[]{colors.primary, colors.primary}));
             button.setIconTint(new ColorStateList(states, new int[]{colors.primary, colors.primary}));
             button.setOnFocusChangeListener(null);
@@ -4622,8 +4643,33 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     }
 
     private ThemeColors currentThemeColors() {
-        ThemeColors colors = lightTheme ? ThemeColors.light() : ThemeColors.dark();
-        return isCinemaStyle() ? ThemeColors.cinema(lightTheme) : colors;
+        return currentThemeColors(lightTheme);
+    }
+
+    private ThemeColors currentThemeColors(boolean light) {
+        return ThemeColors.fromTokens(detailThemeTokens(light), light);
+    }
+
+    /**
+     * Resolves the active global theme's tokens for the detail page's own
+     * light/dark mode. The seed follows the same WebHTV contract as
+     * {@link ThemeController#resolveFromPreferences()}: {@code -1} disables
+     * tinting, {@code 0} uses the wallpaper seed, any other value is an
+     * explicit ARGB seed. The profile's stored mode does not decide the slot
+     * set — the detail page's {@code light} does.
+     */
+    private ThemeTokens detailThemeTokens(boolean light) {
+        int themeColor = Setting.getThemeColor();
+        ThemeSeed seed = themeColor == -1 ? ThemeSeed.NONE
+                : (themeColor == 0 ? ThemeSeed.WALLPAPER : ThemeSeed.EXPLICIT);
+        int explicit = themeColor == 0 ? 0 : themeColor;
+        return ThemeController.tokensForDetail(ThemeController.activeProfile(), seed,
+                explicit, Setting.getWallColor(), !light);
+    }
+
+    /** Replaces only the alpha of an opaque theme colour. */
+    private static int withAlpha(int color, int alpha) {
+        return (color & 0x00FFFFFF) | ((alpha & 0xFF) << 24);
     }
 
     private void refreshBackdropSurface() {
@@ -4643,6 +4689,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     }
 
     private int backdropFallbackBackground(ThemeColors colors) {
+        // 播放器模式下页面就是视频表面：永远保持纯黑 letterbox，不跟主题走。
         return modeController.isPlayerMode() ? 0xFF0F141A : colors.background;
     }
 
@@ -4821,7 +4868,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
         if (!(view instanceof LinearLayout row)) return;
         boolean focused = row.hasFocus();
         GradientDrawable background = new GradientDrawable();
-        background.setColor(modeController.isCinemaStyle() ? TmdbCinemaTheme.palette(lightTheme).ratingChip() : colors.chip);
+        background.setColor(colors.chip);
         // BieCuiLe grouped-card row: 16dp radius + settings-row padding (see
         // docs/ui-restyle-biecuile.md §3.2/§6, shape_setting_row_card). Theme
         // colors and focus-ring logic below are unchanged.
@@ -4908,17 +4955,13 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     }
 
     private void styleDetailRatingChip(TextView chip, int color) {
-        ThemeColors colors = lightTheme ? ThemeColors.light() : ThemeColors.dark();
+        ThemeColors colors = currentThemeColors();
         GradientDrawable background = new GradientDrawable();
-        background.setColor(lightTheme ? ratingChipBackground(colors) : 0x6610141A);
+        background.setColor(lightTheme ? colors.chip : withAlpha(colors.panel, 0x66));
         background.setCornerRadius(ResUtil.dp2px(8));
-        background.setStroke(ResUtil.dp2px(1), lightTheme ? colors.line : 0x33FFFFFF);
+        background.setStroke(ResUtil.dp2px(1), colors.line);
         chip.setBackground(background);
         chip.setTextColor(readableDetailRatingColor(color));
-    }
-
-    private int ratingChipBackground(ThemeColors colors) {
-        return modeController.isCinemaStyle() ? TmdbCinemaTheme.palette(true).ratingChip() : colors.chip;
     }
 
     private int readableDetailRatingColor(int color) {
@@ -5512,7 +5555,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     }
 
     private void setEpisodeRangeFocusChange(MaterialButton button, int index) {
-        ThemeColors colors = lightTheme ? ThemeColors.light() : ThemeColors.dark();
+        ThemeColors colors = currentThemeColors();
         button.setOnFocusChangeListener((view, focused) -> {
             applyChipFocus(button, index == episodeRangeIndex, focused, colors);
             if (!focused) return;
@@ -7225,7 +7268,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     private void showMovieDialog(Episode episode) {
         DialogTmdbEpisodeBinding dialogBinding = DialogTmdbEpisodeBinding.inflate(getLayoutInflater());
         AlertDialog dialog = new WebHtvAlertDialogBuilder(this).setView(dialogBinding.getRoot()).create();
-        ThemeColors colors = lightTheme ? ThemeColors.light() : ThemeColors.dark();
+        ThemeColors colors = currentThemeColors();
         dialogBinding.panel.setCardBackgroundColor(colors.panel);
         dialogBinding.panel.setStrokeColor(colors.line);
         tintTextTree(dialogBinding.getRoot(), colors);
@@ -7340,7 +7383,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     private void showTmdbEpisodeDialog(Episode episode, int episodeNumber, JsonObject detail, List<String> photos, List<TmdbPerson> guests) {
         DialogTmdbEpisodeBinding dialogBinding = DialogTmdbEpisodeBinding.inflate(getLayoutInflater());
         AlertDialog dialog = new WebHtvAlertDialogBuilder(this).setView(dialogBinding.getRoot()).create();
-        ThemeColors colors = lightTheme ? ThemeColors.light() : ThemeColors.dark();
+        ThemeColors colors = currentThemeColors();
         dialogBinding.panel.setCardBackgroundColor(colors.panel);
         dialogBinding.panel.setStrokeColor(colors.line);
         tintTextTree(dialogBinding.getRoot(), colors);
@@ -8038,7 +8081,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
         detailPlayerActive = true;
         binding.playerError.setTextColor(0xFFFFFFFF);
         tintInlineControl(inlineControlsView());
-        setPlayerCard(lightTheme ? ThemeColors.light() : ThemeColors.dark());
+        setPlayerCard(currentThemeColors());
         ensureInlineDanmakuController();
         binding.playerPanel.setVisibility(View.VISIBLE);
         binding.playerPanelSpacer.setVisibility(View.VISIBLE); // spacer 作为焦点桥梁需要可见
@@ -9823,7 +9866,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
             showNativeEnhancedInlineEpisodes();
             return;
         }
-        ThemeColors colors = lightTheme ? ThemeColors.light() : ThemeColors.dark();
+        ThemeColors colors = currentThemeColors();
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
         GradientDrawable background = new GradientDrawable();
@@ -10022,7 +10065,8 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
             }
         });
         adapter.setLight(lightTheme);
-        adapter.setActiveStrokeColor(0xFF2CC56F);
+        adapter.setActiveStrokeColor(currentThemeColors().accent);
+        adapter.setActiveChipBackground(currentThemeColors().chipActive);
         adapter.setNativeEnhanced(true);
         recycler.setAdapter(adapter);
         LinearLayout.LayoutParams recyclerParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -10354,20 +10398,20 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     }
 
     private void applyEpisodeDialogPageState(TextView button, boolean selected, boolean focused) {
-        ThemeColors colors = lightTheme ? ThemeColors.light() : ThemeColors.dark();
+        ThemeColors colors = currentThemeColors();
         GradientDrawable background = new GradientDrawable();
         background.setCornerRadius(ResUtil.dp2px(6));
         if (focused) {
             background.setColor(ThemeController.focusRingColor(this, lightTheme ? 0.10f : 0.33f));
             background.setStroke(focusRingWidthPx(), focusStroke());
-            button.setTextColor(lightTheme ? colors.primary : 0xFFFFFFFF);
+            button.setTextColor(colors.primary);
         } else if (selected) {
-            background.setColor(lightTheme ? 0x1F20B866 : 0x332CC56F);
+            background.setColor(colors.chipActive);
             background.setStroke(ResUtil.dp2px(2), colors.accent);
             button.setTextColor(colors.accent);
         } else {
             background.setColor(0x00000000);
-            button.setTextColor(lightTheme ? colors.secondary : 0xFFC6D0D9);
+            button.setTextColor(colors.secondary);
         }
         button.setSelected(selected);
         button.setBackground(background);
@@ -10417,8 +10461,8 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     }
 
     private void applyInlineEpisodeModeButtonState(MaterialButton button, boolean focused) {
-        ThemeColors colors = lightTheme ? ThemeColors.light() : ThemeColors.dark();
-        int text = focused ? (lightTheme ? colors.primary : 0xFFFFFFFF) : colors.primary;
+        ThemeColors colors = currentThemeColors();
+        int text = colors.primary;
         button.setTextColor(text);
         button.setIconTint(ColorStateList.valueOf(text));
         button.setBackgroundTintList(ColorStateList.valueOf(focused ? ThemeController.focusRingColor(this, lightTheme ? 0.10f : 0.33f) : colors.control));
@@ -10910,7 +10954,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
         setInlineVideoFrame(binding.danmaku, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         binding.playerPanel.setTranslationZ(0f);
         binding.playerPanel.setVisibility(View.VISIBLE);
-        setPlayerCard(lightTheme ? ThemeColors.light() : ThemeColors.dark());
+        setPlayerCard(currentThemeColors());
         binding.playerPanel.requestLayout();
         binding.exo.requestLayout();
         View surface = binding.exo.getVideoSurfaceView();
@@ -11812,6 +11856,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     @Override
     protected void onResume() {
         super.onResume();
+        refreshDetailThemeIfChanged();
         // PluginEpisodeContext 是全局单槽：播放页发布后本页的快照已被覆盖，而返回本页
         // 不触发任何重新装载。不在这里认领，用户走过一次「详情页 → 播放页 → 返回详情页」，
         // 本页的插件 chip 此后永远读不到剧集上下文。
@@ -11821,6 +11866,24 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
         refreshDownloadButton();
         if (vod != null && binding.loading.getVisibility() != View.VISIBLE) revealDefaultPlaybackLoadingPage();
         scheduleBackdropSlide(BACKDROP_SLIDE_DELAY_MS);
+    }
+
+    /**
+     * Repaints the page when the global theme changed while this page was in
+     * the back stack. Applying a merged theme only saves the profile — no
+     * theme event is posted — so without this the page would keep the old
+     * colours until it was recreated. Only colours are re-applied; content
+     * and playback state are untouched.
+     */
+    private void refreshDetailThemeIfChanged() {
+        if (binding == null) return;
+        ThemeController.applyFromPreferences(this);
+        boolean freshLight = resolveLightTheme();
+        ThemeColors fresh = currentThemeColors(freshLight);
+        if (freshLight != lightTheme || !fresh.equals(lastAppliedThemeColors)) {
+            applyDetailTheme();
+            refreshDetailThemeDynamicViews();
+        }
     }
 
     private void restoreOriginAfterExternalPlayback() {
@@ -13856,7 +13919,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     }
 
     private void setChipState(MaterialButton button, boolean selected) {
-        ThemeColors colors = lightTheme ? ThemeColors.light() : ThemeColors.dark();
+        ThemeColors colors = currentThemeColors();
         button.setTextColor(colors.primary);
         // 必须走 backgroundTint 通道，不能用 setBackgroundColor。
         // setBackgroundColor 只把颜色写进当前那个 MaterialShapeDrawable 实例，
@@ -13887,7 +13950,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
 
     private void styleMetaChips() {
         if (binding == null || binding.metaContainer == null) return;
-        ThemeColors colors = lightTheme ? ThemeColors.light() : ThemeColors.dark();
+        ThemeColors colors = currentThemeColors();
         for (int i = 0; i < binding.metaContainer.getChildCount(); i++) {
             View child = binding.metaContainer.getChildAt(i);
             if (!(child instanceof TextView chip)) continue;
@@ -13903,7 +13966,7 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     private void addMetaChip(String text) {
         if (TextUtils.isEmpty(text)) return;
         text = normalizeImdbBrand(text);
-        ThemeColors colors = lightTheme ? ThemeColors.light() : ThemeColors.dark();
+        ThemeColors colors = currentThemeColors();
         TextView chip = new TextView(this);
         chip.setText(text);
         chip.setTextColor(colors.primary);
@@ -14380,63 +14443,61 @@ public class TmdbDetailActivity extends PlaybackActivity implements TrackDialog.
     private record RatingChipTag(String platform, int color) {
     }
 
-    private record ThemeColors(int background, int panel, int control, int chip, int chipActive, int line, int lineStrong, int primary, int secondary, int muted, int body, int accent, int play, int backdropShade) {
+    /**
+     * The detail page's colour contract, resolved from the active global
+     * theme profile. The fixed palettes this record used to carry
+     * ({@code dark()}/{@code light()}/{@code cinema()}) are gone with their
+     * hard-coded values.
+     *
+     * <p>Mapping from the resolved {@link ThemeTokens} — the resolver's
+     * guarantees apply (primary ≥4.5:1 on every surface role,
+     * onSurface/onSurfaceVariant ≥4.5:1 on surface and containers,
+     * focus/outline ≥3:1):
+     * <ul>
+     * <li>background — surface; panel — surfaceContainer at the page's own
+     * alpha (0xAF light / 0xA6 dark); control — surfaceContainerHigh;
+     * chip — surfaceContainer (light) / surfaceContainerHigh at 0x33 (dark);
+     * chipActive — successContainer (opaque light / 0x66 dark), the same
+     * "selected" green the fixed palette used, now theme-derived;
+     * line/lineStrong — outline at 0x33/0x66 (light) and 0x26/0x4D (dark).</li>
+     * <li>primary — onSurface; secondary — onSurface at 0xCC; muted —
+     * onSurfaceVariant (solid, guaranteed readable — the old 60% white/black
+     * could dip below 4.5:1 on a bright poster); body — onSurface at 0xE6.</li>
+     * <li>accent/play — primary (the play button is the page's primary
+     * action, so it uses the primary fill, not the player ring colour);
+     * onPlay — onPrimary, the resolver-recomputed pairing for the fill.</li>
+     * <li>backdropShade — surface at 0x18 (dark) / transparent (light).</li>
+     * </ul>
+     *
+     * <p>Panel translucency is the page's own: the old fixed alphas are kept
+     * and only the hue now comes from the theme. Text on a translucent panel
+     * over a poster can therefore still dip below 4.5:1 on a very bright
+     * poster — the same caveat the fixed palette had, and the reason the
+     * backdrop shade and the panel alphas were left untouched.
+     */
+    private record ThemeColors(int background, int panel, int control, int chip, int chipActive, int line, int lineStrong, int primary, int secondary, int muted, int body, int accent, int play, int onPlay, int backdropShade) {
 
-        static ThemeColors dark() {
+        static ThemeColors fromTokens(ThemeTokens tokens, boolean light) {
+            int surface = tokens.colorSurface();
+            int surfaceContainer = tokens.colorSurfaceContainer();
+            int surfaceContainerHigh = tokens.colorSurfaceContainerHigh();
+            int onSurface = tokens.colorOnSurface();
             return new ThemeColors(
-                    0xFF0F141A,
-                    0xA6141B23,
-                    0xFF2B3743,
-                    0x332B3743,
-                    0x6630A86B,
-                    0x26FFFFFF,
-                    0x4DFFFFFF,
-                    0xFFFFFFFF,
-                    0xCCFFFFFF,
-                    0x99FFFFFF,
-                    0xE6FFFFFF,
-                    0xFF7EE7A2,
-                    0xFF2CC56F,
-                    0x180F141A
-            );
-        }
-
-        static ThemeColors light() {
-            return new ThemeColors(
-                    0xFFF3F6F9,
-                    0xAFFFFFFF,
-                    0xFFE7EDF3,
-                    0xFFEAF0F5,
-                    0xFFE5F7EC,
-                    0x33424B57,
-                    0x66424B57,
-                    0xFF12202D,
-                    0xCC12202D,
-                    0x9912202D,
-                    0xE612202D,
-                    0xFF1D8F5A,
-                    0xFF20B866,
-                    0x00F7FAFC
-            );
-        }
-
-        static ThemeColors cinema(boolean light) {
-            TmdbCinemaTheme.Palette palette = TmdbCinemaTheme.palette(light);
-            return new ThemeColors(
-                    palette.background(),
-                    palette.panel(),
-                    palette.control(),
-                    palette.chip(),
-                    palette.chipActive(),
-                    palette.line(),
-                    palette.lineStrong(),
-                    palette.primary(),
-                    palette.secondary(),
-                    palette.muted(),
-                    palette.body(),
-                    palette.accent(),
-                    palette.play(),
-                    palette.backdropShade()
+                    surface,
+                    withAlpha(surfaceContainer, light ? 0xAF : 0xA6),
+                    surfaceContainerHigh,
+                    light ? surfaceContainer : withAlpha(surfaceContainerHigh, 0x33),
+                    withAlpha(tokens.colorSuccessContainer(), light ? 0xFF : 0x66),
+                    withAlpha(tokens.colorOutline(), light ? 0x33 : 0x26),
+                    withAlpha(tokens.colorOutline(), light ? 0x66 : 0x4D),
+                    onSurface,
+                    withAlpha(onSurface, 0xCC),
+                    tokens.colorOnSurfaceVariant(),
+                    withAlpha(onSurface, 0xE6),
+                    tokens.colorPrimary(),
+                    tokens.colorPrimary(),
+                    tokens.colorOnPrimary(),
+                    withAlpha(surface, light ? 0x00 : 0x18)
             );
         }
     }

@@ -181,6 +181,30 @@ public final class ThemeController {
     }
 
     /**
+     * Resolves the active profile's tokens for an explicit dark/light choice,
+     * without the liquid-glass control derivation.
+     *
+     * <p>The detail page paints its own translucent panels (its panel/chip
+     * alphas are the page's own), so the glass-derived control alphas of
+     * {@link #resolveWith(ThemeProfile, Context)} must not leak in here. The
+     * seed is passed explicitly — rather than read from {@code Setting} — so
+     * this stays a pure function of its arguments and remains JVM-testable.
+     *
+     * <p>{@code dark} is the detail page's own light/dark mode, not the global
+     * appearance mode: it selects the profile's dark or light slot set, and it
+     * wins over the profile's stored mode.
+     */
+    public static ThemeTokens tokensForDetail(ThemeProfile profile, ThemeSeed seed,
+                                              int seedColor, int wallpaperColor, boolean dark) {
+        ThemeProfile stored = profile == null ? ThemeProfile.defaultProfile() : profile;
+        ThemeMode mode = dark ? ThemeMode.DARK : ThemeMode.LIGHT;
+        if (seed == null || seed == ThemeSeed.NONE) {
+            return ThemeResolver.resolve(mode, ThemeSeed.NONE, 0, 0, stored, null, dark);
+        }
+        return ThemeResolver.resolve(mode, seed, seedColor, wallpaperColor, stored, null, dark);
+    }
+
+    /**
      * Resolves the active snapshot against the table the given context inflates with.
      *
      * <p>{@code context} must be the activity whose views are about to be inflated, or

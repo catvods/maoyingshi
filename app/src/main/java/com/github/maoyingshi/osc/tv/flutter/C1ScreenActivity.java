@@ -1505,7 +1505,7 @@ public class C1ScreenActivity extends AppCompatActivity {
                 result.success(file.exists() ? readThemeFile(file) : null);
             }
             else if ("importUserTheme".equals(call.method)) {
-                LabFilePicker.pick(this, false, "*/*", path -> {
+                LabFilePicker.pickSystem(this, "*/*", path -> {
                     if (path == null || path.isEmpty()) {
                         result.success(null);
                         return;
@@ -1554,7 +1554,7 @@ public class C1ScreenActivity extends AppCompatActivity {
                 }
             }
             else if ("importThemeZip".equals(call.method)) {
-                LabFilePicker.pick(this, false, "application/zip", path -> {
+                LabFilePicker.pickSystem(this, "application/zip", path -> {
                     if (path == null || path.isEmpty()) {
                         result.success(null);
                         return;

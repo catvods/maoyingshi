@@ -51,6 +51,17 @@ public final class LabFilePicker {
             }
         } catch (Exception ignored) {
         }
+        launchSystemPicker(activity, directory, mime, callback);
+    }
+
+    // Straight to the system picker (ACTION_OPEN_DOCUMENT), skipping
+    // the built-in browser dialog. Theme import uses this; the lab's
+    // own calls keep pick() and its built-in dialog.
+    public static void pickSystem(Activity activity, String mime, Consumer<String> callback) {
+        launchSystemPicker(activity, false, mime, callback);
+    }
+
+    private static void launchSystemPicker(Activity activity, boolean directory, String mime, Consumer<String> callback) {
         int code = nextCode++;
         PENDING.put(code, new Pending(activity, directory, callback));
         try {

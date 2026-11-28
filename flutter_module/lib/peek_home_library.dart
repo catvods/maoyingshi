@@ -6,11 +6,18 @@ import 'package:rfw/rfw.dart';
 
 import 'theme_design.dart';
 
-/// The `peek.home` local widget library: the nine custom widgets the
-/// ported PeekPro home themes import next to `core.widgets`. The
+/// The `peek.home` local widget library: the thirteen custom widgets
+/// the ported PeekPro home themes import next to `core.widgets`. The
 /// themes are declarative RFW text (assets/peek_home); everything
 /// stateful or platform-bound lives here, implemented against the
 /// B11/B12 home data the bridge in themed_home.dart feeds in.
+///
+/// The four shape widgets (ClipPath, RotatedBox, Transform,
+/// CustomPaint) fill the gaps RFW's core library leaves: core
+/// registers only 39 widgets and has no arbitrary clip, rotation,
+/// transform or custom painting, so themes that need a true polygon
+/// or a Bezier curve use these instead of approximating with
+/// borderRadius.
 ///
 /// The themes pass no event handlers into these widgets; the two
 /// behaviours that need to reach back into the bridge (carousel page
@@ -535,7 +542,411 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
           children: source.childList(<Object>['children']),
         );
       },
+      'ClipPath': (BuildContext context, DataSource source) {
+        final List<Offset>? points =
+            _decodeOffsets(source, <Object>['points']);
+        final Widget? child = source.optionalChild(<Object>['child']);
+        if (points == null || points.length < 3 || child == null) {
+          return child ?? const SizedBox.shrink();
+        }
+        return ClipPath(clipper: _PolygonClipper(points), child: child);
+      },
+      'RotatedBox': (BuildContext context, DataSource source) {
+        final int turns = source.v<int>(<Object>['quarterTurns']) ?? 0;
+        return RotatedBox(
+          quarterTurns: turns,
+          child: source.optionalChild(<Object>['child']) ??
+              const SizedBox.shrink(),
+        );
+      },
+      'Transform': (BuildContext context, DataSource source) {
+        final double angle = _decodeDouble(source, <Object>['angle']) ?? 0.0;
+        final double scale = _decodeDouble(source, <Object>['scale']) ?? 1.0;
+        final double translateX =
+            _decodeDouble(source, <Object>['translateX']) ?? 0.0;
+        final double translateY =
+            _decodeDouble(source, <Object>['translateY']) ?? 0.0;
+        return Transform(
+          transform: Matrix4.identity()
+            ..translate(translateX, translateY)
+            ..rotateZ(angle)
+            ..scale(scale),
+          alignment: Alignment.center,
+          child: source.optionalChild(<Object>['child']) ??
+              const SizedBox.shrink(),
+        );
+      },
+      'CustomPaint': (BuildContext context, DataSource source) {
+        final double width =
+            _decodeDouble(source, <Object>['width']) ?? 100.0;
+        final double height =
+            _decodeDouble(source, <Object>['height']) ?? 100.0;
+        final List<_PaintCommand>? shapes =
+            _decodePaintCommands(source, <Object>['shapes']);
+        return CustomPaint(
+          size: Size(width, height),
+          painter: _CommandPainter(shapes ?? const <_PaintCommand>[]),
+        );
+      },
     });
+
+/// Decodes an RFW number (int or double) as a double. RFW text writes
+/// `0` as int and `0.0` as double; `source.v<double>` only matches
+/// doubles, so int values need the fallback.
+double? _decodeDouble(DataSource source, List<Object> key) {
+  final double? asDouble = source.v<double>(key);
+  if (asDouble != null) return asDouble;
+  final int? asInt = source.v<int>(key);
+  return asInt?.toDouble();
+}
+
+/// Decodes a list of `{x, y}` maps as 0..1-relative [Offset]s.
+List<Offset>? _decodeOffsets(DataSource source, List<Object> key) {
+  return ArgumentDecoders.list<Offset>(
+    source,
+    key,
+    (DataSource s, List<Object> k) {
+      final double x = _decodeDouble(s, <Object>[...k, 'x']) ?? 0.0;
+      final double y = _decodeDouble(s, <Object>[...k, 'y']) ?? 0.0;
+      return Offset(x, y);
+    },
+  );
+}
+
+/// Clips to the polygon through the given 0..1-relative points
+/// (straight edges only). Arcs and curves belong to [_CommandPainter]'s
+/// path command (quadratic/cubic Bezier segments), not here.
+class _PolygonClipper extends CustomClipper<Path> {
+  const _PolygonClipper(this.points);
+
+  final List<Offset> points;
+
+  @override
+  Path getClip(Size size) {
+    final Path path = Path();
+    for (int i = 0; i < points.length; i++) {
+      final Offset p =
+          Offset(points[i].dx * size.width, points[i].dy * size.height);
+      if (i == 0) {
+        path.moveTo(p.dx, p.dy);
+      } else {
+        path.lineTo(p.dx, p.dy);
+      }
+    }
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(_PolygonClipper oldClipper) {
+    if (points.length != oldClipper.points.length) return true;
+    for (int i = 0; i < points.length; i++) {
+      if (points[i] != oldClipper.points[i]) return true;
+    }
+    return false;
+  }
+}
+
+/// One segment of a [CustomPaint] `path` command. Coordinates are
+/// absolute px inside the widget's `width` x `height` box.
+class _PathSegment {
+  const _PathSegment({
+    required this.op,
+    this.x = 0.0,
+    this.y = 0.0,
+    this.cx = 0.0,
+    this.cy = 0.0,
+    this.c1x = 0.0,
+    this.c1y = 0.0,
+    this.c2x = 0.0,
+    this.c2y = 0.0,
+  });
+
+  /// 'move' | 'line' | 'quad' | 'cubic' | 'close'.
+  final String op;
+  final double x;
+  final double y;
+
+  /// Quadratic Bezier control point ('quad').
+  final double cx;
+  final double cy;
+
+  /// Cubic Bezier control points ('cubic').
+  final double c1x;
+  final double c1y;
+  final double c2x;
+  final double c2y;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _PathSegment &&
+        op == other.op &&
+        x == other.x &&
+        y == other.y &&
+        cx == other.cx &&
+        cy == other.cy &&
+        c1x == other.c1x &&
+        c1y == other.c1y &&
+        c2x == other.c2x &&
+        c2y == other.c2y;
+  }
+
+  @override
+  int get hashCode => Object.hash(op, x, y, cx, cy, c1x, c1y, c2x, c2y);
+}
+
+/// One draw instruction for [CustomPaint]'s `shapes` list. Coordinates
+/// are absolute px inside the widget's `width` x `height` box.
+class _PaintCommand {
+  const _PaintCommand({
+    required this.type,
+    this.cx = 0.0,
+    this.cy = 0.0,
+    this.radius = 0.0,
+    this.left = 0.0,
+    this.top = 0.0,
+    this.right = 0.0,
+    this.bottom = 0.0,
+    this.x1 = 0.0,
+    this.y1 = 0.0,
+    this.x2 = 0.0,
+    this.y2 = 0.0,
+    this.segments = const <_PathSegment>[],
+    this.points = const <Offset>[],
+    this.close = false,
+    this.color = const Color(0xFF000000),
+    this.filled = true,
+    this.width = 1.0,
+  });
+
+  /// 'circle' | 'rect' | 'rrect' | 'line' | 'path'.
+  final String type;
+
+  /// Circle centre + radius ('circle'); rrect corner radius ('rrect').
+  final double cx;
+  final double cy;
+  final double radius;
+
+  /// Box edges ('rect' / 'rrect').
+  final double left;
+  final double top;
+  final double right;
+  final double bottom;
+
+  /// Line endpoints ('line').
+  final double x1;
+  final double y1;
+  final double x2;
+  final double y2;
+
+  /// Path segments ('path'); used when non-empty.
+  final List<_PathSegment> segments;
+
+  /// Shorthand polyline points ('path') when [segments] is empty:
+  /// move to the first point, line to the rest.
+  final List<Offset> points;
+
+  /// Whether the path is closed ('path').
+  final bool close;
+  final Color color;
+  final bool filled;
+  final double width;
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! _PaintCommand) return false;
+    return type == other.type &&
+        cx == other.cx &&
+        cy == other.cy &&
+        radius == other.radius &&
+        left == other.left &&
+        top == other.top &&
+        right == other.right &&
+        bottom == other.bottom &&
+        x1 == other.x1 &&
+        y1 == other.y1 &&
+        x2 == other.x2 &&
+        y2 == other.y2 &&
+        close == other.close &&
+        color == other.color &&
+        filled == other.filled &&
+        width == other.width &&
+        _listEquals(segments, other.segments) &&
+        _listEquals(points, other.points);
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        type,
+        cx,
+        cy,
+        radius,
+        left,
+        top,
+        right,
+        bottom,
+        x1,
+        y1,
+        x2,
+        y2,
+        close,
+        color,
+        filled,
+        width,
+        Object.hashAll(segments),
+        Object.hashAll(points),
+      );
+}
+
+bool _listEquals<T>(List<T> a, List<T> b) {
+  if (a.length != b.length) return false;
+  for (int i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
+List<_PathSegment>? _decodePathSegments(DataSource source, List<Object> key) {
+  return ArgumentDecoders.list<_PathSegment>(
+    source,
+    key,
+    (DataSource s, List<Object> k) {
+      return _PathSegment(
+        op: s.v<String>(<Object>[...k, 'op']) ?? '',
+        x: _decodeDouble(s, <Object>[...k, 'x']) ?? 0.0,
+        y: _decodeDouble(s, <Object>[...k, 'y']) ?? 0.0,
+        cx: _decodeDouble(s, <Object>[...k, 'cx']) ?? 0.0,
+        cy: _decodeDouble(s, <Object>[...k, 'cy']) ?? 0.0,
+        c1x: _decodeDouble(s, <Object>[...k, 'c1x']) ?? 0.0,
+        c1y: _decodeDouble(s, <Object>[...k, 'c1y']) ?? 0.0,
+        c2x: _decodeDouble(s, <Object>[...k, 'c2x']) ?? 0.0,
+        c2y: _decodeDouble(s, <Object>[...k, 'c2y']) ?? 0.0,
+      );
+    },
+  );
+}
+
+List<_PaintCommand>? _decodePaintCommands(DataSource source, List<Object> key) {
+  return ArgumentDecoders.list<_PaintCommand>(
+    source,
+    key,
+    (DataSource s, List<Object> k) {
+      final Color color =
+          ArgumentDecoders.color(s, <Object>[...k, 'color']) ??
+              const Color(0xFF000000);
+      return _PaintCommand(
+        type: s.v<String>(<Object>[...k, 'type']) ?? '',
+        cx: _decodeDouble(s, <Object>[...k, 'cx']) ?? 0.0,
+        cy: _decodeDouble(s, <Object>[...k, 'cy']) ?? 0.0,
+        radius: _decodeDouble(s, <Object>[...k, 'radius']) ?? 0.0,
+        left: _decodeDouble(s, <Object>[...k, 'left']) ?? 0.0,
+        top: _decodeDouble(s, <Object>[...k, 'top']) ?? 0.0,
+        right: _decodeDouble(s, <Object>[...k, 'right']) ?? 0.0,
+        bottom: _decodeDouble(s, <Object>[...k, 'bottom']) ?? 0.0,
+        x1: _decodeDouble(s, <Object>[...k, 'x1']) ?? 0.0,
+        y1: _decodeDouble(s, <Object>[...k, 'y1']) ?? 0.0,
+        x2: _decodeDouble(s, <Object>[...k, 'x2']) ?? 0.0,
+        y2: _decodeDouble(s, <Object>[...k, 'y2']) ?? 0.0,
+        segments: _decodePathSegments(s, <Object>[...k, 'segments']) ??
+            const <_PathSegment>[],
+        points: _decodeOffsets(s, <Object>[...k, 'points']) ??
+            const <Offset>[],
+        close: s.v<bool>(<Object>[...k, 'close']) ?? false,
+        color: color,
+        filled: s.v<bool>(<Object>[...k, 'filled']) ?? true,
+        width: _decodeDouble(s, <Object>[...k, 'width']) ?? 1.0,
+      );
+    },
+  );
+}
+
+/// Draws [CustomPaint]'s `shapes` command list, in order.
+class _CommandPainter extends CustomPainter {
+  const _CommandPainter(this.commands);
+
+  final List<_PaintCommand> commands;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final _PaintCommand command in commands) {
+      final Paint paint = Paint()
+        ..color = command.color
+        ..style = command.filled ? PaintingStyle.fill : PaintingStyle.stroke
+        ..strokeWidth = command.width;
+      switch (command.type) {
+        case 'circle':
+          canvas.drawCircle(
+              Offset(command.cx, command.cy), command.radius, paint);
+          break;
+        case 'rect':
+          canvas.drawRect(
+              Rect.fromLTRB(
+                  command.left, command.top, command.right, command.bottom),
+              paint);
+          break;
+        case 'rrect':
+          canvas.drawRRect(
+              RRect.fromLTRBR(command.left, command.top, command.right,
+                  command.bottom, Radius.circular(command.radius)),
+              paint);
+          break;
+        case 'line':
+          canvas.drawLine(Offset(command.x1, command.y1),
+              Offset(command.x2, command.y2), paint);
+          break;
+        case 'path':
+          canvas.drawPath(_buildPath(command), paint);
+          break;
+      }
+    }
+  }
+
+  Path _buildPath(_PaintCommand command) {
+    final Path path = Path();
+    if (command.segments.isNotEmpty) {
+      for (final _PathSegment segment in command.segments) {
+        switch (segment.op) {
+          case 'move':
+            path.moveTo(segment.x, segment.y);
+            break;
+          case 'line':
+            path.lineTo(segment.x, segment.y);
+            break;
+          case 'quad':
+            path.quadraticBezierTo(
+                segment.cx, segment.cy, segment.x, segment.y);
+            break;
+          case 'cubic':
+            path.cubicTo(segment.c1x, segment.c1y, segment.c2x, segment.c2y,
+                segment.x, segment.y);
+            break;
+          case 'close':
+            path.close();
+            break;
+        }
+      }
+    } else {
+      for (int i = 0; i < command.points.length; i++) {
+        if (i == 0) {
+          path.moveTo(command.points[i].dx, command.points[i].dy);
+        } else {
+          path.lineTo(command.points[i].dx, command.points[i].dy);
+        }
+      }
+    }
+    if (command.close) path.close();
+    return path;
+  }
+
+  @override
+  bool shouldRepaint(_CommandPainter oldDelegate) {
+    if (commands.length != oldDelegate.commands.length) return true;
+    for (int i = 0; i < commands.length; i++) {
+      if (commands[i] != oldDelegate.commands[i]) return true;
+    }
+    return false;
+  }
+}
 
 class _PeekCarousel extends StatefulWidget {
   const _PeekCarousel({

@@ -23,11 +23,22 @@ import com.github.maoyingshi.osc.tv.flutter.FlutterNav;
 import com.github.maoyingshi.osc.tv.utils.ImgUtil;
 import com.github.catvod.utils.Prefers;
 
-/** Owns the two supported built-in app branding choices. */
+/** Owns the supported built-in app branding choices: the default icon,
+ * the original icon, and 8 cat icons (modes 2..9). */
 public final class AppBranding {
 
     public static final int ICON_CURRENT = 0;
     public static final int ICON_HISTORY = 1;
+    public static final int ICON_MINIMAL = 2;
+    public static final int ICON_INK = 3;
+    public static final int ICON_CLAPPER = 4;
+    public static final int ICON_PAPERCUT = 5;
+    public static final int ICON_ORIGAMI = 6;
+    public static final int ICON_STICKER = 7;
+    public static final int ICON_PROJECTOR = 8;
+    public static final int ICON_UKIYOE = 9;
+    /** Number of built-in icon choices (modes 0..ICON_COUNT - 1). */
+    public static final int ICON_COUNT = 10;
 
     private static final String ICON_KEY = "app_branding_icon";
     private static final String ALIAS_SUFFIX_CURRENT = "Current";
@@ -40,9 +51,36 @@ public final class AppBranding {
     private AppBranding() {
     }
 
-    /** Old custom mode values intentionally migrate to the default built-in icon. */
+    /** Unknown mode values intentionally migrate to the default built-in icon. */
     public static int normalizeIconMode(int mode) {
-        return mode == ICON_HISTORY ? ICON_HISTORY : ICON_CURRENT;
+        return mode >= ICON_CURRENT && mode < ICON_COUNT ? mode : ICON_CURRENT;
+    }
+
+    /** Launcher-alias suffix per mode (HomeActivity + suffix). */
+    static String launcherAliasSuffix(int mode) {
+        switch (normalizeIconMode(mode)) {
+            case ICON_HISTORY: return ALIAS_SUFFIX_HISTORY;
+            case ICON_MINIMAL: return "Minimal";
+            case ICON_INK: return "Ink";
+            case ICON_CLAPPER: return "Clapper";
+            case ICON_PAPERCUT: return "Papercut";
+            case ICON_ORIGAMI: return "Origami";
+            case ICON_STICKER: return "Sticker";
+            case ICON_PROJECTOR: return "Projector";
+            case ICON_UKIYOE: return "Ukiyoe";
+            case ICON_CURRENT:
+            default: return ALIAS_SUFFIX_CURRENT;
+        }
+    }
+
+    /** Display labels of the extra built-in icons (modes 2..9), in mode order. */
+    @NonNull
+    public static java.util.List<String> extraIconLabels(@NonNull Context context) {
+        java.util.List<String> labels = new java.util.ArrayList<>(ICON_COUNT - 2);
+        for (int mode = 2; mode < ICON_COUNT; mode++) {
+            labels.add(context.getString(iconLabelResource(mode)));
+        }
+        return labels;
     }
 
     @NonNull
@@ -114,8 +152,19 @@ public final class AppBranding {
     }
 
     static int logoResource(int mode) {
-        return normalizeIconMode(mode) == ICON_HISTORY
-                ? R.drawable.ic_launcher_history : R.mipmap.ic_launcher;
+        switch (normalizeIconMode(mode)) {
+            case ICON_HISTORY: return R.drawable.ic_launcher_history;
+            case ICON_MINIMAL: return R.drawable.ic_launcher_minimal;
+            case ICON_INK: return R.drawable.ic_launcher_ink;
+            case ICON_CLAPPER: return R.drawable.ic_launcher_clapper;
+            case ICON_PAPERCUT: return R.drawable.ic_launcher_papercut;
+            case ICON_ORIGAMI: return R.drawable.ic_launcher_origami;
+            case ICON_STICKER: return R.drawable.ic_launcher_sticker;
+            case ICON_PROJECTOR: return R.drawable.ic_launcher_projector;
+            case ICON_UKIYOE: return R.drawable.ic_launcher_ukiyoe;
+            case ICON_CURRENT:
+            default: return R.mipmap.ic_launcher;
+        }
     }
 
     @NonNull
@@ -131,20 +180,31 @@ public final class AppBranding {
     }
 
     public static int iconLabelResource(int mode) {
-        return normalizeIconMode(mode) == ICON_HISTORY
-                ? R.string.app_branding_icon_history : R.string.app_branding_icon_current;
+        switch (normalizeIconMode(mode)) {
+            case ICON_HISTORY: return R.string.app_branding_icon_history;
+            case ICON_MINIMAL: return R.string.app_branding_icon_minimal;
+            case ICON_INK: return R.string.app_branding_icon_ink;
+            case ICON_CLAPPER: return R.string.app_branding_icon_clapper;
+            case ICON_PAPERCUT: return R.string.app_branding_icon_papercut;
+            case ICON_ORIGAMI: return R.string.app_branding_icon_origami;
+            case ICON_STICKER: return R.string.app_branding_icon_sticker;
+            case ICON_PROJECTOR: return R.string.app_branding_icon_projector;
+            case ICON_UKIYOE: return R.string.app_branding_icon_ukiyoe;
+            case ICON_CURRENT:
+            default: return R.string.app_branding_icon_current;
+        }
     }
 
     public static void applyLauncherIcon(@NonNull Context context) {
-        boolean history = getIconMode(context) == ICON_HISTORY;
+        int selected = getIconMode(context);
         String homeActivity = FlutterNav.HOME_ACTIVITY_CLASS;
-        setComponentEnabled(context, launcherAliasClassName(homeActivity, ICON_CURRENT), !history);
-        setComponentEnabled(context, launcherAliasClassName(homeActivity, ICON_HISTORY), history);
+        for (int mode = 0; mode < ICON_COUNT; mode++) {
+            setComponentEnabled(context, launcherAliasClassName(homeActivity, mode), mode == selected);
+        }
     }
 
     static String launcherAliasClassName(@NonNull String homeActivityClassName, int mode) {
-        return homeActivityClassName + (normalizeIconMode(mode) == ICON_HISTORY
-                ? ALIAS_SUFFIX_HISTORY : ALIAS_SUFFIX_CURRENT);
+        return homeActivityClassName + launcherAliasSuffix(mode);
     }
 
     @NonNull

@@ -35,6 +35,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/peek_home/
+    - assets/app_icons/
   # Title fonts are NO LONGER bundled here: NotoSerifSC (serif) and
   # LXGWWenKaiLite (wenkai) ship in the 「标题字体」 module zip instead
   # (ModuleDefinition.FONTS; packaged by app/build.gradle from

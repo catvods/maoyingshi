@@ -19,6 +19,8 @@ public class AppBrandingActivity extends BaseActivity {
 
     private ActivityAppBrandingBinding mBinding;
     private int selectedIconMode;
+    private final LinearLayoutCompat[] optionContainers = new LinearLayoutCompat[AppBranding.ICON_COUNT];
+    private final TextView[] optionLabels = new TextView[AppBranding.ICON_COUNT];
 
     public static void start(Activity activity) {
         // B8 B15: mobile opens the Flutter branding page (leanback guard
@@ -43,14 +45,36 @@ public class AppBrandingActivity extends BaseActivity {
     @Override
     protected void initView(Bundle savedInstanceState) {
         selectedIconMode = AppBranding.getIconMode(this);
+        optionContainers[AppBranding.ICON_CURRENT] = mBinding.iconCurrent;
+        optionLabels[AppBranding.ICON_CURRENT] = mBinding.iconCurrentText;
+        optionContainers[AppBranding.ICON_HISTORY] = mBinding.iconHistory;
+        optionLabels[AppBranding.ICON_HISTORY] = mBinding.iconHistoryText;
+        optionContainers[AppBranding.ICON_MINIMAL] = mBinding.iconMinimal;
+        optionLabels[AppBranding.ICON_MINIMAL] = mBinding.iconMinimalText;
+        optionContainers[AppBranding.ICON_INK] = mBinding.iconInk;
+        optionLabels[AppBranding.ICON_INK] = mBinding.iconInkText;
+        optionContainers[AppBranding.ICON_CLAPPER] = mBinding.iconClapper;
+        optionLabels[AppBranding.ICON_CLAPPER] = mBinding.iconClapperText;
+        optionContainers[AppBranding.ICON_PAPERCUT] = mBinding.iconPapercut;
+        optionLabels[AppBranding.ICON_PAPERCUT] = mBinding.iconPapercutText;
+        optionContainers[AppBranding.ICON_ORIGAMI] = mBinding.iconOrigami;
+        optionLabels[AppBranding.ICON_ORIGAMI] = mBinding.iconOrigamiText;
+        optionContainers[AppBranding.ICON_STICKER] = mBinding.iconSticker;
+        optionLabels[AppBranding.ICON_STICKER] = mBinding.iconStickerText;
+        optionContainers[AppBranding.ICON_PROJECTOR] = mBinding.iconProjector;
+        optionLabels[AppBranding.ICON_PROJECTOR] = mBinding.iconProjectorText;
+        optionContainers[AppBranding.ICON_UKIYOE] = mBinding.iconUkiyoe;
+        optionLabels[AppBranding.ICON_UKIYOE] = mBinding.iconUkiyoeText;
         updateSelection();
         mBinding.toolbar.setNavigationOnClickListener(v -> finish());
     }
 
     @Override
     protected void initEvent() {
-        mBinding.iconCurrent.setOnClickListener(v -> selectIcon(AppBranding.ICON_CURRENT));
-        mBinding.iconHistory.setOnClickListener(v -> selectIcon(AppBranding.ICON_HISTORY));
+        for (int mode = 0; mode < AppBranding.ICON_COUNT; mode++) {
+            final int iconMode = mode;
+            optionContainers[mode].setOnClickListener(v -> selectIcon(iconMode));
+        }
         mBinding.cancel.setOnClickListener(v -> finish());
         mBinding.save.setOnClickListener(v -> save());
     }
@@ -61,8 +85,9 @@ public class AppBrandingActivity extends BaseActivity {
     }
 
     private void updateSelection() {
-        setSelected(mBinding.iconCurrent, mBinding.iconCurrentText, selectedIconMode == AppBranding.ICON_CURRENT);
-        setSelected(mBinding.iconHistory, mBinding.iconHistoryText, selectedIconMode == AppBranding.ICON_HISTORY);
+        for (int mode = 0; mode < AppBranding.ICON_COUNT; mode++) {
+            setSelected(optionContainers[mode], optionLabels[mode], selectedIconMode == mode);
+        }
     }
 
     private void setSelected(LinearLayoutCompat container, TextView label, boolean selected) {

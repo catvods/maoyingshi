@@ -5,6 +5,14 @@
    <string name="setting_app_branding">APP 圖示</string>
     <string name="app_branding_icon_current">預設圖示</string>
     <string name="app_branding_icon_history">原始圖示</string>
+    <string name="app_branding_icon_minimal">極簡線條</string>
+    <string name="app_branding_icon_ink">水墨</string>
+    <string name="app_branding_icon_clapper">橘貓場記</string>
+    <string name="app_branding_icon_papercut">剪紙</string>
+    <string name="app_branding_icon_origami">摺紙</string>
+    <string name="app_branding_icon_sticker">貼紙貓</string>
+    <string name="app_branding_icon_projector">放映機</string>
+    <string name="app_branding_icon_ukiyoe">浮世繪</string>
     <string name="app_branding_icon_select">選擇圖示</string>
     <string name="app_exit_confirm">再按一次退出應用</string>
 

@@ -127,6 +127,117 @@
             </intent-filter>
         </activity-alias>
 
+        <activity-alias
+            android:name=".ui.activity.HomeActivityMinimal"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_minimal"
+            android:roundIcon="@drawable/ic_launcher_minimal"
+            android:targetActivity=".ui.activity.HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivityInk"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_ink"
+            android:roundIcon="@drawable/ic_launcher_ink"
+            android:targetActivity=".ui.activity.HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivityClapper"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_clapper"
+            android:roundIcon="@drawable/ic_launcher_clapper"
+            android:targetActivity=".ui.activity.HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivityPapercut"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_papercut"
+            android:roundIcon="@drawable/ic_launcher_papercut"
+            android:targetActivity=".ui.activity.HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivityOrigami"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_origami"
+            android:roundIcon="@drawable/ic_launcher_origami"
+            android:targetActivity=".ui.activity.HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivitySticker"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_sticker"
+            android:roundIcon="@drawable/ic_launcher_sticker"
+            android:targetActivity=".ui.activity.HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivityProjector"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_projector"
+            android:roundIcon="@drawable/ic_launcher_projector"
+            android:targetActivity=".ui.activity.HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivityUkiyoe"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_ukiyoe"
+            android:roundIcon="@drawable/ic_launcher_ukiyoe"
+            android:targetActivity=".ui.activity.HomeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
         <activity
             android:name=".ui.activity.CastActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"

@@ -46,6 +46,109 @@
             </intent-filter>
         </activity-alias>
 
+        <activity-alias
+            android:name=".ui.activity.HomeActivityMinimal"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_minimal"
+            android:roundIcon="@drawable/ic_launcher_minimal"
+            android:targetActivity=".flutter.C1ScreenActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivityInk"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_ink"
+            android:roundIcon="@drawable/ic_launcher_ink"
+            android:targetActivity=".flutter.C1ScreenActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivityClapper"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_clapper"
+            android:roundIcon="@drawable/ic_launcher_clapper"
+            android:targetActivity=".flutter.C1ScreenActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivityPapercut"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_papercut"
+            android:roundIcon="@drawable/ic_launcher_papercut"
+            android:targetActivity=".flutter.C1ScreenActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivityOrigami"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_origami"
+            android:roundIcon="@drawable/ic_launcher_origami"
+            android:targetActivity=".flutter.C1ScreenActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivitySticker"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_sticker"
+            android:roundIcon="@drawable/ic_launcher_sticker"
+            android:targetActivity=".flutter.C1ScreenActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivityProjector"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_projector"
+            android:roundIcon="@drawable/ic_launcher_projector"
+            android:targetActivity=".flutter.C1ScreenActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".ui.activity.HomeActivityUkiyoe"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_ukiyoe"
+            android:roundIcon="@drawable/ic_launcher_ukiyoe"
+            android:targetActivity=".flutter.C1ScreenActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
         <!-- B8 delete-native phase 3: the launcher home. The launcher
              aliases target this Activity; the SEARCH/SEND/VIEW
              intent-filters and the searchable meta-data moved here

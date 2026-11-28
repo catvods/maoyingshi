@@ -5,6 +5,14 @@
    <string name="setting_app_branding">App icon</string>
     <string name="app_branding_icon_current">Default icon</string>
     <string name="app_branding_icon_history">Original icon</string>
+    <string name="app_branding_icon_minimal">Minimal Lines</string>
+    <string name="app_branding_icon_ink">Ink Wash</string>
+    <string name="app_branding_icon_clapper">Clapperboard Cat</string>
+    <string name="app_branding_icon_papercut">Paper Cut</string>
+    <string name="app_branding_icon_origami">Origami</string>
+    <string name="app_branding_icon_sticker">Sticker Cat</string>
+    <string name="app_branding_icon_projector">Projector</string>
+    <string name="app_branding_icon_ukiyoe">Ukiyo-e</string>
    <string name="app_branding_icon_select">Select icon</string>
     <string name="app_exit_confirm">Press back again to exit</string>
 

@@ -18,7 +18,9 @@ public class AppBrandingContractTest {
         assertEquals(AppBranding.ICON_CURRENT, AppBranding.normalizeIconMode(99));
         assertEquals(AppBranding.ICON_CURRENT, AppBranding.normalizeIconMode(AppBranding.ICON_CURRENT));
         assertEquals(AppBranding.ICON_HISTORY, AppBranding.normalizeIconMode(AppBranding.ICON_HISTORY));
-        assertEquals(AppBranding.ICON_CURRENT, AppBranding.normalizeIconMode(2));
+        assertEquals(AppBranding.ICON_MINIMAL, AppBranding.normalizeIconMode(2));
+        assertEquals(AppBranding.ICON_UKIYOE, AppBranding.normalizeIconMode(9));
+        assertEquals(AppBranding.ICON_CURRENT, AppBranding.normalizeIconMode(10));
     }
 
     @Test
@@ -29,8 +31,12 @@ public class AppBrandingContractTest {
                 AppBranding.launcherAliasClassName(homeActivity, AppBranding.ICON_CURRENT));
         assertEquals(homeActivity + "History",
                 AppBranding.launcherAliasClassName(homeActivity, AppBranding.ICON_HISTORY));
+        assertEquals(homeActivity + "Minimal",
+                AppBranding.launcherAliasClassName(homeActivity, AppBranding.ICON_MINIMAL));
+        assertEquals(homeActivity + "Ukiyoe",
+                AppBranding.launcherAliasClassName(homeActivity, AppBranding.ICON_UKIYOE));
         assertEquals(homeActivity + "Current",
-                AppBranding.launcherAliasClassName(homeActivity, 2));
+                AppBranding.launcherAliasClassName(homeActivity, 10));
     }
 
     @Test

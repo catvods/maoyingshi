@@ -133,15 +133,17 @@ class B15LocalItem {
   bool isDirectory;
 }
 
-/// App-branding snapshot (native AppBrandingActivity). The two icon
-/// previews are approximated in Dart with Material icons; the host
-/// only supplies labels and the current selection.
+/// App-branding snapshot (native AppBrandingActivity). The two built-in
+/// icon previews are approximated in Dart with Material icons; the extra
+/// cat icons use bundled asset previews. The host only supplies labels
+/// and the current selection.
 class B15BrandingScreen {
   B15BrandingScreen({
     required this.title,
     required this.selectLabel,
     required this.currentLabel,
     required this.historyLabel,
+    required this.extraLabels,
     required this.selectedMode,
     required this.cancelLabel,
     required this.saveLabel,
@@ -158,6 +160,10 @@ class B15BrandingScreen {
   /// app_branding_icon_current / app_branding_icon_history.
   String currentLabel;
   String historyLabel;
+
+  /// Labels of the extra built-in icons (AppBranding modes 2..9),
+  /// in mode order; the host supplies one per extra icon.
+  List<String> extraLabels;
 
   /// AppBranding.getIconMode(): 0 = current, 1 = history.
   int selectedMode;

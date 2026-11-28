@@ -233,7 +233,20 @@ class _B15LocalPageState extends State<B15LocalPage>
   }
 }
 
-/// B8 B15: the mobile app-branding page (AppBrandingActivity). Two icon
+/// Bundled previews for the extra built-in icons (AppBranding modes
+/// 2..9), in mode order; see flutter_module/assets/app_icons/.
+const List<String> _kExtraIconAssets = <String>[
+  'assets/app_icons/ic_minimal.png',
+  'assets/app_icons/ic_ink.png',
+  'assets/app_icons/ic_clapper.png',
+  'assets/app_icons/ic_papercut.png',
+  'assets/app_icons/ic_origami.png',
+  'assets/app_icons/ic_sticker.png',
+  'assets/app_icons/ic_projector.png',
+  'assets/app_icons/ic_ukiyoe.png',
+];
+
+/// B8 B15: the mobile app-branding page (AppBrandingActivity). Ten icon
 /// options + save/cancel; the actual switch is 100% host-side
 /// (AppBranding.putIconMode + applyLauncherIcon + launcher restart).
 class B15BrandingPage extends StatefulWidget {
@@ -345,29 +358,7 @@ class _B15BrandingPageState extends State<B15BrandingPage>
             style: const TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _IconOption(
-                  // Native previews are the real launcher icons
-                  // (mipmap ic_launcher / drawable ic_launcher_history);
-                  // Dart approximates them with Material icons.
-                  icon: Icons.apps,
-                  label: screen.currentLabel,
-                  selected: _selectedMode == 0,
-                  onTap: () => setState(() => _selectedMode = 0),
-                ),
-              ),
-              Expanded(
-                child: _IconOption(
-                  icon: Icons.history,
-                  label: screen.historyLabel,
-                  selected: _selectedMode == 1,
-                  onTap: () => setState(() => _selectedMode = 1),
-                ),
-              ),
-            ],
-          ),
+          ..._optionRows(screen),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -394,17 +385,72 @@ class _B15BrandingPageState extends State<B15BrandingPage>
       ),
     );
   }
+
+  /// Icon options in two-column rows: the two built-ins first
+  /// (Material-icon approximations, as before), then the extra cat
+  /// icons with bundled asset previews, in mode order.
+  List<Widget> _optionRows(B15BrandingScreen screen) {
+    final List<_BrandingOption> options = <_BrandingOption>[
+      _BrandingOption(mode: 0, icon: Icons.apps, label: screen.currentLabel),
+      _BrandingOption(mode: 1, icon: Icons.history, label: screen.historyLabel),
+      for (int i = 0; i < screen.extraLabels.length; i++)
+        _BrandingOption(
+          mode: 2 + i,
+          asset: i < _kExtraIconAssets.length ? _kExtraIconAssets[i] : null,
+          label: screen.extraLabels[i],
+        ),
+    ];
+    final List<Widget> rows = <Widget>[];
+    for (int i = 0; i < options.length; i += 2) {
+      final List<_BrandingOption> pair =
+          options.sublist(i, (i + 2).clamp(0, options.length));
+      rows.add(
+        Row(
+          children: [
+            for (final _BrandingOption option in pair)
+              Expanded(
+                child: _IconOption(
+                  icon: option.icon,
+                  asset: option.asset,
+                  label: option.label,
+                  selected: _selectedMode == option.mode,
+                  onTap: () => setState(() => _selectedMode = option.mode),
+                ),
+              ),
+          ],
+        ),
+      );
+      if (i + 2 < options.length) rows.add(const SizedBox(height: 12));
+    }
+    return rows;
+  }
+}
+
+class _BrandingOption {
+  const _BrandingOption({
+    required this.mode,
+    this.icon,
+    this.asset,
+    required this.label,
+  });
+
+  final int mode;
+  final IconData? icon;
+  final String? asset;
+  final String label;
 }
 
 class _IconOption extends StatelessWidget {
   const _IconOption({
-    required this.icon,
+    this.icon,
+    this.asset,
     required this.label,
     required this.selected,
     required this.onTap,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final String? asset;
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -425,7 +471,23 @@ class _IconOption extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, size: 64),
+            if (asset != null)
+              Container(
+                width: 64,
+                height: 64,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Image.asset(
+                  asset!,
+                  width: 64,
+                  height: 64,
+                  fit: BoxFit.cover,
+                ),
+              )
+            else
+              Icon(icon, size: 64),
             const SizedBox(height: 8),
             Text(
               label,

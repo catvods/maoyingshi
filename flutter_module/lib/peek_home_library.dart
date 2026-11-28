@@ -568,9 +568,9 @@ LocalWidgetLibrary createPeekHomeWidgets() =>
             _decodeDouble(source, <Object>['translateY']) ?? 0.0;
         return Transform(
           transform: Matrix4.identity()
-            ..translate(translateX, translateY)
+            ..translateByDouble(translateX, translateY, 0.0)
             ..rotateZ(angle)
-            ..scale(scale),
+            ..scaleByDouble(scale, scale, 1.0),
           alignment: Alignment.center,
           child: source.optionalChild(<Object>['child']) ??
               const SizedBox.shrink(),

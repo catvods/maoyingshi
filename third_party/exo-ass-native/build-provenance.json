@@ -2,8 +2,8 @@
   "schema": 1,
   "artifact": {
     "path": "prebuilt/arm64-v8a/libexo_ass.so",
-    "sha256": "bb0858e3fa70d66ca9a86f82a99255c86a5d88b8ecd8bef87f3bd63bab2e7f4b",
-    "bytes": 2775192
+    "sha256": "12bbe4d23cc93aa589a5a498d65617860ed106d0bab2dda1a27f40f1c0aea201",
+    "bytes": 2775464
   },
   "android": {
     "ndk": "29.0.14206865",
@@ -18,7 +18,7 @@
     "third_party/exo-ass-lock.json": "b524b2904218465093a9d20ebc8e5419529eae322650adfe331b48474fa67000",
     "scripts/build_exo_ass_native.py": "be7828a4ba01788258c2ef67328e87b808df57d6d55eed9938df7c0fd286fdb4",
     "third_party/exo-ass-native/CMakeLists.txt": "4abec300900d0588502938c62c3e7a90f9fc5cc2a832f0446689356e5df29266",
-    "third_party/exo-ass-native/exo_ass.cpp": "1662c8e0f9a55302afc6d6d8f550c887c5df24e174fd494498bf5877a1efde6b",
+    "third_party/exo-ass-native/exo_ass.cpp": "185325ab70a65852992d432c3edca069bb5451400d44745aa9f0394008d64b42",
     "third_party/exo-ass-native/mask_copy.h": "8fa89ecb7904ad82bb3bafd551517e77f1cef6463278897fcf198d12e42db574"
   },
   "sources": {
@@ -31,7 +31,7 @@
   },
   "static_archives": {
     "libass.a": "8a9ec2697badcc06be60de34ee719430727d5d185ff46f37adb85fa0838e2235",
-    "libfontconfig.a": "2cd9c01e1754951e8c18dafac35f415eca2b52ec2ebc247f8c061034c728aa54",
+    "libfontconfig.a": "7d5d9bcf50dc1bfac797f6569d1a13e26c45a0b5233c26b469bb9f8a74739c0b",
     "libfreetype.a": "42f0c868979a3d690d3f0b903b931e1a130e1da74707327357dfcb2d64df1580",
     "libfribidi.a": "aa49e4640293e32b6596a231e30e8139be9ff01aa775fccd0d194cc07b81fa91",
     "libharfbuzz.a": "f115492904058072fff4a863da5414c069373212c1cfcbd5b43189679e8044de",
@@ -47,7 +47,7 @@
     "licenses/libass/COPYING": "f7e30699d02798351e7f839e3d3bfeb29ce65e44efa7735c225464c4fd7dfe9c",
     "licenses/libxml2/Copyright": "5d4873884a890122a4b9b20ad56ac6f7da1d796a5bfcf04a427970ac96217626"
   },
-  "compiler": "Android (13989888, +pgo, +bolt, +lto, +mlgo, based on r563880c) clang version 21.0.0 (https://android.googlesource.com/toolchain/llvm-project 5e96669f06077099aa41290cdb4c5e6fa0f59349)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /home/hatch/workspace/android-sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/linux-x86_64/bin",
+  "compiler": "Android (13989888, +pgo, +bolt, +lto, +mlgo, based on r563880c) clang version 21.0.0 (https://android.googlesource.com/toolchain/llvm-project 5e96669f06077099aa41290cdb4c5e6fa0f59349)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /home/hatch/android-sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/linux-x86_64/bin",
   "tools": {
     "cmake": "cmake version 3.28.3",
     "meson": "1.12.1",
